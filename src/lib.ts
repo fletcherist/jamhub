@@ -22,3 +22,21 @@ export interface User {
 export interface Room {
   users: User[];
 }
+
+export const emojis = [
+  "😎",
+  "🧐",
+  "🤡",
+  "👻",
+  "😷",
+  "🤗",
+  "😏",
+  "👽",
+  "👨‍🚀",
+  "🐺",
+  "🐯",
+  "🦁",
+  "🐶",
+  "🐼",
+  "🙈",
+];

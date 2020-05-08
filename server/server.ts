@@ -7,7 +7,7 @@ import {
   WebSocketMessage,
 } from "https://deno.land/std@v1.0.0-rc1/ws/mod.ts";
 
-import { User } from "../src/lib.ts";
+import { User, emojis } from "../src/lib.ts";
 
 const port = Deno.args[0] || "8080";
 
@@ -53,23 +53,6 @@ for await (const req of serve(`:${port}`)) {
       bufWriter,
       headers,
     });
-    const emojis = [
-      "😎",
-      "🧐",
-      "🤡",
-      "👻",
-      "😷",
-      "🤗",
-      "😏",
-      "👽",
-      "👨‍🚀",
-      "🐺",
-      "🐯",
-      "🦁",
-      "🐶",
-      "🐼",
-      "🙈",
-    ];
     const user: UserServer = {
       sock: sock,
       emoji: emojis[Math.floor(Math.random() * emojis.length)],
@@ -77,34 +60,36 @@ for await (const req of serve(`:${port}`)) {
     };
     const room = getOrCreateRoom(url);
     roomAddUser(room, user);
-
     console.log("socket connected!");
-    try {
-      for await (const ev of sock) {
-        if (typeof ev === "string") {
-          // text message
-          console.log("ws:Text", ev);
-          roomBroadcast(room, ev);
-        } else if (ev instanceof Uint8Array) {
-          // binary message
-          console.log("ws:Binary", ev);
-        } else if (isWebSocketPingEvent(ev)) {
-          const [, body] = ev;
-          // ping
-          console.log("ws:Ping", body);
-        } else if (isWebSocketCloseEvent(ev)) {
-          // close
-          const { code, reason } = ev;
-          console.log("ws:Close", code, reason);
+    const listenEvents = async () => {
+      try {
+        for await (const ev of sock) {
+          if (typeof ev === "string") {
+            // text message
+            console.log("ws:Text", ev);
+            roomBroadcast(room, ev);
+          } else if (ev instanceof Uint8Array) {
+            // binary message
+            console.log("ws:Binary", ev);
+          } else if (isWebSocketPingEvent(ev)) {
+            const [, body] = ev;
+            // ping
+            console.log("ws:Ping", body);
+          } else if (isWebSocketCloseEvent(ev)) {
+            // close
+            const { code, reason } = ev;
+            console.log("ws:Close", code, reason);
+          }
+        }
+      } catch (err) {
+        console.error(`failed to receive frame: ${err}`);
+        roomRemoveUser(room, user);
+        if (!sock.isClosed) {
+          await sock.close(1000).catch(console.error);
         }
       }
-    } catch (err) {
-      console.error(`failed to receive frame: ${err}`);
-      roomRemoveUser(room, user);
-      if (!sock.isClosed) {
-        await sock.close(1000).catch(console.error);
-      }
-    }
+    };
+    listenEvents();
   } catch (err) {
     console.error(`failed to accept websocket: ${err}`);
     await req.respond({ status: 400 });
