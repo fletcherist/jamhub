@@ -83,17 +83,72 @@ const assert = (expression: boolean, error: string): void => {
   }
 };
 
-type KeyboardNote = "a" | "s" | "d" | "f" | "g" | "h" | "j";
-type NotePitch = "C" | "D" | "E" | "F" | "G" | "A" | "B";
-const keybardToNote = new Map<KeyboardNote, NotePitch>([
+type KeyboardNoteKey =
+  | "a"
+  | "s"
+  | "d"
+  | "f"
+  | "g"
+  | "h"
+  | "j"
+  | "k"
+  | "l"
+  | "w"
+  | "e"
+  | "t"
+  | "y"
+  | "u"
+  | "o";
+type KeboardNote =
+  | "C"
+  | "C#"
+  | "D"
+  | "D#"
+  | "E"
+  | "F"
+  | "F#"
+  | "G"
+  | "G#"
+  | "A"
+  | "A#"
+  | "B";
+type KeyboardNotePitch = KeboardNote | "C8" | "C#8" | "D8";
+const keybardToNoteMap = new Map<KeyboardNoteKey, KeyboardNotePitch>([
   ["a", "C"],
+  ["w", "C#"],
   ["s", "D"],
+  ["e", "D#"],
   ["d", "E"],
   ["f", "F"],
+  ["t", "F#"],
   ["g", "G"],
+  ["y", "G#"],
   ["h", "A"],
+  ["u", "A#"],
   ["j", "B"],
+  ["k", "C8"], // 1 octave higher than C
+  ["o", "C#8"], // 1 octave higher than C#
+  ["l", "D8"], // 1 octave higher than D
 ]);
+
+const selectKeyboardKeyOctave = (
+  key: KeyboardNotePitch,
+  octave: number
+): number => octave + (key.endsWith("8") ? 1 : 0);
+const parseKeyboardKey = (key: string, octave: number): string | undefined => {
+  try {
+    return mapKeyboardKeyToNote(key as KeyboardNoteKey, octave);
+  } catch (error) {
+    return undefined;
+  }
+};
+const mapKeyboardKeyToNote = (key: KeyboardNoteKey, octave: number): string => {
+  const note = keybardToNoteMap.get(key);
+  if (!note) {
+    throw new Error("invalid key");
+  }
+  return `${note.replace("8", "")}${selectKeyboardKeyOctave(note, octave)}`;
+};
 
 const App: React.FC = () => {
   const refSocket = useRef<WebSocket>();
@@ -109,11 +164,11 @@ const App: React.FC = () => {
     }
     const io = refSocket.current;
     io.onmessage = async (event) => {
-      const msg = JSON.parse(event.data) as { note: NotePitch };
+      const msg = JSON.parse(event.data) as { note: KeyboardNotePitch };
       console.log(msg);
       await Tone.start();
       console.log("audio is ready");
-      synth.triggerAttackRelease(`${msg.note}4`, "8n");
+      synth.triggerAttackRelease(`${msg.note}`, "8n");
       console.log(event);
     };
     io.onopen = () => {
@@ -123,10 +178,8 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const handleKeydown = (event: KeyboardEvent) => {
-      console.log(keybardToNote.size);
       // assert(keybardToNote.size === keybardToNote.size, 'error')
-      console.log(event);
-      const note = keybardToNote.get(event.key as KeyboardNote);
+      const note = parseKeyboardKey(event.key, 4);
       if (!note) {
         return;
       }
