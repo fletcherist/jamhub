@@ -100,6 +100,7 @@ for await (const req of serve(`:${port}`)) {
       }
     } catch (err) {
       console.error(`failed to receive frame: ${err}`);
+      roomRemoveUser(room, user);
       if (!sock.isClosed) {
         await sock.close(1000).catch(console.error);
       }
