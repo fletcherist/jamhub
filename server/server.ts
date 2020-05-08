@@ -3,6 +3,8 @@ import {
   acceptWebSocket,
   isWebSocketCloseEvent,
   isWebSocketPingEvent,
+  WebSocket,
+  WebSocketMessage,
 } from "https://deno.land/std@v1.0.0-rc1/ws/mod.ts";
 
 import { User } from "../src/lib.ts";
@@ -10,7 +12,7 @@ import { User } from "../src/lib.ts";
 const port = Deno.args[0] || "8080";
 
 interface UserServer extends User {
-  conn: Deno.Conn;
+  sock: WebSocket;
 }
 interface Room {
   users: UserServer[];
@@ -30,10 +32,20 @@ const getOrCreateRoom = (id: string): Room => {
   }
   return room;
 };
-
+const roomAddUser = (room: Room, user: UserServer): void => {
+  room.users = [...room.users, user];
+};
+const roomRemoveUser = (room: Room, user: UserServer): void => {
+  room.users = room.users.filter((u) => u.id !== user.id);
+};
+const roomBroadcast = (room: Room, event: WebSocketMessage) => {
+  for (const user of room.users) {
+    user.sock.send(event);
+  }
+};
 console.log(`websocket server is running on :${port}`);
 for await (const req of serve(`:${port}`)) {
-  const { conn, r: bufReader, w: bufWriter, headers } = req;
+  const { conn, r: bufReader, w: bufWriter, headers, url } = req;
   try {
     const sock = await acceptWebSocket({
       conn,
@@ -41,13 +53,38 @@ for await (const req of serve(`:${port}`)) {
       bufWriter,
       headers,
     });
+    const emojis = [
+      "😎",
+      "🧐",
+      "🤡",
+      "👻",
+      "😷",
+      "🤗",
+      "😏",
+      "👽",
+      "👨‍🚀",
+      "🐺",
+      "🐯",
+      "🦁",
+      "🐶",
+      "🐼",
+      "🙈",
+    ];
+    const user: UserServer = {
+      sock: sock,
+      emoji: emojis[Math.floor(Math.random() * emojis.length)],
+      id: String(Date.now()),
+    };
+    const room = getOrCreateRoom(url);
+    roomAddUser(room, user);
+
     console.log("socket connected!");
     try {
       for await (const ev of sock) {
         if (typeof ev === "string") {
           // text message
           console.log("ws:Text", ev);
-          await sock.send(ev);
+          roomBroadcast(room, ev);
         } else if (ev instanceof Uint8Array) {
           // binary message
           console.log("ws:Binary", ev);

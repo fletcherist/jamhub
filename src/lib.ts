@@ -17,7 +17,6 @@ export interface TransportEvent {
 export interface User {
   id: string;
   emoji: string;
-  mute: boolean;
 }
 
 export interface Room {
