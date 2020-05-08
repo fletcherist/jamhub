@@ -8,6 +8,29 @@ import {
 import { User } from "../src/lib.ts";
 
 const port = Deno.args[0] || "8080";
+
+interface UserServer extends User {
+  conn: Deno.Conn;
+}
+interface Room {
+  users: UserServer[];
+}
+const roomsMap = new Map<string, Room>();
+const createRoom = (id: string): Room => {
+  return {
+    users: [],
+  };
+};
+const getOrCreateRoom = (id: string): Room => {
+  const room = roomsMap.get(id);
+  if (!room) {
+    const newRoom = createRoom(id);
+    roomsMap.set(id, newRoom);
+    return newRoom;
+  }
+  return room;
+};
+
 console.log(`websocket server is running on :${port}`);
 for await (const req of serve(`:${port}`)) {
   const { conn, r: bufReader, w: bufWriter, headers } = req;
