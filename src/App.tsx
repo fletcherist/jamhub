@@ -77,6 +77,24 @@ export const useStore = (): Store => {
 
 const synth = new Tone.Synth().toMaster();
 
+const assert = (expression: boolean, error: string): void => {
+  if (!expression) {
+    throw new Error(error);
+  }
+};
+
+type KeyboardNote = "a" | "s" | "d" | "f" | "g" | "h" | "j";
+type NotePitch = "C" | "D" | "E" | "F" | "G" | "A" | "B";
+const keybardToNote = new Map<KeyboardNote, NotePitch>([
+  ["a", "C"],
+  ["s", "D"],
+  ["d", "E"],
+  ["f", "F"],
+  ["g", "G"],
+  ["h", "A"],
+  ["j", "B"],
+]);
+
 const App: React.FC = () => {
   const refSocket = useRef<WebSocket>();
   useEffect(() => {
@@ -91,9 +109,11 @@ const App: React.FC = () => {
     }
     const io = refSocket.current;
     io.onmessage = async (event) => {
+      const msg = JSON.parse(event.data) as { note: NotePitch };
+      console.log(msg);
       await Tone.start();
       console.log("audio is ready");
-      synth.triggerAttackRelease("C4", "8n");
+      synth.triggerAttackRelease(`${msg.note}4`, "8n");
       console.log(event);
     };
     io.onopen = () => {
@@ -103,9 +123,16 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const handleKeydown = (event: KeyboardEvent) => {
+      console.log(keybardToNote.size);
+      // assert(keybardToNote.size === keybardToNote.size, 'error')
+      console.log(event);
+      const note = keybardToNote.get(event.key as KeyboardNote);
+      if (!note) {
+        return;
+      }
       refSocket.current?.send(
         JSON.stringify({
-          hello: "world",
+          note: note,
         })
       );
     };
@@ -121,20 +148,6 @@ const App: React.FC = () => {
 
   return (
     <div className={css.container}>
-      <button
-        onClick={async () => {
-          if (!refSocket.current) {
-            throw new Error("socket is not connected");
-          }
-          refSocket.current.send(
-            JSON.stringify({
-              hello: "world",
-            })
-          );
-        }}
-      >
-        play
-      </button>
       <p></p>
     </div>
   );
