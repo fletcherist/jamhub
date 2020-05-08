@@ -194,8 +194,8 @@ const App: React.FC = () => {
       // piano.keyDown({ note: msg.note, velocity: 0.2 });
       // setTimeout(() => {
       //   piano.keyUp({ note: msg.note });
-      // }, 100);
-      synth.triggerAttackRelease(`${msg.note}`, "8n");
+      // }, 1000);
+      // synth.triggerAttackRelease(`${msg.note}`, "8n");
       console.log(event);
     };
     io.onopen = () => {
@@ -210,6 +210,10 @@ const App: React.FC = () => {
       if (!note) {
         return;
       }
+      // piano.keyDown({ note: note, velocity: 0.2 });
+      // setTimeout(() => {
+      //   piano.keyUp({ note: note });
+      // }, 100);
       refSocket.current?.send(
         JSON.stringify({
           note: note,
@@ -217,6 +221,33 @@ const App: React.FC = () => {
       );
     };
     document.addEventListener("keydown", handleKeydown);
+
+    (navigator as any).requestMIDIAccess().then(onMIDISuccess, onMIDIFailure);
+
+    function getMIDIMessage(midiMessage: any) {
+      console.log(midiMessage);
+      const [type, pitch, velocity] = midiMessage.data;
+      // note on
+      if (type === 144) {
+        synth.triggerAttackRelease(`C4`, "8n");
+        // refSocket.current?.send(
+        //   JSON.stringify({
+        //     note: "C4",
+        //   })
+        // );
+      }
+    }
+    function onMIDISuccess(midiAccess: any) {
+      console.log(midiAccess);
+      for (var input of midiAccess.inputs.values()) {
+        input.onmidimessage = getMIDIMessage;
+      }
+    }
+
+    function onMIDIFailure() {
+      console.log("Could not access your MIDI devices.");
+    }
+
     return () => {
       document.removeEventListener("keydown", handleKeydown);
     };
