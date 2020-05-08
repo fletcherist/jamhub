@@ -4,17 +4,17 @@ import * as Tone from "tone";
 import { User, Room } from "./lib";
 import css from "./App.module.css";
 
-import { Piano } from "@tonejs/piano";
+// import { Piano } from "@tonejs/piano";
 
-const piano = new Piano({
-  velocities: 5,
-});
+// const piano = new Piano({
+//   velocities: 5,
+// });
 
 //connect it to the speaker output
-piano.toDestination();
-piano.load().then(() => {
-  console.log("loaded!");
-});
+// piano.toDestination();
+// piano.load().then(() => {
+//   console.log("loaded!");
+// });
 
 export interface State {
   isMutedMicrophone: boolean;
@@ -87,17 +87,17 @@ export const useStore = (): Store => {
   return context as Store; // store is defined anyway
 };
 
-// const synth = new Tone.Synth({
-//   oscillator: {
-//     type: "sine",
-//   },
-//   envelope: {
-//     attack: 0.005,
-//     decay: 0.1,
-//     sustain: 0.3,
-//     release: 1,
-//   },
-// }).toMaster();
+const synth = new Tone.Synth({
+  oscillator: {
+    type: "sine",
+  },
+  envelope: {
+    attack: 0.005,
+    decay: 0.1,
+    sustain: 0.3,
+    release: 1,
+  },
+}).toMaster();
 // const synth = new Tone.MetalSynth().toMaster();
 // const synth = new Tone.MetalSynth().toMaster();
 
@@ -177,8 +177,8 @@ const mapKeyboardKeyToNote = (key: KeyboardNoteKey, octave: number): string => {
 const App: React.FC = () => {
   const refSocket = useRef<WebSocket>();
   useEffect(() => {
-    // refSocket.current = new WebSocket("ws://localhost:8080");
-    refSocket.current = new WebSocket("ws://cap.chat:8080");
+    refSocket.current = new WebSocket("ws://localhost:8080");
+    // refSocket.current = new WebSocket("ws://cap.chat:8080");
     return () => {
       refSocket.current?.close();
     };
@@ -193,11 +193,11 @@ const App: React.FC = () => {
       console.log(msg);
       await Tone.start();
 
-      piano.keyDown({ note: msg.note, velocity: 0.2 });
-      setTimeout(() => {
-        piano.keyUp({ note: msg.note });
-      }, 100);
-      // synth.triggerAttackRelease(`${msg.note}`, "8n");
+      // piano.keyDown({ note: msg.note, velocity: 0.2 });
+      // setTimeout(() => {
+      //   piano.keyUp({ note: msg.note });
+      // }, 100);
+      synth.triggerAttackRelease(`${msg.note}`, "8n");
       console.log(event);
     };
     io.onopen = () => {

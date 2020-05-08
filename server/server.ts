@@ -1,4 +1,7 @@
-import { serve } from "https://deno.land/std@v1.0.0-rc1/http/server.ts";
+import {
+  serve,
+  ServerRequest,
+} from "https://deno.land/std@v1.0.0-rc1/http/server.ts";
 import {
   acceptWebSocket,
   isWebSocketCloseEvent,
@@ -8,8 +11,6 @@ import {
 } from "https://deno.land/std@v1.0.0-rc1/ws/mod.ts";
 
 import { User, emojis } from "../src/lib.ts";
-
-const port = Deno.args[0] || "8080";
 
 interface UserServer extends User {
   sock: WebSocket;
@@ -43,8 +44,8 @@ const roomBroadcast = (room: Room, event: WebSocketMessage) => {
     user.sock.send(event);
   }
 };
-console.log(`websocket server is running on :${port}`);
-for await (const req of serve(`:${port}`)) {
+
+const handle = async (req: ServerRequest) => {
   const { conn, r: bufReader, w: bufWriter, headers, url } = req;
   try {
     const sock = await acceptWebSocket({
@@ -94,4 +95,10 @@ for await (const req of serve(`:${port}`)) {
     console.error(`failed to accept websocket: ${err}`);
     await req.respond({ status: 400 });
   }
+};
+
+const port = Deno.args[0] || "8080";
+console.log(`websocket server is running on :${port}`);
+for await (const req of serve(`:${port}`)) {
+  handle(req).catch(console.error);
 }
