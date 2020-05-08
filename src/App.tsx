@@ -4,6 +4,18 @@ import * as Tone from "tone";
 import { User, Room } from "./lib";
 import css from "./App.module.css";
 
+import { Piano } from "@tonejs/piano";
+
+const piano = new Piano({
+  velocities: 5,
+});
+
+//connect it to the speaker output
+piano.toDestination();
+piano.load().then(() => {
+  console.log("loaded!");
+});
+
 export interface State {
   isMutedMicrophone: boolean;
   isMutedSpeaker: boolean;
@@ -75,7 +87,19 @@ export const useStore = (): Store => {
   return context as Store; // store is defined anyway
 };
 
-const synth = new Tone.Synth().toMaster();
+// const synth = new Tone.Synth({
+//   oscillator: {
+//     type: "sine",
+//   },
+//   envelope: {
+//     attack: 0.005,
+//     decay: 0.1,
+//     sustain: 0.3,
+//     release: 1,
+//   },
+// }).toMaster();
+// const synth = new Tone.MetalSynth().toMaster();
+// const synth = new Tone.MetalSynth().toMaster();
 
 const assert = (expression: boolean, error: string): void => {
   if (!expression) {
@@ -167,8 +191,12 @@ const App: React.FC = () => {
       const msg = JSON.parse(event.data) as { note: KeyboardNotePitch };
       console.log(msg);
       await Tone.start();
-      console.log("audio is ready");
-      synth.triggerAttackRelease(`${msg.note}`, "8n");
+
+      piano.keyDown({ note: msg.note, velocity: 0.2 });
+      setTimeout(() => {
+        piano.keyUp({ note: msg.note });
+      }, 100);
+      // synth.triggerAttackRelease(`${msg.note}`, "8n");
       console.log(event);
     };
     io.onopen = () => {

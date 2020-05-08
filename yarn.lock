@@ -1391,6 +1391,13 @@
   resolved "https://registry.yarnpkg.com/@testing-library/user-event/-/user-event-7.2.1.tgz#2ad4e844175a3738cb9e7064be5ea070b8863a1c"
   integrity sha512-oZ0Ib5I4Z2pUEcoo95cT1cr6slco9WY7yiPpG+RGNkj8YcYgJnM7pXmYmorNOReh8MIGcKSqXyeGjxnr8YiZbA==
 
+"@tonejs/piano@0.2.1":
+  version "0.2.1"
+  resolved "https://registry.yarnpkg.com/@tonejs/piano/-/piano-0.2.1.tgz#48dcf653704d2355fddfc7bffeac81efacbae282"
+  integrity sha512-JIwZ91RSFR7Rt16o7cA7O7G30wenFl0lY5yhTsuwZmn48MO9KV+X7kyXE98Bqvs/dCBVg9PoAJ1GKMabPOW4yQ==
+  dependencies:
+    tslib "^1.11.1"
+
 "@types/babel__core@^7.1.0":
   version "7.1.6"
   resolved "https://registry.yarnpkg.com/@types/babel__core/-/babel__core-7.1.6.tgz#16ff42a5ae203c9af1c6e190ed1f30f83207b610"
@@ -10367,6 +10374,11 @@ webidl-conversions@^4.0.2:
   version "4.0.2"
   resolved "https://registry.yarnpkg.com/webidl-conversions/-/webidl-conversions-4.0.2.tgz#a855980b1f0b6b359ba1d5d9fb39ae941faa63ad"
   integrity sha512-YQ+BmxuTgd6UXZW3+ICGfyqRyHXVlD5GtQr5+qjiNW7bF0cqrzX500HVXPBOvgXb5YnzDd+h0zqyv61KUD7+Sg==
+
+webmidi@2.5.1:
+  version "2.5.1"
+  resolved "https://registry.yarnpkg.com/webmidi/-/webmidi-2.5.1.tgz#e98b0bb5356afb5112aaff7eaac23606cf0b71d0"
+  integrity sha512-rX9/vBBSnSZR04ZZcLWCe/ujOizH9f/Q9HX11+Zw+HHwOy7edUTbbC3Axc2RjoiDQ2W7RkK1tY4yv0nYSfUcJg==
 
 webpack-dev-middleware@^3.7.2:
   version "3.7.2"
