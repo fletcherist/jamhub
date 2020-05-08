@@ -191,8 +191,6 @@ const App: React.FC = () => {
     io.onmessage = async (event) => {
       const msg = JSON.parse(event.data) as { note: KeyboardNotePitch };
       console.log(msg);
-      await Tone.start();
-
       // piano.keyDown({ note: msg.note, velocity: 0.2 });
       // setTimeout(() => {
       //   piano.keyUp({ note: msg.note });
@@ -230,7 +228,14 @@ const App: React.FC = () => {
 
   return (
     <div className={css.container}>
-      <p></p>
+      <div
+        style={{ width: 200, height: 300, backgroundColor: "blue" }}
+        onClick={async () => {
+          await Tone.start();
+        }}
+      >
+        start
+      </div>
     </div>
   );
 };
