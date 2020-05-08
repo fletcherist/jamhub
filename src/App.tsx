@@ -97,7 +97,7 @@ const synth = new Tone.Synth({
     sustain: 0.3,
     release: 1,
   },
-}).toMaster();
+}).toDestination();
 // const synth = new Tone.MetalSynth().toMaster();
 // const synth = new Tone.MetalSynth().toMaster();
 
@@ -177,8 +177,8 @@ const mapKeyboardKeyToNote = (key: KeyboardNoteKey, octave: number): string => {
 const App: React.FC = () => {
   const refSocket = useRef<WebSocket>();
   useEffect(() => {
-    refSocket.current = new WebSocket("ws://localhost:8080");
-    // refSocket.current = new WebSocket("ws://cap.chat:8080");
+    // refSocket.current = new WebSocket("ws://localhost:8080");
+    refSocket.current = new WebSocket("ws://cap.chat:8080");
     return () => {
       refSocket.current?.close();
     };
