@@ -8,17 +8,24 @@ import { Subject, of } from "rxjs";
 import { mergeMap } from "rxjs/operators";
 // import { TransportEvent } from "./lib.ts";
 
-// import { Piano } from "@tonejs/piano";
+import { Piano } from "@tonejs/piano";
+import { Reverb } from "tone";
 
-// const piano = new Piano({
-//   velocities: 5,
-// });
+const piano = new Piano({
+  velocities: 5,
+});
 
 //connect it to the speaker output
-// piano.toDestination();
-// piano.load().then(() => {
-//   console.log("loaded!");
-// });
+const reverb = new Reverb({
+  decay: 5,
+  wet: 0.5,
+});
+
+piano.load().then(() => {
+  console.log("loaded!");
+});
+piano.connect(reverb);
+reverb.toDestination();
 
 export interface State {
   isMutedMicrophone: boolean;
@@ -160,7 +167,8 @@ const keybardToNoteMap = new Map<KeyboardNoteKey, KeyboardNotePitch>([
 ]);
 
 interface TransportEvent {
-  note: string;
+  // note: string;
+  midi: [number, number, number];
 }
 
 interface Transport {
@@ -175,11 +183,15 @@ interface Player {
 const createPlayer = (): Player => {
   return {
     send: (event: TransportEvent) => {
-      synth.triggerAttackRelease(event.note, "8n");
-      // piano.keyDown({ note: msg.note, velocity: 0.2 });
-      // setTimeout(() => {
-      //   piano.keyUp({ note: msg.note });
-      // }, 1000);
+      console.log("player", event, event.midi);
+      // synth.triggerAttackRelease("C4", "8n");
+      // synth.triggerAttackRelease(event.note, "8n");
+      const [type, pitch, velocity] = event.midi;
+      if (type === 144) {
+        piano.keyDown({ midi: pitch, velocity: velocity / 256 });
+      } else if (type === 128) {
+        piano.keyUp({ midi: pitch });
+      }
     },
   };
 };
@@ -214,7 +226,7 @@ const createWebSocketTransport = ({
       // send/receieve data pipelines
       const sendPipeline = send.pipe(
         mergeMap(async (event) => {
-          socket.send(JSON.stringify({ event }));
+          socket.send(JSON.stringify(event));
           return of(event);
         })
       );
@@ -231,6 +243,7 @@ const createWebSocketTransport = ({
       };
       socket.onmessage = async (msg) => {
         const event = JSON.parse(msg.data) as TransportEvent;
+        console.log("onmessage", event);
         receive.next(event);
       };
       return {
@@ -264,37 +277,42 @@ const mapKeyboardKeyToNote = (key: KeyboardNoteKey, octave: number): string => {
 };
 
 const App: React.FC = () => {
-  const refSocket = useRef<WebSocket>();
   const player = createPlayer();
-  const transport = createLocalTransport({ player });
-  // const transport = createWebSocketTransport({
-  //   player,
-  //   url: "ws://cap.chat:8080",
-  // });
-  // console.log("freq", Tone.Frequency(124, "midi"));
-  // console.log("freq", Tone.Midi(124));
+  // const transport = createLocalTransport({ player });
+  const transport = createWebSocketTransport({
+    player,
+    url: "ws://cap.chat:8080",
+  });
 
   useEffect(() => {
     const conn = transport.connect();
     return () => {
       conn.disconnect();
     };
-  }, [refSocket]);
+  }, []);
 
   useEffect(() => {
     const handleKeydown = (event: KeyboardEvent) => {
+      // console.log(event);
       const note = parseKeyboardKey(event.key, 4);
       if (!note) {
         return;
       }
-      transport.send({ note: note });
+      Tone.Frequency(note).toMidi();
+      transport.send({ midi: [144, Tone.Frequency(note).toMidi(), 127] });
     };
-    const handleMidiEvent = (midiEvent: any) => {
-      console.log(midiEvent);
+    const handleMidiEvent = (
+      midiEvent: Event & { data: [number, number, number] }
+    ) => {
       const [type, pitch, velocity] = midiEvent.data;
-      // note on
+      console.log(midiEvent.data);
+
       if (type === 144) {
-        transport.send({ note: Tone.Frequency(pitch, "midi").toNote() });
+        // note on
+        transport.send({ midi: [type, pitch, velocity] });
+      } else if (type === 128) {
+        // note off
+        transport.send({ midi: [type, pitch, velocity] });
       }
     };
     const tryAccessMidi = async (): Promise<void> => {
@@ -302,12 +320,12 @@ const App: React.FC = () => {
         if (typeof (navigator as any).requestMIDIAccess === "undefined") {
           throw new Error("midi is not supported");
         }
-        const midiAccess = (navigator as any).requestMIDIAccess();
+        const midiAccess = await (navigator as any).requestMIDIAccess();
         for (const midiInput of midiAccess.inputs.values()) {
           midiInput.onmidimessage = handleMidiEvent;
         }
       } catch (error) {
-        console.error("Could not access your MIDI devices.");
+        console.error("Could not access your MIDI devices.", error);
       }
     };
     tryAccessMidi();
@@ -315,7 +333,7 @@ const App: React.FC = () => {
     return () => {
       document.removeEventListener("keydown", handleKeydown);
     };
-  }, [refSocket]);
+  }, []);
 
   return (
     <div className={css.container}>
