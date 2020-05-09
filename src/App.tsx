@@ -175,7 +175,7 @@ interface Player {
 const createPlayer = (): Player => {
   return {
     send: (event: TransportEvent) => {
-      synth.triggerAttackRelease(`${event.note}`, "8n");
+      synth.triggerAttackRelease(event.note, "8n");
       // piano.keyDown({ note: msg.note, velocity: 0.2 });
       // setTimeout(() => {
       //   piano.keyUp({ note: msg.note });
@@ -271,6 +271,8 @@ const App: React.FC = () => {
   //   player,
   //   url: "ws://cap.chat:8080",
   // });
+  // console.log("freq", Tone.Frequency(124, "midi"));
+  // console.log("freq", Tone.Midi(124));
 
   useEffect(() => {
     const conn = transport.connect();
@@ -281,47 +283,38 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const handleKeydown = (event: KeyboardEvent) => {
-      // assert(keybardToNote.size === keybardToNote.size, 'error')
       const note = parseKeyboardKey(event.key, 4);
       if (!note) {
         return;
       }
       transport.send({ note: note });
     };
-    document.addEventListener("keydown", handleKeydown);
-    (navigator as any).requestMIDIAccess().then(onMIDISuccess, onMIDIFailure);
-
-    function getMIDIMessage(midiMessage: any) {
-      console.log(midiMessage);
-      const [type, pitch, velocity] = midiMessage.data;
+    const handleMidiEvent = (midiEvent: any) => {
+      console.log(midiEvent);
+      const [type, pitch, velocity] = midiEvent.data;
       // note on
       if (type === 144) {
-        synth.triggerAttackRelease(`C4`, "8n");
-        // refSocket.current?.send(
-        //   JSON.stringify({
-        //     note: "C4",
-        //   })
-        // );
+        transport.send({ note: Tone.Frequency(pitch, "midi").toNote() });
       }
-    }
-    function onMIDISuccess(midiAccess: any) {
-      console.log(midiAccess);
-      for (const midiInput of midiAccess.inputs.values()) {
-        midiInput.onmidimessage = getMIDIMessage;
+    };
+    const tryAccessMidi = async (): Promise<void> => {
+      try {
+        if (typeof (navigator as any).requestMIDIAccess === "undefined") {
+          throw new Error("midi is not supported");
+        }
+        const midiAccess = (navigator as any).requestMIDIAccess();
+        for (const midiInput of midiAccess.inputs.values()) {
+          midiInput.onmidimessage = handleMidiEvent;
+        }
+      } catch (error) {
+        console.error("Could not access your MIDI devices.");
       }
-    }
-
-    function onMIDIFailure() {
-      console.log("Could not access your MIDI devices.");
-    }
-
+    };
+    tryAccessMidi();
+    document.addEventListener("keydown", handleKeydown);
     return () => {
       document.removeEventListener("keydown", handleKeydown);
     };
-    // if (typeof (navigator as any).requestMIDIAccess === "undefined") {
-    //   alert("midi is not supported");
-    //   return;
-    // }
   }, [refSocket]);
 
   return (
