@@ -4,6 +4,10 @@ import * as Tone from "tone";
 import { User, Room } from "./lib";
 import css from "./App.module.css";
 
+import { Subject, of } from "rxjs";
+import { mergeMap } from "rxjs/operators";
+// import { TransportEvent } from "./lib.ts";
+
 // import { Piano } from "@tonejs/piano";
 
 // const piano = new Piano({
@@ -155,6 +159,85 @@ const keybardToNoteMap = new Map<KeyboardNoteKey, KeyboardNotePitch>([
   ["l", "D8"], // 1 octave higher than D
 ]);
 
+interface TransportEvent {
+  note: string;
+}
+
+interface Transport {
+  send: (event: TransportEvent) => void;
+  connect: () => { disconnect: () => void };
+}
+
+interface Player {
+  send: (event: TransportEvent) => void;
+}
+
+const createPlayer = (): Player => {
+  return {
+    send: (event: TransportEvent) => {
+      synth.triggerAttackRelease(`${event.note}`, "8n");
+    },
+  };
+};
+
+const createLocalTransport = ({ player }: { player: Player }): Transport => {
+  const stream = new Subject<TransportEvent>();
+  stream.subscribe((event) => player.send(event));
+  return {
+    send: (event: TransportEvent) => {
+      stream.next(event);
+    },
+    connect: () => {
+      return { disconnect: () => {} };
+    },
+  };
+};
+const createNetworkTransport = ({
+  url,
+  player,
+}: {
+  url: string;
+  player: Player;
+}): Transport => {
+  const sendChannel = new Subject<TransportEvent>();
+  const receiveChannel = new Subject<TransportEvent>();
+  return {
+    send: (event: TransportEvent) => {
+      sendChannel.next(event);
+    },
+    connect: () => {
+      const socket = new WebSocket(url);
+      socket.onmessage = async (msg) => {
+        const event = JSON.parse(msg.data) as TransportEvent;
+        receiveChannel.next(event);
+      };
+      sendChannel
+        .pipe(
+          mergeMap(async (event) => {
+            socket.send(JSON.stringify({ event }));
+            return of(event);
+          })
+        )
+        .subscribe();
+      receiveChannel
+        .pipe(
+          mergeMap((event) => {
+            player.send(event);
+            return of(event);
+          })
+        )
+        .subscribe();
+      return {
+        disconnect: () => {
+          socket.close();
+          sendChannel.unsubscribe();
+          receiveChannel.unsubscribe();
+        },
+      };
+    },
+  };
+};
+
 const selectKeyboardKeyOctave = (
   key: KeyboardNotePitch,
   octave: number
@@ -176,6 +259,9 @@ const mapKeyboardKeyToNote = (key: KeyboardNoteKey, octave: number): string => {
 
 const App: React.FC = () => {
   const refSocket = useRef<WebSocket>();
+  const player = createPlayer();
+  const transport = createLocalTransport({ player });
+
   useEffect(() => {
     // refSocket.current = new WebSocket("ws://localhost:8080");
     refSocket.current = new WebSocket("ws://cap.chat:8080");
@@ -189,13 +275,12 @@ const App: React.FC = () => {
     }
     const io = refSocket.current;
     io.onmessage = async (event) => {
-      const msg = JSON.parse(event.data) as { note: KeyboardNotePitch };
+      const msg = JSON.parse(event.data) as TransportEvent;
       console.log(msg);
       // piano.keyDown({ note: msg.note, velocity: 0.2 });
       // setTimeout(() => {
       //   piano.keyUp({ note: msg.note });
       // }, 1000);
-      // synth.triggerAttackRelease(`${msg.note}`, "8n");
       console.log(event);
     };
     io.onopen = () => {
@@ -214,14 +299,9 @@ const App: React.FC = () => {
       // setTimeout(() => {
       //   piano.keyUp({ note: note });
       // }, 100);
-      refSocket.current?.send(
-        JSON.stringify({
-          note: note,
-        })
-      );
+      transport.send({ note: note });
     };
     document.addEventListener("keydown", handleKeydown);
-
     (navigator as any).requestMIDIAccess().then(onMIDISuccess, onMIDIFailure);
 
     function getMIDIMessage(midiMessage: any) {
@@ -239,8 +319,8 @@ const App: React.FC = () => {
     }
     function onMIDISuccess(midiAccess: any) {
       console.log(midiAccess);
-      for (var input of midiAccess.inputs.values()) {
-        input.onmidimessage = getMIDIMessage;
+      for (const midiInput of midiAccess.inputs.values()) {
+        midiInput.onmidimessage = getMIDIMessage;
       }
     }
 

@@ -16,7 +16,8 @@
     "typescript": "~3.7.2",
     "tone": "next",
     "@tonejs/piano": "0.2.1",
-    "webmidi": "2.5.1"
+    "webmidi": "2.5.1",
+    "rxjs": "6.5.5"
   },
   "scripts": {
     "start": "react-scripts start",
