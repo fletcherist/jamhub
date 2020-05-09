@@ -176,6 +176,10 @@ const createPlayer = (): Player => {
   return {
     send: (event: TransportEvent) => {
       synth.triggerAttackRelease(`${event.note}`, "8n");
+      // piano.keyDown({ note: msg.note, velocity: 0.2 });
+      // setTimeout(() => {
+      //   piano.keyUp({ note: msg.note });
+      // }, 1000);
     },
   };
 };
@@ -192,46 +196,48 @@ const createLocalTransport = ({ player }: { player: Player }): Transport => {
     },
   };
 };
-const createNetworkTransport = ({
+const createWebSocketTransport = ({
   url,
   player,
 }: {
   url: string;
   player: Player;
 }): Transport => {
-  const sendChannel = new Subject<TransportEvent>();
-  const receiveChannel = new Subject<TransportEvent>();
+  const send = new Subject<TransportEvent>();
+  const receive = new Subject<TransportEvent>();
   return {
     send: (event: TransportEvent) => {
-      sendChannel.next(event);
+      send.next(event);
     },
     connect: () => {
       const socket = new WebSocket(url);
+      // send/receieve data pipelines
+      const sendPipeline = send.pipe(
+        mergeMap(async (event) => {
+          socket.send(JSON.stringify({ event }));
+          return of(event);
+        })
+      );
+      const receivePipeline = receive.pipe(
+        mergeMap((event) => {
+          player.send(event);
+          return of(event);
+        })
+      );
+
+      socket.onopen = () => {
+        sendPipeline.subscribe();
+        receivePipeline.subscribe();
+      };
       socket.onmessage = async (msg) => {
         const event = JSON.parse(msg.data) as TransportEvent;
-        receiveChannel.next(event);
+        receive.next(event);
       };
-      sendChannel
-        .pipe(
-          mergeMap(async (event) => {
-            socket.send(JSON.stringify({ event }));
-            return of(event);
-          })
-        )
-        .subscribe();
-      receiveChannel
-        .pipe(
-          mergeMap((event) => {
-            player.send(event);
-            return of(event);
-          })
-        )
-        .subscribe();
       return {
         disconnect: () => {
           socket.close();
-          sendChannel.unsubscribe();
-          receiveChannel.unsubscribe();
+          send.complete();
+          receive.complete();
         },
       };
     },
@@ -261,30 +267,15 @@ const App: React.FC = () => {
   const refSocket = useRef<WebSocket>();
   const player = createPlayer();
   const transport = createLocalTransport({ player });
+  // const transport = createWebSocketTransport({
+  //   player,
+  //   url: "ws://cap.chat:8080",
+  // });
 
   useEffect(() => {
-    // refSocket.current = new WebSocket("ws://localhost:8080");
-    refSocket.current = new WebSocket("ws://cap.chat:8080");
+    const conn = transport.connect();
     return () => {
-      refSocket.current?.close();
-    };
-  }, []);
-  useEffect(() => {
-    if (!refSocket.current) {
-      return;
-    }
-    const io = refSocket.current;
-    io.onmessage = async (event) => {
-      const msg = JSON.parse(event.data) as TransportEvent;
-      console.log(msg);
-      // piano.keyDown({ note: msg.note, velocity: 0.2 });
-      // setTimeout(() => {
-      //   piano.keyUp({ note: msg.note });
-      // }, 1000);
-      console.log(event);
-    };
-    io.onopen = () => {
-      console.log("connect");
+      conn.disconnect();
     };
   }, [refSocket]);
 
@@ -295,10 +286,6 @@ const App: React.FC = () => {
       if (!note) {
         return;
       }
-      // piano.keyDown({ note: note, velocity: 0.2 });
-      // setTimeout(() => {
-      //   piano.keyUp({ note: note });
-      // }, 100);
       transport.send({ note: note });
     };
     document.addEventListener("keydown", handleKeydown);
