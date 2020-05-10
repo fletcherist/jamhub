@@ -1,14 +1,11 @@
-import {
-  serve,
-  ServerRequest,
-} from "https://deno.land/std@v1.0.0-rc1/http/server.ts";
+import { serve, ServerRequest } from "https://deno.land/std/http/server.ts";
 import {
   acceptWebSocket,
   isWebSocketCloseEvent,
   isWebSocketPingEvent,
   WebSocket,
   WebSocketMessage,
-} from "https://deno.land/std@v1.0.0-rc1/ws/mod.ts";
+} from "https://deno.land/std/ws/mod.ts";
 
 import { User, emojis } from "../src/lib.ts";
 
