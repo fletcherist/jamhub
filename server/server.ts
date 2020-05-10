@@ -57,8 +57,12 @@ const handle = async (req: ServerRequest) => {
       id: String(Date.now()),
     };
     const room = getOrCreateRoom(url);
-    roomAddUser(room, user);
-    console.log("socket connected!");
+
+    const join = () => roomAddUser(room, user);
+    const leave = () => roomRemoveUser(room, user);
+
+    join();
+    console.log("socket connected!", user.emoji, room.users.length);
     const listenEvents = async () => {
       try {
         for await (const ev of sock) {
@@ -77,11 +81,16 @@ const handle = async (req: ServerRequest) => {
             // close
             const { code, reason } = ev;
             console.log("ws:Close", code, reason);
+            leave();
           }
         }
       } catch (err) {
-        console.error(`failed to receive frame: ${err}`);
-        roomRemoveUser(room, user);
+        console.error(
+          `failed to receive frame: ${err}`,
+          user.emoji,
+          room.users.length,
+        );
+        leave();
         if (!sock.isClosed) {
           await sock.close(1000).catch(console.error);
         }
