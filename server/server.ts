@@ -6,6 +6,7 @@ import {
   WebSocket,
   WebSocketMessage,
 } from "https://deno.land/std/ws/mod.ts";
+// import { blue, green, red, yellow } from "https://deno.land/std/fmt/colors.ts";
 
 import { User, emojis } from "../src/lib.ts";
 
@@ -37,6 +38,7 @@ const roomRemoveUser = (room: Room, user: UserServer): void => {
   room.users = room.users.filter((u) => u.id !== user.id);
 };
 const roomBroadcast = (room: Room, event: WebSocketMessage) => {
+  console.log("broadcasting to: ", room.users.length, "users");
   for (const user of room.users) {
     user.sock.send(event);
   }
@@ -82,13 +84,14 @@ const handle = async (req: ServerRequest) => {
             const { code, reason } = ev;
             console.log("ws:Close", code, reason);
             leave();
+            break;
           }
         }
       } catch (err) {
         console.error(
           `failed to receive frame: ${err}`,
           user.emoji,
-          room.users.length,
+          room.users.length
         );
         leave();
         if (!sock.isClosed) {
