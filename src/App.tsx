@@ -295,8 +295,8 @@ const App: React.FC = () => {
   // const transport = createLocalTransport({ player });
   const transport = createWebSocketTransport({
     player,
-    // url: `wss://api.jambox.online${window.location.pathname}`,
-    url: "ws://localhost:8080/123",
+    url: `wss://api.jambox.online${window.location.pathname}`,
+    // url: "ws://localhost:8080/123",
   });
   const [transportStatus, setTransportStatus] = useState<TransportStatus>(
     "disconnected"
