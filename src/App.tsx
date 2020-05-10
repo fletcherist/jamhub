@@ -304,6 +304,7 @@ const App: React.FC = () => {
   const [pianoStatus, setPianoStatus] = useState<
     "not loaded" | "loading" | "ready"
   >("not loaded");
+  const octave = useRef<number>(4);
 
   useEffect(() => {
     setPianoStatus("loading");
@@ -335,8 +336,22 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const handleKeydown = (event: KeyboardEvent) => {
+      if (event.key === "z") {
+        if (octave.current === -1) {
+          return;
+        }
+        octave.current = octave.current - 1;
+        return;
+      }
+      if (event.key === "x") {
+        if (octave.current === 9) {
+          return;
+        }
+        octave.current = octave.current + 1;
+        return;
+      }
       // console.log(event);
-      const note = parseKeyboardKey(event.key, 4);
+      const note = parseKeyboardKey(event.key, octave.current);
       if (!note) {
         return;
       }
@@ -378,7 +393,7 @@ const App: React.FC = () => {
     return () => {
       document.removeEventListener("keydown", handleKeydown);
     };
-  }, []);
+  }, [octave]);
 
   return (
     <div className={css.container}>
