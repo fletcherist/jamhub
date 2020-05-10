@@ -4,7 +4,7 @@ import * as Tone from "tone";
 import { User, Room } from "./lib";
 import css from "./App.module.css";
 
-import { Subject, of } from "rxjs";
+import { Subject, of, Observable } from "rxjs";
 import { mergeMap } from "rxjs/operators";
 // import { TransportEvent } from "./lib.ts";
 
@@ -21,9 +21,6 @@ const reverb = new Reverb({
   wet: 0.5,
 });
 
-piano.load().then(() => {
-  console.log("loaded!");
-});
 piano.connect(reverb);
 reverb.toDestination();
 
@@ -171,9 +168,11 @@ interface TransportEvent {
   midi: [number, number, number];
 }
 
+type TransportStatus = "disconnected" | "connecting" | "connected";
 interface Transport {
   send: (event: TransportEvent) => void;
   connect: () => { disconnect: () => void };
+  events: Observable<TransportStatus>;
 }
 
 interface Player {
@@ -198,16 +197,24 @@ const createPlayer = (): Player => {
 
 const createLocalTransport = ({ player }: { player: Player }): Transport => {
   const stream = new Subject<TransportEvent>();
+  const events = new Subject<TransportStatus>();
   stream.subscribe((event) => player.send(event));
   return {
     send: (event: TransportEvent) => {
       stream.next(event);
     },
     connect: () => {
-      return { disconnect: () => {} };
+      events.next("connected");
+      return {
+        disconnect: () => {
+          events.next("disconnected");
+        },
+      };
     },
+    events: events.asObservable(),
   };
 };
+
 const createWebSocketTransport = ({
   url,
   player,
@@ -217,11 +224,13 @@ const createWebSocketTransport = ({
 }): Transport => {
   const send = new Subject<TransportEvent>();
   const receive = new Subject<TransportEvent>();
+  const events = new Subject<TransportStatus>();
   return {
     send: (event: TransportEvent) => {
       send.next(event);
     },
     connect: () => {
+      events.next("connecting");
       const socket = new WebSocket(url);
       // send/receieve data pipelines
       const sendPipeline = send.pipe(
@@ -240,6 +249,10 @@ const createWebSocketTransport = ({
       socket.onopen = () => {
         sendPipeline.subscribe();
         receivePipeline.subscribe();
+        events.next("connected");
+      };
+      socket.onclose = () => {
+        events.next("disconnected");
       };
       socket.onmessage = async (msg) => {
         const event = JSON.parse(msg.data) as TransportEvent;
@@ -254,6 +267,7 @@ const createWebSocketTransport = ({
         },
       };
     },
+    events: events.asObservable(),
   };
 };
 
@@ -281,9 +295,36 @@ const App: React.FC = () => {
   // const transport = createLocalTransport({ player });
   const transport = createWebSocketTransport({
     player,
-    url: `wss://api.jambox.online${window.location.pathname}`,
-    // url: "ws://localhost:8080/123",
+    // url: `wss://api.jambox.online${window.location.pathname}`,
+    url: "ws://localhost:8080/123",
   });
+  const [transportStatus, setTransportStatus] = useState<TransportStatus>(
+    "disconnected"
+  );
+  const [pianoStatus, setPianoStatus] = useState<
+    "not loaded" | "loading" | "ready"
+  >("not loaded");
+
+  useEffect(() => {
+    setPianoStatus("loading");
+    piano.load().then(() => {
+      setPianoStatus("ready");
+      console.log("loaded!");
+    });
+
+    const listener = transport.events
+      .pipe(
+        mergeMap((event) => {
+          console.log(event);
+          setTransportStatus(event);
+          return of(event);
+        })
+      )
+      .subscribe();
+    return () => {
+      listener.unsubscribe();
+    };
+  }, []);
 
   useEffect(() => {
     const conn = transport.connect();
@@ -341,14 +382,16 @@ const App: React.FC = () => {
 
   return (
     <div className={css.container}>
-      <div
+      <button
         style={{ width: 200, height: 300, backgroundColor: "blue" }}
         onClick={async () => {
           await Tone.start();
         }}
       >
         start
-      </div>
+      </button>
+      <div>transport: {transportStatus}</div>
+      <div>piano: {pianoStatus}</div>
     </div>
   );
 };
