@@ -281,7 +281,8 @@ const App: React.FC = () => {
   // const transport = createLocalTransport({ player });
   const transport = createWebSocketTransport({
     player,
-    url: "ws://cap.chat:8080",
+    url: `wss://api.jambox.online${window.location.pathname}`,
+    // url: "ws://localhost:8080/123",
   });
 
   useEffect(() => {
@@ -298,8 +299,11 @@ const App: React.FC = () => {
       if (!note) {
         return;
       }
-      Tone.Frequency(note).toMidi();
-      transport.send({ midi: [144, Tone.Frequency(note).toMidi(), 127] });
+      const pitch = Tone.Frequency(note).toMidi();
+      transport.send({ midi: [144, pitch, 30] });
+      setTimeout(() => {
+        transport.send({ midi: [128, pitch, 64] });
+      }, 500);
     };
     const handleMidiEvent = (
       midiEvent: Event & { data: [number, number, number] }
