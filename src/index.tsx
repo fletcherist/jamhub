@@ -4,6 +4,10 @@ import "./index.css";
 import App from "./App";
 import * as serviceWorker from "./serviceWorker";
 
+const Keyboard: React.FC = () => {
+  return <div>hello </div>;
+};
+
 ReactDOM.render(
   <React.StrictMode>
     <App />

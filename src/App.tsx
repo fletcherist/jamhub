@@ -11,18 +11,29 @@ import { mergeMap } from "rxjs/operators";
 import { Piano } from "@tonejs/piano";
 import { Reverb } from "tone";
 
-const piano = new Piano({
-  velocities: 5,
-});
+// const piano = new Piano({
+//   velocities: 5,
+// });
 
-//connect it to the speaker output
-const reverb = new Reverb({
-  decay: 5,
-  wet: 0.5,
-});
+// //connect it to the speaker output
+// const reverb = new Reverb({
+//   decay: 5,
+//   wet: 0.5,
+// });
 
-piano.connect(reverb);
-reverb.toDestination();
+// piano.connect(reverb);
+// reverb.toDestination();
+const synth = new Tone.Synth({
+  oscillator: {
+    type: "sine",
+  },
+  envelope: {
+    attack: 0.005,
+    decay: 0.1,
+    sustain: 0.3,
+    release: 1,
+  },
+}).toDestination();
 
 export interface State {
   isMutedMicrophone: boolean;
@@ -94,20 +105,6 @@ export const useStore = (): Store => {
   const context = useContext(StoreContext);
   return context as Store; // store is defined anyway
 };
-
-const synth = new Tone.Synth({
-  oscillator: {
-    type: "sine",
-  },
-  envelope: {
-    attack: 0.005,
-    decay: 0.1,
-    sustain: 0.3,
-    release: 1,
-  },
-}).toDestination();
-// const synth = new Tone.MetalSynth().toMaster();
-// const synth = new Tone.MetalSynth().toMaster();
 
 const assert = (expression: boolean, error: string): void => {
   if (!expression) {
@@ -186,11 +183,19 @@ const createPlayer = (): Player => {
       // synth.triggerAttackRelease("C4", "8n");
       // synth.triggerAttackRelease(event.note, "8n");
       const [type, pitch, velocity] = event.midi;
+
       if (type === 144) {
-        piano.keyDown({ midi: pitch, velocity: velocity / 256 });
-      } else if (type === 128) {
-        piano.keyUp({ midi: pitch });
+        synth.triggerAttackRelease(
+          Tone.Frequency(pitch, "midi").toNote(),
+          "16n"
+        );
       }
+
+      // if (type === 144) {
+      //   piano.keyDown({ midi: pitch, velocity: velocity / 256 });
+      // } else if (type === 128) {
+      //   piano.keyUp({ midi: pitch });
+      // }
     },
   };
 };
@@ -292,12 +297,12 @@ const mapKeyboardKeyToNote = (key: KeyboardNoteKey, octave: number): string => {
 
 const App: React.FC = () => {
   const player = createPlayer();
-  // const transport = createLocalTransport({ player });
-  const transport = createWebSocketTransport({
-    player,
-    url: `wss://api.jambox.online${window.location.pathname}`,
-    // url: "ws://localhost:8080/123",
-  });
+  const transport = createLocalTransport({ player });
+  // const transport = createWebSocketTransport({
+  //   player,
+  //   url: `wss://api.jambox.online${window.location.pathname}`,
+  //   // url: "ws://localhost:8080/123",
+  // });
   const [transportStatus, setTransportStatus] = useState<TransportStatus>(
     "disconnected"
   );
@@ -308,10 +313,10 @@ const App: React.FC = () => {
 
   useEffect(() => {
     setPianoStatus("loading");
-    piano.load().then(() => {
-      setPianoStatus("ready");
-      console.log("loaded!");
-    });
+    // piano.load().then(() => {
+    //   setPianoStatus("ready");
+    //   console.log("loaded!");
+    // });
 
     const listener = transport.events
       .pipe(
@@ -395,6 +400,15 @@ const App: React.FC = () => {
     };
   }, [octave]);
 
+  // useEffect(() => {
+  //   setInterval(() => {
+  //     console.log("tick");
+  //     transport.send({ midi: [144, 108, 0.2] });
+  //     transport.send({ midi: [128, 108, 0.2] });
+  //     // 666.6666
+  //   }, 666.6666);
+  // }, []);
+
   return (
     <div className={css.container}>
       <button
@@ -407,6 +421,7 @@ const App: React.FC = () => {
       </button>
       <div>transport: {transportStatus}</div>
       <div>piano: {pianoStatus}</div>
+      <div>v0.0.1</div>
     </div>
   );
 };
