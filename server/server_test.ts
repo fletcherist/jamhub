@@ -18,7 +18,7 @@ const endpoint = `ws://localhost:${port}`;
 const createServer = () => server(port);
 const connectServer = () => connectWebSocket(endpoint);
 
-const queue = (
+const createQueue = (
   sock: WebSocket
 ): {
   receive: () => Promise<WebSocketEvent>;
@@ -31,17 +31,7 @@ const queue = (
       if (listener) {
         listener(msg);
       }
-      if (typeof msg === "string") {
-        console.log(yellow(`< ${msg}`));
-      } else if (isWebSocketPingEvent(msg)) {
-        console.log(blue("< ping"));
-      } else if (isWebSocketPongEvent(msg)) {
-        console.log(blue("< pong"));
-      } else if (isWebSocketCloseEvent(msg)) {
-        console.log(red(`closed: code=${msg.code}, reason=${msg.reason}`));
-      }
     }
-    console.log("here");
   };
 
   listenSocket();
@@ -77,21 +67,48 @@ const range = (start: number, end: number): number[] => {
 Deno.test({
   name: "1 connection",
   fn: async () => {
-    const { listen, server } = createServer();
-    listen();
+    const server = createServer();
+    server.listen();
     for (const _ of range(0, 1).reverse()) {
       const sock = await connectServer();
-      const { request } = queue(sock);
+      const queue = createQueue(sock);
 
       for (const iter of range(0, 10).reverse()) {
         const payload = "ping";
-        const res = await request(payload);
+        const res = await queue.request(payload);
         assertEquals(res, payload);
       }
 
       await sock.close();
     }
     await delay(1000);
+    server.close();
+  },
+});
+
+Deno.test({
+  name: "broadcast to many connections",
+  fn: async () => {
+    const server = createServer();
+    server.listen();
+    const clients = await Promise.all(range(1, 100).map(() => connectServer()));
+    const queues = clients.map(createQueue);
+
+    const payload = "test";
+    for (const client of clients) {
+      const receivePromises = queues.map((queue) => queue.receive());
+      receivePromises.forEach((promise) => {
+        promise.then((res) => {
+          assertEquals(res, payload);
+        });
+      });
+      await client.send(payload);
+      await delay(100);
+      await client.close();
+    }
+    await delay(100);
+    // await Promise.all(clients.map((client) => client.close()));
+    await delay(100);
     server.close();
   },
 });

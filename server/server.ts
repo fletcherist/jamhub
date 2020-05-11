@@ -1,8 +1,4 @@
-import {
-  serve,
-  ServerRequest,
-  Server,
-} from "https://deno.land/std/http/server.ts";
+import { serve, ServerRequest } from "https://deno.land/std/http/server.ts";
 import {
   acceptWebSocket,
   isWebSocketCloseEvent,
@@ -19,14 +15,16 @@ interface UserServer extends User {
 }
 interface Room {
   users: UserServer[];
+  id: string;
 }
 const roomsMap = new Map<string, Room>();
 const createRoom = (id: string): Room => {
   return {
     users: [],
+    id,
   };
 };
-const getOrCreateRoom = (id: string): Room => {
+const roomGetOrCreate = (id: string): Room => {
   const room = roomsMap.get(id);
   if (!room) {
     const newRoom = createRoom(id);
@@ -35,13 +33,25 @@ const getOrCreateRoom = (id: string): Room => {
   }
   return room;
 };
-const roomAddUser = (room: Room, user: UserServer): void => {
-  room.users = [...room.users, user];
+
+const updateRoom = (id: string, room: Partial<Room>): void => {
+  const roomPrev = roomGetOrCreate(id);
+  const updated: Room = { ...roomPrev, ...room };
+  roomsMap.set(id, updated);
 };
-const roomRemoveUser = (room: Room, user: UserServer): void => {
-  room.users = room.users.filter((u) => u.id !== user.id);
+
+const roomAddUser = (id: string, user: UserServer): void => {
+  const room = roomGetOrCreate(id);
+  return updateRoom(id, { users: [...room.users, user] });
 };
-const roomBroadcast = (room: Room, event: WebSocketMessage) => {
+const roomRemoveUser = (id: string, user: UserServer): void => {
+  const room = roomGetOrCreate(id);
+  return updateRoom(id, {
+    users: room.users.filter((u) => u.id !== user.id),
+  });
+};
+const roomBroadcast = (id: string, event: WebSocketMessage) => {
+  const room = roomGetOrCreate(id);
   console.log("broadcasting to: ", room.users.length, "users");
   for (const user of room.users) {
     user.sock.send(event);
@@ -60,12 +70,14 @@ const handle = async (req: ServerRequest) => {
     const user: UserServer = {
       sock: sock,
       emoji: emojis[Math.floor(Math.random() * emojis.length)],
-      id: String(Date.now()),
+      id: `${Date.now()}${Math.floor(Math.random() * 1000000)}`,
     };
-    const room = getOrCreateRoom(url);
 
-    const join = () => roomAddUser(room, user);
-    const leave = () => roomRemoveUser(room, user);
+    const room = roomGetOrCreate(url);
+    const roomId = room.id;
+
+    const join = () => roomAddUser(roomId, user);
+    const leave = () => roomRemoveUser(roomId, user);
 
     join();
     console.log("socket connected!", user.emoji, room.users.length);
@@ -75,7 +87,7 @@ const handle = async (req: ServerRequest) => {
           if (typeof ev === "string") {
             // text message
             console.log("ws:Text", ev);
-            roomBroadcast(room, ev);
+            roomBroadcast(room.id, ev);
           } else if (ev instanceof Uint8Array) {
             // binary message
             console.log("ws:Binary", ev);
@@ -113,7 +125,7 @@ const handle = async (req: ServerRequest) => {
 export const server = (
   port: number
 ): {
-  server: Server;
+  close: () => void;
   listen: () => Promise<void>;
 } => {
   const s = serve({ port });
@@ -123,5 +135,5 @@ export const server = (
       handle(req).catch(console.error);
     }
   };
-  return { server: s, listen };
+  return { close: () => s.close(), listen };
 };
