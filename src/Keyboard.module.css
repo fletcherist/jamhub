@@ -1,0 +1,44 @@
+.container {
+  display: flex;
+  justify-content: center;
+
+  --width: 50px;
+  --height: calc(var(--width) * 2);
+  --width-black: calc(var(--width) * 0.8);
+  --height-black: calc(var(--height) * 0.5);
+}
+
+.white,
+.black {
+  box-sizing: border-box;
+  outline-width: 0;
+  padding: 0;
+}
+.white {
+  border: 1px solid black;
+  height: var(--height);
+  width: var(--width);
+}
+.white:active {
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+.whiteWithBlack {
+  position: relative;
+}
+
+.black {
+  position: absolute;
+  width: var(--width-black);
+  height: var(--height-black);
+  background-color: black;
+  top: 0;
+  left: 50%;
+  outline-width: 0;
+  border-width: 0;
+  z-index: 9;
+  padding: 0;
+}
+.black:active {
+  background-color: rgba(0, 0, 0, 0.9);
+}
