@@ -1,4 +1,8 @@
-import { serve, ServerRequest } from "https://deno.land/std/http/server.ts";
+import {
+  serve,
+  ServerRequest,
+  Server,
+} from "https://deno.land/std/http/server.ts";
 import {
   acceptWebSocket,
   isWebSocketCloseEvent,
@@ -91,7 +95,7 @@ const handle = async (req: ServerRequest) => {
         console.error(
           `failed to receive frame: ${err}`,
           user.emoji,
-          room.users.length,
+          room.users.length
         );
         leave();
         if (!sock.isClosed) {
@@ -106,10 +110,18 @@ const handle = async (req: ServerRequest) => {
   }
 };
 
-export const run = async (port: number) => {
-  console.log(`websocket server is running on :${port}`);
+export const server = (
+  port: number
+): {
+  server: Server;
+  listen: () => Promise<void>;
+} => {
   const s = serve({ port });
-  for await (const req of s) {
-    handle(req).catch(console.error);
-  }
+  console.log(`websocket server is running on :${port}`);
+  const listen = async (): Promise<void> => {
+    for await (const req of s) {
+      handle(req).catch(console.error);
+    }
+  };
+  return { server: s, listen };
 };
