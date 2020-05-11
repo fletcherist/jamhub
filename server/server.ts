@@ -6,7 +6,7 @@ import {
   WebSocket,
   WebSocketMessage,
 } from "https://deno.land/std/ws/mod.ts";
-// import { blue, green, red, yellow } from "https://deno.land/std/fmt/colors.ts";
+import { blue, green, red, yellow } from "https://deno.land/std/fmt/colors.ts";
 
 import { User, emojis } from "../src/lib.ts";
 
@@ -52,7 +52,13 @@ const roomRemoveUser = (id: string, user: UserServer): void => {
 };
 const roomBroadcast = (id: string, event: WebSocketMessage) => {
   const room = roomGetOrCreate(id);
-  console.log("broadcasting to: ", room.users.length, "users");
+  console.log(
+    blue(room.id),
+    green(">"),
+    `"${event}" to`,
+    room.users.length,
+    "users"
+  );
   for (const user of room.users) {
     user.sock.send(event);
   }
@@ -78,15 +84,18 @@ const handle = async (req: ServerRequest) => {
 
     const join = () => roomAddUser(roomId, user);
     const leave = () => roomRemoveUser(roomId, user);
+    const log = (...args: unknown[]) => {
+      console.log(blue(room.id), ...args);
+    };
 
     join();
-    console.log("socket connected!", user.emoji, room.users.length);
+    log(green("user connected"), user.emoji, room.users.length);
     const listenEvents = async () => {
       try {
         for await (const ev of sock) {
           if (typeof ev === "string") {
             // text message
-            console.log("ws:Text", ev);
+            log(red("<"), `"${ev}"`);
             roomBroadcast(room.id, ev);
           } else if (ev instanceof Uint8Array) {
             // binary message
@@ -98,9 +107,9 @@ const handle = async (req: ServerRequest) => {
           } else if (isWebSocketCloseEvent(ev)) {
             // close
             const { code, reason } = ev;
-            console.log("ws:Close", code, reason);
             leave();
-            break;
+            log(red("user disconnected"));
+            return;
           }
         }
       } catch (err) {
