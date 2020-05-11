@@ -10,11 +10,7 @@ ReactDOM.render(
   <React.StrictMode>
     <div style={{ height: "100vh" }}>
       <Center>
-        <Keyboard
-          onMIDIEvent={(event) => {
-            console.log(event);
-          }}
-        />
+        <App />
       </Center>
     </div>
   </React.StrictMode>,

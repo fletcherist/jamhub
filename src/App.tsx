@@ -11,6 +11,8 @@ import { mergeMap } from "rxjs/operators";
 import { Piano } from "@tonejs/piano";
 import { Reverb } from "tone";
 
+import { Keyboard } from "./Keyboard";
+
 // const piano = new Piano({
 //   velocities: 5,
 // });
@@ -110,6 +112,13 @@ const assert = (expression: boolean, error: string): void => {
   if (!expression) {
     throw new Error(error);
   }
+};
+const uniq = (list: string[]): string[] => {
+  return Object.keys(
+    list.reduce((counts, name) => {
+      return { ...counts, ...{ [name]: 1 } };
+    }, {} as { [key: string]: number })
+  );
 };
 
 interface TransportEvent {
@@ -313,17 +322,15 @@ const App: React.FC = () => {
 
   return (
     <div className={css.container}>
-      <button
-        style={{ width: 200, height: 300, backgroundColor: "blue" }}
-        onClick={async () => {
-          await Tone.start();
+      <Keyboard
+        onMIDIEvent={(event) => {
+          console.log(event);
+          transport.send({ midi: event });
         }}
-      >
-        start
-      </button>
+      />
       <div>transport: {transportStatus}</div>
       <div>piano: {pianoStatus}</div>
-      <div>v0.0.1</div>
+      <div>v0.0.2</div>
     </div>
   );
 };

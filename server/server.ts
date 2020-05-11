@@ -91,7 +91,7 @@ const handle = async (req: ServerRequest) => {
         console.error(
           `failed to receive frame: ${err}`,
           user.emoji,
-          room.users.length
+          room.users.length,
         );
         leave();
         if (!sock.isClosed) {
@@ -106,8 +106,10 @@ const handle = async (req: ServerRequest) => {
   }
 };
 
-const port = Deno.args[0] || "8080";
-console.log(`websocket server is running on :${port}`);
-for await (const req of serve(`:${port}`)) {
-  handle(req).catch(console.error);
-}
+export const run = async (port: number) => {
+  console.log(`websocket server is running on :${port}`);
+  const s = serve({ port });
+  for await (const req of s) {
+    handle(req).catch(console.error);
+  }
+};

@@ -86,14 +86,6 @@ export const Center: React.FC = ({ children }) => {
   );
 };
 
-const WhiteWithBlack = () => {
-  return (
-    <div className={css.whiteWithBlack}>
-      <button className={css.white} />
-      <button className={css.black} />
-    </div>
-  );
-};
 const White: React.FC<{ active: boolean }> = ({ active }) => {
   return (
     <div
@@ -110,14 +102,6 @@ const Black: React.FC<{ active: boolean }> = ({ active }) => {
         [css.active]: active,
       })}
     />
-  );
-};
-
-const uniq = (list: string[]): string[] => {
-  return Object.keys(
-    list.reduce((counts, name) => {
-      return { ...counts, ...{ [name]: 1 } };
-    }, {} as { [key: string]: number })
   );
 };
 
@@ -167,7 +151,7 @@ export const Keyboard: React.FC<{
           (key) => event.key !== key
         );
         setActiveKeys(refActiveKeys.current);
-        onMIDIEvent([144, pitch, velocity.current]);
+        onMIDIEvent([128, pitch, velocity.current]);
       }
     };
     document.addEventListener("keydown", handleKeydown);
