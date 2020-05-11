@@ -112,54 +112,6 @@ const assert = (expression: boolean, error: string): void => {
   }
 };
 
-type KeyboardNoteKey =
-  | "a"
-  | "s"
-  | "d"
-  | "f"
-  | "g"
-  | "h"
-  | "j"
-  | "k"
-  | "l"
-  | "w"
-  | "e"
-  | "t"
-  | "y"
-  | "u"
-  | "o";
-type KeboardNote =
-  | "C"
-  | "C#"
-  | "D"
-  | "D#"
-  | "E"
-  | "F"
-  | "F#"
-  | "G"
-  | "G#"
-  | "A"
-  | "A#"
-  | "B";
-type KeyboardNotePitch = KeboardNote | "C8" | "C#8" | "D8";
-const keybardToNoteMap = new Map<KeyboardNoteKey, KeyboardNotePitch>([
-  ["a", "C"],
-  ["w", "C#"],
-  ["s", "D"],
-  ["e", "D#"],
-  ["d", "E"],
-  ["f", "F"],
-  ["t", "F#"],
-  ["g", "G"],
-  ["y", "G#"],
-  ["h", "A"],
-  ["u", "A#"],
-  ["j", "B"],
-  ["k", "C8"], // 1 octave higher than C
-  ["o", "C#8"], // 1 octave higher than C#
-  ["l", "D8"], // 1 octave higher than D
-]);
-
 interface TransportEvent {
   // note: string;
   midi: [number, number, number];
@@ -276,24 +228,7 @@ const createWebSocketTransport = ({
   };
 };
 
-const selectKeyboardKeyOctave = (
-  key: KeyboardNotePitch,
-  octave: number
-): number => octave + (key.endsWith("8") ? 1 : 0);
-const parseKeyboardKey = (key: string, octave: number): string | undefined => {
-  try {
-    return mapKeyboardKeyToNote(key as KeyboardNoteKey, octave);
-  } catch (error) {
-    return undefined;
-  }
-};
-const mapKeyboardKeyToNote = (key: KeyboardNoteKey, octave: number): string => {
-  const note = keybardToNoteMap.get(key);
-  if (!note) {
-    throw new Error("invalid key");
-  }
-  return `${note.replace("8", "")}${selectKeyboardKeyOctave(note, octave)}`;
-};
+export type MIDIEvent = [number, number, number];
 
 const App: React.FC = () => {
   const player = createPlayer();
@@ -309,7 +244,6 @@ const App: React.FC = () => {
   const [pianoStatus, setPianoStatus] = useState<
     "not loaded" | "loading" | "ready"
   >("not loaded");
-  const octave = useRef<number>(4);
 
   useEffect(() => {
     setPianoStatus("loading");
@@ -340,35 +274,7 @@ const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const handleKeydown = (event: KeyboardEvent) => {
-      if (event.key === "z") {
-        if (octave.current === -1) {
-          return;
-        }
-        octave.current = octave.current - 1;
-        return;
-      }
-      if (event.key === "x") {
-        if (octave.current === 9) {
-          return;
-        }
-        octave.current = octave.current + 1;
-        return;
-      }
-      // console.log(event);
-      const note = parseKeyboardKey(event.key, octave.current);
-      if (!note) {
-        return;
-      }
-      const pitch = Tone.Frequency(note).toMidi();
-      transport.send({ midi: [144, pitch, 30] });
-      setTimeout(() => {
-        transport.send({ midi: [128, pitch, 64] });
-      }, 500);
-    };
-    const handleMidiEvent = (
-      midiEvent: Event & { data: [number, number, number] }
-    ) => {
+    const handleMidiEvent = (midiEvent: Event & { data: MIDIEvent }) => {
       const [type, pitch, velocity] = midiEvent.data;
       console.log(midiEvent.data);
 
@@ -394,11 +300,7 @@ const App: React.FC = () => {
       }
     };
     tryAccessMidi();
-    document.addEventListener("keydown", handleKeydown);
-    return () => {
-      document.removeEventListener("keydown", handleKeydown);
-    };
-  }, [octave]);
+  });
 
   // useEffect(() => {
   //   setInterval(() => {

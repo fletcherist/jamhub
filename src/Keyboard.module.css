@@ -22,6 +22,9 @@
 .white:active {
   background-color: rgba(0, 0, 0, 0.2);
 }
+.active {
+  background-color: rgba(0, 0, 0, 0.2);
+}
 
 .whiteWithBlack {
   position: relative;

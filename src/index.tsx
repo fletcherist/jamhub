@@ -4,13 +4,19 @@ import "./index.css";
 import App from "./App";
 import * as serviceWorker from "./serviceWorker";
 
-const Keyboard: React.FC = () => {
-  return <div>hello </div>;
-};
+import { Keyboard, Center } from "./Keyboard";
 
 ReactDOM.render(
   <React.StrictMode>
-    <App />
+    <div style={{ height: "100vh" }}>
+      <Center>
+        <Keyboard
+          onMIDIEvent={(event) => {
+            console.log(event);
+          }}
+        />
+      </Center>
+    </div>
   </React.StrictMode>,
   document.getElementById("root")
 );
