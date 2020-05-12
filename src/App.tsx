@@ -11,6 +11,7 @@ import { Piano } from "@tonejs/piano";
 import { Reverb } from "tone";
 
 import { Keyboard } from "./Keyboard";
+import { WSAEACCES } from "constants";
 
 // const piano = new Piano({
 //   velocities: 5,
@@ -181,6 +182,54 @@ const createLocalTransport = ({ player }: { player: Player }): Transport => {
   };
 };
 
+// based on sockette https://github.com/lukeed/sockette
+const webSocketReconnect = (
+  url: string,
+  {
+    onopen,
+    onerror,
+    onclose,
+    onmessage,
+  }: {
+    onopen: (ev: Event) => void;
+    onerror: (ev: Event) => void;
+    onclose: (ev: CloseEvent) => void;
+    onmessage: (ev: MessageEvent) => void;
+  }
+) => {
+  let sock: WebSocket;
+  const open = (): void => {
+    sock = new WebSocket(url);
+    sock.onmessage = onmessage;
+    sock.onopen = (event) => {
+      onopen(event);
+    };
+    sock.onclose = async (event) => {
+      await delay(1000);
+      reconnect();
+      onclose(event);
+    };
+    sock.onerror = (error) => {
+      onerror(error);
+      sock.close();
+    };
+  };
+
+  const close = (): void => sock.close();
+  const reconnect = () => open();
+  const send = (
+    data: string | ArrayBuffer | SharedArrayBuffer | Blob | ArrayBufferView
+  ): void => sock.send(data);
+
+  open();
+  return {
+    open,
+    close,
+    reconnect,
+    send,
+  };
+};
+
 const createWebSocketTransport = ({
   url,
   player,
@@ -198,7 +247,32 @@ const createWebSocketTransport = ({
     },
     connect: () => {
       events.next({ type: "connectionStatus", status: "connecting" });
-      const sock = new WebSocket(url);
+      const sock = webSocketReconnect(url, {
+        onclose: (event) => {
+          console.log(event);
+          events.next({ type: "connectionStatus", status: "disconnected" });
+        },
+        onerror: (event) => {
+          console.log(event);
+          events.next({ type: "connectionStatus", status: "error" });
+        },
+        onopen: (event) => {
+          console.log(event);
+          events.next({ type: "connectionStatus", status: "connected" });
+        },
+        onmessage: (msg) => {
+          const event = JSON.parse(msg.data) as TransportEvent;
+          console.log("onmessage", event);
+          receive.next(event);
+          if (event.type === "ping") {
+            events.next({
+              type: "ping",
+              value: Date.now() - lastSentEventTimestamp,
+            });
+          }
+        },
+      });
+
       // send/receieve data pipelines
       const sendPipeline = send.pipe(
         mergeMap((event) => {
@@ -213,35 +287,17 @@ const createWebSocketTransport = ({
         })
       );
 
-      sock.onopen = async () => {
-        sendPipeline.subscribe();
-        receivePipeline.subscribe();
-        events.next({ type: "connectionStatus", status: "connected" });
+      sendPipeline.subscribe();
+      receivePipeline.subscribe();
 
+      (async () => {
         while (true) {
           await delay(5000);
           lastSentEventTimestamp = Date.now();
           sock.send(JSON.stringify(pingEvent));
         }
-      };
-      sock.onclose = () => {
-        events.next({ type: "connectionStatus", status: "disconnected" });
-      };
-      sock.onerror = (error) => {
-        console.error(error);
-        events.next({ type: "connectionStatus", status: "error" });
-      };
-      sock.onmessage = async (msg) => {
-        const event = JSON.parse(msg.data) as TransportEvent;
-        console.log("onmessage", event);
-        receive.next(event);
-        if (event.type === "ping") {
-          events.next({
-            type: "ping",
-            value: Date.now() - lastSentEventTimestamp,
-          });
-        }
-      };
+      })();
+
       return {
         disconnect: () => {
           send.complete();
