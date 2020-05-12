@@ -1,11 +1,11 @@
 import React, { useState, useContext, useEffect, useRef } from "react";
 import * as Tone from "tone";
 
-import { User, Room } from "./lib";
+import { User, Room, pingEvent, TransportEvent, delay } from "./lib";
 
 import { Subject, of, Observable } from "rxjs";
 import { mergeMap } from "rxjs/operators";
-// import { TransportEvent } from "./lib.ts";
+// import { LoggerEvent } from "./lib.ts";
 
 import { Piano } from "@tonejs/piano";
 import { Reverb } from "tone";
@@ -107,57 +107,49 @@ export const useStore = (): Store => {
   return context as Store; // store is defined anyway
 };
 
-const assert = (expression: boolean, error: string): void => {
-  if (!expression) {
-    throw new Error(error);
-  }
-};
-const uniq = (list: string[]): string[] => {
-  return Object.keys(
-    list.reduce((counts, name) => {
-      return { ...counts, ...{ [name]: 1 } };
-    }, {} as { [key: string]: number })
-  );
-};
+export type MIDIEvent = [number, number, number];
+// interface TransportEvent {
+//   // note: string;
+//   midi: MIDIEvent;
+// }
 
-interface TransportData {
-  // note: string;
-  midi: [number, number, number];
-}
-
-type TransportStatus = "disconnected" | "connecting" | "connected" | "error";
-interface TransportEventConnectionStatus {
+interface LoggerEventConnectionStatus {
   type: "connectionStatus";
   status: TransportStatus;
 }
-interface TransportEventPing {
+interface LoggerEventPing {
   type: "ping";
-  value: number;
+  value: number; // ms
 }
-type TransportEvent = TransportEventConnectionStatus | TransportEventPing;
+
+type LoggerEvent = LoggerEventConnectionStatus | LoggerEventPing;
+type TransportStatus = "disconnected" | "connecting" | "connected" | "error";
+
 interface Transport {
-  send: (event: TransportData) => void;
+  send: (event: TransportEvent) => void;
   connect: () => { disconnect: () => void };
-  events: Observable<TransportEvent>;
+  events: Observable<LoggerEvent>;
 }
 
 interface Player {
-  send: (event: TransportData) => void;
+  send: (event: TransportEvent) => void;
 }
 
 const createPlayer = (): Player => {
   return {
-    send: (event: TransportData) => {
-      console.log("player", event, event.midi);
-      // synth.triggerAttackRelease("C4", "8n");
-      // synth.triggerAttackRelease(event.note, "8n");
-      const [type, pitch, velocity] = event.midi;
+    send: (event: TransportEvent) => {
+      if (event.type === "midi") {
+        console.log("player", event, event.midi);
+        // synth.triggerAttackRelease("C4", "8n");
+        // synth.triggerAttackRelease(event.note, "8n");
+        const [type, pitch, velocity] = event.midi;
 
-      if (type === 144) {
-        synth.triggerAttackRelease(
-          Tone.Frequency(pitch, "midi").toNote(),
-          "16n"
-        );
+        if (type === 144) {
+          synth.triggerAttackRelease(
+            Tone.Frequency(pitch, "midi").toNote(),
+            "16n"
+          );
+        }
       }
 
       // if (type === 144) {
@@ -170,11 +162,11 @@ const createPlayer = (): Player => {
 };
 
 const createLocalTransport = ({ player }: { player: Player }): Transport => {
-  const stream = new Subject<TransportData>();
-  const events = new Subject<TransportEvent>();
+  const stream = new Subject<TransportEvent>();
+  const events = new Subject<LoggerEvent>();
   stream.subscribe((event) => player.send(event));
   return {
-    send: (event: TransportData) => {
+    send: (event: TransportEvent) => {
       stream.next(event);
     },
     connect: () => {
@@ -196,22 +188,21 @@ const createWebSocketTransport = ({
   url: string;
   player: Player;
 }): Transport => {
-  const send = new Subject<TransportData>();
-  const receive = new Subject<TransportData>();
-  const events = new Subject<TransportEvent>();
+  const send = new Subject<TransportEvent>();
+  const receive = new Subject<TransportEvent>();
+  const events = new Subject<LoggerEvent>();
   let lastSentEventTimestamp: number = Date.now();
   return {
-    send: (event: TransportData) => {
+    send: (event: TransportEvent) => {
       send.next(event);
     },
     connect: () => {
       events.next({ type: "connectionStatus", status: "connecting" });
-      const socket = new WebSocket(url);
+      const sock = new WebSocket(url);
       // send/receieve data pipelines
       const sendPipeline = send.pipe(
         mergeMap((event) => {
-          lastSentEventTimestamp = Date.now();
-          socket.send(JSON.stringify(event));
+          sock.send(JSON.stringify(event));
           return of(event);
         })
       );
@@ -222,40 +213,46 @@ const createWebSocketTransport = ({
         })
       );
 
-      socket.onopen = () => {
+      sock.onopen = async () => {
         sendPipeline.subscribe();
         receivePipeline.subscribe();
         events.next({ type: "connectionStatus", status: "connected" });
+
+        while (true) {
+          await delay(5000);
+          lastSentEventTimestamp = Date.now();
+          sock.send(JSON.stringify(pingEvent));
+        }
       };
-      socket.onclose = () => {
+      sock.onclose = () => {
         events.next({ type: "connectionStatus", status: "disconnected" });
       };
-      socket.onerror = (error) => {
+      sock.onerror = (error) => {
         console.error(error);
         events.next({ type: "connectionStatus", status: "error" });
       };
-      socket.onmessage = async (msg) => {
-        const event = JSON.parse(msg.data) as TransportData;
+      sock.onmessage = async (msg) => {
+        const event = JSON.parse(msg.data) as TransportEvent;
         console.log("onmessage", event);
         receive.next(event);
-        events.next({
-          type: "ping",
-          value: Date.now() - lastSentEventTimestamp,
-        });
+        if (event.type === "pong") {
+          events.next({
+            type: "ping",
+            value: Date.now() - lastSentEventTimestamp,
+          });
+        }
       };
       return {
         disconnect: () => {
           send.complete();
           receive.complete();
-          socket.close();
+          sock.close();
         },
       };
     },
     events: events.asObservable(),
   };
 };
-
-export type MIDIEvent = [number, number, number];
 
 const player = createPlayer();
 const webSocketTransport = createWebSocketTransport({
@@ -314,10 +311,10 @@ const App: React.FC = () => {
 
       if (type === 144) {
         // note on
-        transport.send({ midi: [type, pitch, velocity] });
+        transport.send({ type: "midi", midi: [type, pitch, velocity] });
       } else if (type === 128) {
         // note off
-        transport.send({ midi: [type, pitch, velocity] });
+        transport.send({ type: "midi", midi: [type, pitch, velocity] });
       }
     };
     const tryAccessMidi = async (): Promise<void> => {
@@ -350,7 +347,7 @@ const App: React.FC = () => {
       <Keyboard
         onMIDIEvent={(event) => {
           console.log(event);
-          transport.send({ midi: event });
+          transport.send({ type: "midi", midi: event });
         }}
       />
       <div>
@@ -373,3 +370,16 @@ const App: React.FC = () => {
 };
 
 export default App;
+
+const assert = (expression: boolean, error: string): void => {
+  if (!expression) {
+    throw new Error(error);
+  }
+};
+const uniq = (list: string[]): string[] => {
+  return Object.keys(
+    list.reduce((counts, name) => {
+      return { ...counts, ...{ [name]: 1 } };
+    }, {} as { [key: string]: number })
+  );
+};

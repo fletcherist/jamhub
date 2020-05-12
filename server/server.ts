@@ -7,9 +7,9 @@ import {
   WebSocketMessage,
 } from "https://deno.land/std/ws/mod.ts";
 import { blue, green, red, yellow } from "https://deno.land/std/fmt/colors.ts";
+import { v4 as uuid } from "https://deno.land/std/uuid/mod.ts";
 
-import { User, emojis } from "../src/lib.ts";
-
+import { User, emojis, TransportEvent, pongEvent, delay } from "../src/lib.ts";
 interface UserServer extends User {
   sock: WebSocket;
 }
@@ -76,7 +76,7 @@ const handle = async (req: ServerRequest) => {
     const user: UserServer = {
       sock: sock,
       emoji: emojis[Math.floor(Math.random() * emojis.length)],
-      id: `${Date.now()}${Math.floor(Math.random() * 1000000)}`,
+      id: uuid.generate(),
     };
 
     const room = roomGetOrCreate(url);
@@ -91,12 +91,28 @@ const handle = async (req: ServerRequest) => {
     join();
     log(green("user connected"), user.emoji, room.users.length);
 
+    (async () => {
+      try {
+        while (true) {
+          await delay(5000);
+          await sock.ping();
+        }
+      } catch (error) {
+        return;
+      }
+    })();
+
     try {
       for await (const ev of sock) {
         if (typeof ev === "string") {
           // text message
           log(red("<"), `"${ev}"`);
-          roomBroadcast(room.id, ev);
+          const event = JSON.parse(ev) as TransportEvent;
+          if (event.type === "midi") {
+            roomBroadcast(room.id, ev);
+          } else if (event.type === "ping") {
+            await sock.send(JSON.stringify(pongEvent));
+          }
         } else if (ev instanceof Uint8Array) {
           // binary message
           console.log("ws:Binary", ev);
@@ -104,6 +120,7 @@ const handle = async (req: ServerRequest) => {
           const [, body] = ev;
           // ping
           console.log("ws:Ping", body);
+          await sock.ping();
         } else if (isWebSocketCloseEvent(ev)) {
           // close
           const { code, reason } = ev;
