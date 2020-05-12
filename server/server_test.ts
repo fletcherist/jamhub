@@ -68,7 +68,7 @@ Deno.test({
   name: "1 connection",
   fn: async () => {
     const server = createServer();
-    server.listen();
+    server.run();
     for (const _ of range(0, 1).reverse()) {
       const sock = await connectServer();
       const queue = createQueue(sock);
@@ -90,7 +90,7 @@ Deno.test({
   name: "broadcast to many connections",
   fn: async () => {
     const server = createServer();
-    server.listen();
+    server.run();
     const clients = await Promise.all(range(1, 100).map(() => connectServer()));
     const queues = clients.map(createQueue);
 

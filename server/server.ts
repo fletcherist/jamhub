@@ -135,14 +135,14 @@ export const server = (
   port: number
 ): {
   close: () => void;
-  listen: () => Promise<void>;
+  run: () => Promise<void>;
 } => {
   const s = serve({ port });
   console.log(`websocket server is running on :${port}`);
-  const listen = async (): Promise<void> => {
+  const run = async (): Promise<void> => {
     for await (const req of s) {
       handle(req).catch(console.error);
     }
   };
-  return { close: () => s.close(), listen };
+  return { close: () => s.close(), run };
 };

@@ -245,6 +245,7 @@ const App: React.FC = () => {
   const transport = createWebSocketTransport({
     player,
     url: `wss://api.jambox.online${window.location.pathname}`,
+    // url: "ws://35.204.191.145:80/123",
     // url: "ws://localhost:8080/123",
   });
   const [transportStatus, setTransportStatus] = useState<TransportStatus>(
