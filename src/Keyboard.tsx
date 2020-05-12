@@ -21,6 +21,7 @@ type KeyboardNoteKey =
   | "y"
   | "u"
   | "o";
+type KeyboardPitchVelocity = "z" | "x" | "c" | "v";
 type KeboardNote =
   | "C"
   | "C#"
@@ -51,6 +52,33 @@ const keybardToNoteMap = new Map<KeyboardNoteKey, KeyboardNotePitch>([
   ["k", "C8"], // 1 octave higher than C
   ["o", "C#8"], // 1 octave higher than C#
   ["l", "D8"], // 1 octave higher than D
+]);
+
+const keyCodeToNoteKeyMap = new Map<
+  number,
+  KeyboardNoteKey | KeyboardPitchVelocity
+>([
+  // notes
+  [65, "a"],
+  [87, "w"],
+  [83, "s"],
+  [69, "e"],
+  [68, "d"],
+  [70, "f"],
+  [84, "t"],
+  [71, "g"],
+  [89, "y"],
+  [72, "h"],
+  [85, "u"],
+  [74, "j"],
+  [75, "k"],
+  [79, "o"],
+  [76, "l"],
+  // veloctity, octave shift
+  [90, "z"],
+  [88, "x"],
+  [67, "c"],
+  [86, "v"],
 ]);
 const selectKeyboardKeyOctave = (
   key: KeyboardNotePitch,
@@ -157,20 +185,20 @@ export const Keyboard: React.FC<{
   };
   useEffect(() => {
     const handleKeydown = (event: KeyboardEvent) => {
-      if (event.key === "z") {
+      const key = keyCodeToNoteKeyMap.get(event.keyCode);
+      if (key === "z") {
         octave.current = Math.max(-1, octave.current - 1);
         return;
       }
-      if (event.key === "x") {
+      if (key === "x") {
         octave.current = Math.min(9, octave.current + 1);
         return;
       }
-      // console.log(event);
-      const key = event.key as KeyboardNoteKey;
-      handleKeyboardNoteDown(key);
+      const noteKey = key as KeyboardNoteKey;
+      handleKeyboardNoteDown(noteKey);
     };
     const handleKeyup = (event: KeyboardEvent) => {
-      const key = event.key as KeyboardNoteKey;
+      const key = keyCodeToNoteKeyMap.get(event.keyCode) as KeyboardNoteKey;
       handleKeyboardNoteUp(key);
     };
     document.addEventListener("keydown", handleKeydown);
@@ -180,18 +208,6 @@ export const Keyboard: React.FC<{
       document.removeEventListener("keyup", handleKeyup);
     };
   }, [octave, refActiveKeys, handleKeyboardNoteDown]);
-
-  //   const keys = [1, 1, 0, 1, 1, 1, 0]; // 1 for white with black, 0 only for white
-  //   const renderKeys = () => {
-  //     return keys.map((key, index) => {
-  //       if (key === 1) {
-  //         return <WhiteWithBlack key={index} />;
-  //       } else if (key === 0) {
-  //         return <White key={index} />;
-  //       }
-  //       throw new Error("undefined key");
-  //     });
-  //   };
 
   const WhiteBind: React.FC<{ keyboardKey: KeyboardNoteKey }> = ({
     keyboardKey,
@@ -241,7 +257,6 @@ export const Keyboard: React.FC<{
       </div>
       <WhiteBind keyboardKey="j" />
       <WhiteBind keyboardKey="k" />
-      {/* {renderKeys()} */}
     </div>
   );
 };
