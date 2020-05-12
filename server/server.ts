@@ -137,8 +137,9 @@ export const server = (
   close: () => void;
   run: () => Promise<void>;
 } => {
-  const s = serve({ port });
-  console.log(`websocket server is running on :${port}`);
+  const addr: string = `:${port}`;
+  const s = serve(addr);
+  console.log(`websocket server is running on ${addr}`);
   const run = async (): Promise<void> => {
     for await (const req of s) {
       handle(req).catch(console.error);
