@@ -90,41 +90,39 @@ const handle = async (req: ServerRequest) => {
 
     join();
     log(green("user connected"), user.emoji, room.users.length);
-    const listenEvents = async () => {
-      try {
-        for await (const ev of sock) {
-          if (typeof ev === "string") {
-            // text message
-            log(red("<"), `"${ev}"`);
-            roomBroadcast(room.id, ev);
-          } else if (ev instanceof Uint8Array) {
-            // binary message
-            console.log("ws:Binary", ev);
-          } else if (isWebSocketPingEvent(ev)) {
-            const [, body] = ev;
-            // ping
-            console.log("ws:Ping", body);
-          } else if (isWebSocketCloseEvent(ev)) {
-            // close
-            const { code, reason } = ev;
-            leave();
-            log(red("user disconnected"));
-            return;
-          }
-        }
-      } catch (err) {
-        console.error(
-          `failed to receive frame: ${err}`,
-          user.emoji,
-          room.users.length
-        );
-        leave();
-        if (!sock.isClosed) {
-          await sock.close(1000).catch(console.error);
+
+    try {
+      for await (const ev of sock) {
+        if (typeof ev === "string") {
+          // text message
+          log(red("<"), `"${ev}"`);
+          roomBroadcast(room.id, ev);
+        } else if (ev instanceof Uint8Array) {
+          // binary message
+          console.log("ws:Binary", ev);
+        } else if (isWebSocketPingEvent(ev)) {
+          const [, body] = ev;
+          // ping
+          console.log("ws:Ping", body);
+        } else if (isWebSocketCloseEvent(ev)) {
+          // close
+          const { code, reason } = ev;
+          leave();
+          log(red("user disconnected"));
+          return;
         }
       }
-    };
-    listenEvents();
+    } catch (err) {
+      console.error(
+        `failed to receive frame: ${err}`,
+        user.emoji,
+        room.users.length
+      );
+      leave();
+      if (!sock.isClosed) {
+        await sock.close(1000).catch(console.error);
+      }
+    }
   } catch (err) {
     console.error(`failed to accept websocket: ${err}`);
     await req.respond({ status: 400 });

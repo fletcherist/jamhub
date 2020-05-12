@@ -2,7 +2,6 @@ import React, { useState, useContext, useEffect, useRef } from "react";
 import * as Tone from "tone";
 
 import { User, Room } from "./lib";
-import css from "./App.module.css";
 
 import { Subject, of, Observable } from "rxjs";
 import { mergeMap } from "rxjs/operators";
@@ -121,25 +120,34 @@ const uniq = (list: string[]): string[] => {
   );
 };
 
-interface TransportEvent {
+interface TransportData {
   // note: string;
   midi: [number, number, number];
 }
 
-type TransportStatus = "disconnected" | "connecting" | "connected";
+type TransportStatus = "disconnected" | "connecting" | "connected" | "error";
+interface TransportEventConnectionStatus {
+  type: "connectionStatus";
+  status: TransportStatus;
+}
+interface TransportEventPing {
+  type: "ping";
+  value: number;
+}
+type TransportEvent = TransportEventConnectionStatus | TransportEventPing;
 interface Transport {
-  send: (event: TransportEvent) => void;
+  send: (event: TransportData) => void;
   connect: () => { disconnect: () => void };
-  events: Observable<TransportStatus>;
+  events: Observable<TransportEvent>;
 }
 
 interface Player {
-  send: (event: TransportEvent) => void;
+  send: (event: TransportData) => void;
 }
 
 const createPlayer = (): Player => {
   return {
-    send: (event: TransportEvent) => {
+    send: (event: TransportData) => {
       console.log("player", event, event.midi);
       // synth.triggerAttackRelease("C4", "8n");
       // synth.triggerAttackRelease(event.note, "8n");
@@ -162,18 +170,18 @@ const createPlayer = (): Player => {
 };
 
 const createLocalTransport = ({ player }: { player: Player }): Transport => {
-  const stream = new Subject<TransportEvent>();
-  const events = new Subject<TransportStatus>();
+  const stream = new Subject<TransportData>();
+  const events = new Subject<TransportEvent>();
   stream.subscribe((event) => player.send(event));
   return {
-    send: (event: TransportEvent) => {
+    send: (event: TransportData) => {
       stream.next(event);
     },
     connect: () => {
-      events.next("connected");
+      events.next({ type: "connectionStatus", status: "connected" });
       return {
         disconnect: () => {
-          events.next("disconnected");
+          events.next({ type: "connectionStatus", status: "disconnected" });
         },
       };
     },
@@ -188,19 +196,21 @@ const createWebSocketTransport = ({
   url: string;
   player: Player;
 }): Transport => {
-  const send = new Subject<TransportEvent>();
-  const receive = new Subject<TransportEvent>();
-  const events = new Subject<TransportStatus>();
+  const send = new Subject<TransportData>();
+  const receive = new Subject<TransportData>();
+  const events = new Subject<TransportEvent>();
+  let lastSentEventTimestamp: number = Date.now();
   return {
-    send: (event: TransportEvent) => {
+    send: (event: TransportData) => {
       send.next(event);
     },
     connect: () => {
-      events.next("connecting");
+      events.next({ type: "connectionStatus", status: "connecting" });
       const socket = new WebSocket(url);
       // send/receieve data pipelines
       const sendPipeline = send.pipe(
-        mergeMap(async (event) => {
+        mergeMap((event) => {
+          lastSentEventTimestamp = Date.now();
           socket.send(JSON.stringify(event));
           return of(event);
         })
@@ -215,21 +225,29 @@ const createWebSocketTransport = ({
       socket.onopen = () => {
         sendPipeline.subscribe();
         receivePipeline.subscribe();
-        events.next("connected");
+        events.next({ type: "connectionStatus", status: "connected" });
       };
       socket.onclose = () => {
-        events.next("disconnected");
+        events.next({ type: "connectionStatus", status: "disconnected" });
+      };
+      socket.onerror = (error) => {
+        console.error(error);
+        events.next({ type: "connectionStatus", status: "error" });
       };
       socket.onmessage = async (msg) => {
-        const event = JSON.parse(msg.data) as TransportEvent;
+        const event = JSON.parse(msg.data) as TransportData;
         console.log("onmessage", event);
         receive.next(event);
+        events.next({
+          type: "ping",
+          value: Date.now() - lastSentEventTimestamp,
+        });
       };
       return {
         disconnect: () => {
-          socket.close();
           send.complete();
           receive.complete();
+          socket.close();
         },
       };
     },
@@ -239,24 +257,26 @@ const createWebSocketTransport = ({
 
 export type MIDIEvent = [number, number, number];
 
+const player = createPlayer();
+const webSocketTransport = createWebSocketTransport({
+  player,
+  url: `wss://api.jambox.online${window.location.pathname}`,
+  // url: "ws://localhost:8080/123",
+});
+
 const App: React.FC = () => {
-  const player = createPlayer();
   // const transport = createLocalTransport({ player });
-  const transport = createWebSocketTransport({
-    player,
-    url: `wss://api.jambox.online${window.location.pathname}`,
-    // url: "ws://35.204.191.145:80/123",
-    // url: "ws://localhost:8080/123",
-  });
+  const transport = webSocketTransport;
   const [transportStatus, setTransportStatus] = useState<TransportStatus>(
     "disconnected"
   );
   const [pianoStatus, setPianoStatus] = useState<
     "not loaded" | "loading" | "ready"
   >("not loaded");
+  const [ping, setPing] = useState<number>(0);
 
   useEffect(() => {
-    setPianoStatus("loading");
+    // setPianoStatus("loading");
     // piano.load().then(() => {
     //   setPianoStatus("ready");
     //   console.log("loaded!");
@@ -266,7 +286,11 @@ const App: React.FC = () => {
       .pipe(
         mergeMap((event) => {
           console.log(event);
-          setTransportStatus(event);
+          if (event.type === "connectionStatus") {
+            setTransportStatus(event.status);
+          } else if (event.type === "ping") {
+            setPing(event.value);
+          }
           return of(event);
         })
       )
@@ -322,15 +346,27 @@ const App: React.FC = () => {
   // }, []);
 
   return (
-    <div className={css.container}>
+    <div>
       <Keyboard
         onMIDIEvent={(event) => {
           console.log(event);
           transport.send({ midi: event });
         }}
       />
-      <div>transport: {transportStatus}</div>
+      <div>
+        transport:{" "}
+        <span
+          style={{
+            ...(transportStatus === "connected" && { color: "green" }),
+            ...(transportStatus === "error" && { color: "red" }),
+            // color: transportStatus === "connected" ? "green" : "black",
+          }}
+        >
+          {transportStatus}
+        </span>
+      </div>
       <div>piano: {pianoStatus}</div>
+      <div>ping: {ping}ms</div>
       <div>v0.0.2</div>
     </div>
   );
