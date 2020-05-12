@@ -11,7 +11,6 @@ import { Piano } from "@tonejs/piano";
 import { Reverb } from "tone";
 
 import { Keyboard } from "./Keyboard";
-import { WSAEACCES } from "constants";
 
 // const piano = new Piano({
 //   velocities: 5,

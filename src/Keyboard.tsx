@@ -86,18 +86,30 @@ export const Center: React.FC = ({ children }) => {
   );
 };
 
-const White: React.FC<{ active: boolean }> = ({ active }) => {
+const White: React.FC<{
+  active: boolean;
+  onPress: () => void;
+  onRelease: () => void;
+}> = ({ active, onPress, onRelease }) => {
   return (
-    <div
+    <button
+      onPointerDown={onPress}
+      onPointerUp={onRelease}
       className={cx(css.white, {
         [css.active]: active,
       })}
     />
   );
 };
-const Black: React.FC<{ active: boolean }> = ({ active }) => {
+const Black: React.FC<{
+  active: boolean;
+  onPress: () => void;
+  onRelease: () => void;
+}> = ({ active, onPress, onRelease }) => {
   return (
     <button
+      onPointerDown={onPress}
+      onPointerUp={onRelease}
       className={cx(css.black, {
         [css.active]: active,
       })}
@@ -112,6 +124,37 @@ export const Keyboard: React.FC<{
   const velocity = useRef<number>(30);
   const refActiveKeys = useRef<KeyboardNoteKey[]>([]);
   const [activeKeys, setActiveKeys] = useState<KeyboardNoteKey[]>([]);
+
+  const handleKeyboardNoteDown = (key: KeyboardNoteKey) => {
+    const note = parseKeyboardKey(key, octave.current);
+    if (!note) {
+      return;
+    }
+    const pitch = Tone.Frequency(note).toMidi();
+    //   transport.send({ midi: [144, pitch, 30] });
+    //   setTimeout(() => {
+    //     transport.send({ midi: [128, pitch, 64] });
+    //   }, 500);
+    if (!refActiveKeys.current.includes(key)) {
+      refActiveKeys.current = [...refActiveKeys.current, key];
+      setActiveKeys(refActiveKeys.current);
+      onMIDIEvent([144, pitch, velocity.current]);
+    }
+  };
+  const handleKeyboardNoteUp = (key: KeyboardNoteKey) => {
+    const note = parseKeyboardKey(key, octave.current);
+    if (!note) {
+      return;
+    }
+    const pitch = Tone.Frequency(note).toMidi();
+    if (refActiveKeys.current.includes(key)) {
+      refActiveKeys.current = refActiveKeys.current.filter(
+        (activeKey) => activeKey !== key
+      );
+      setActiveKeys(refActiveKeys.current);
+      onMIDIEvent([128, pitch, velocity.current]);
+    }
+  };
   useEffect(() => {
     const handleKeydown = (event: KeyboardEvent) => {
       if (event.key === "z") {
@@ -124,35 +167,11 @@ export const Keyboard: React.FC<{
       }
       // console.log(event);
       const key = event.key as KeyboardNoteKey;
-      const note = parseKeyboardKey(event.key, octave.current);
-      if (!note) {
-        return;
-      }
-      const pitch = Tone.Frequency(note).toMidi();
-      //   transport.send({ midi: [144, pitch, 30] });
-      //   setTimeout(() => {
-      //     transport.send({ midi: [128, pitch, 64] });
-      //   }, 500);
-      if (!refActiveKeys.current.includes(key)) {
-        refActiveKeys.current = [...refActiveKeys.current, key];
-        setActiveKeys(refActiveKeys.current);
-        onMIDIEvent([144, pitch, velocity.current]);
-      }
+      handleKeyboardNoteDown(key);
     };
     const handleKeyup = (event: KeyboardEvent) => {
       const key = event.key as KeyboardNoteKey;
-      const note = parseKeyboardKey(event.key, octave.current);
-      if (!note) {
-        return;
-      }
-      const pitch = Tone.Frequency(note).toMidi();
-      if (refActiveKeys.current.includes(key)) {
-        refActiveKeys.current = refActiveKeys.current.filter(
-          (key) => event.key !== key
-        );
-        setActiveKeys(refActiveKeys.current);
-        onMIDIEvent([128, pitch, velocity.current]);
-      }
+      handleKeyboardNoteUp(key);
     };
     document.addEventListener("keydown", handleKeydown);
     document.addEventListener("keyup", handleKeyup);
@@ -160,7 +179,7 @@ export const Keyboard: React.FC<{
       document.removeEventListener("keydown", handleKeydown);
       document.removeEventListener("keyup", handleKeyup);
     };
-  }, [octave, refActiveKeys, onMIDIEvent]);
+  }, [octave, refActiveKeys, handleKeyboardNoteDown]);
 
   //   const keys = [1, 1, 0, 1, 1, 1, 0]; // 1 for white with black, 0 only for white
   //   const renderKeys = () => {
@@ -173,31 +192,55 @@ export const Keyboard: React.FC<{
   //       throw new Error("undefined key");
   //     });
   //   };
+
+  const WhiteBind: React.FC<{ keyboardKey: KeyboardNoteKey }> = ({
+    keyboardKey,
+  }): React.ReactElement => {
+    return (
+      <White
+        active={activeKeys.includes(keyboardKey)}
+        onPress={() => handleKeyboardNoteDown(keyboardKey)}
+        onRelease={() => handleKeyboardNoteUp(keyboardKey)}
+      />
+    );
+  };
+  const BlackBind: React.FC<{ keyboardKey: KeyboardNoteKey }> = ({
+    keyboardKey,
+  }): React.ReactElement => {
+    return (
+      <Black
+        active={activeKeys.includes(keyboardKey)}
+        onPress={() => handleKeyboardNoteDown(keyboardKey)}
+        onRelease={() => handleKeyboardNoteUp(keyboardKey)}
+      />
+    );
+  };
+
   return (
     <div className={css.container}>
       <div className={css.whiteWithBlack}>
-        <White active={activeKeys.includes("a")} />
-        <Black active={activeKeys.includes("w")} />
+        <WhiteBind keyboardKey="a" />
+        <BlackBind keyboardKey="w" />
       </div>
       <div className={css.whiteWithBlack}>
-        <White active={activeKeys.includes("s")} />
-        <Black active={activeKeys.includes("e")} />
+        <WhiteBind keyboardKey="s" />
+        <BlackBind keyboardKey="e" />
       </div>
-      <White active={activeKeys.includes("d")} />
+      <WhiteBind keyboardKey="d" />
       <div className={css.whiteWithBlack}>
-        <White active={activeKeys.includes("f")} />
-        <Black active={activeKeys.includes("t")} />
-      </div>
-      <div className={css.whiteWithBlack}>
-        <White active={activeKeys.includes("g")} />
-        <Black active={activeKeys.includes("y")} />
+        <WhiteBind keyboardKey="f" />
+        <BlackBind keyboardKey="t" />
       </div>
       <div className={css.whiteWithBlack}>
-        <White active={activeKeys.includes("h")} />
-        <Black active={activeKeys.includes("u")} />
+        <WhiteBind keyboardKey="g" />
+        <BlackBind keyboardKey="y" />
       </div>
-      <White active={activeKeys.includes("j")} />
-      <White active={activeKeys.includes("k")} />
+      <div className={css.whiteWithBlack}>
+        <WhiteBind keyboardKey="h" />
+        <BlackBind keyboardKey="u" />
+      </div>
+      <WhiteBind keyboardKey="j" />
+      <WhiteBind keyboardKey="k" />
       {/* {renderKeys()} */}
     </div>
   );
