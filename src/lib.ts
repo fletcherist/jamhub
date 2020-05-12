@@ -3,20 +3,13 @@ export type MIDIEvent = [number, number, number];
 interface TransportEventPing {
   type: "ping";
 }
-interface TransportEventPong {
-  type: "pong";
-}
 interface TransportEventMIDI {
   type: "midi";
   midi: MIDIEvent;
 }
-export type TransportEvent =
-  | TransportEventMIDI
-  | TransportEventPing
-  | TransportEventPong;
+export type TransportEvent = TransportEventMIDI | TransportEventPing;
 
 export const pingEvent: TransportEventPing = { type: "ping" };
-export const pongEvent: TransportEventPong = { type: "pong" };
 
 // export interface TransportEvent {
 //   type:

@@ -9,7 +9,7 @@ import {
 import { blue, green, red, yellow } from "https://deno.land/std/fmt/colors.ts";
 import { v4 as uuid } from "https://deno.land/std/uuid/mod.ts";
 
-import { User, emojis, TransportEvent, pongEvent, delay } from "../src/lib.ts";
+import { User, emojis, TransportEvent, pingEvent, delay } from "../src/lib.ts";
 interface UserServer extends User {
   sock: WebSocket;
 }
@@ -111,7 +111,7 @@ const handle = async (req: ServerRequest) => {
           if (event.type === "midi") {
             roomBroadcast(room.id, ev);
           } else if (event.type === "ping") {
-            await sock.send(JSON.stringify(pongEvent));
+            await sock.send(JSON.stringify(pingEvent));
           }
         } else if (ev instanceof Uint8Array) {
           // binary message

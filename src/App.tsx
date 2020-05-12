@@ -235,7 +235,7 @@ const createWebSocketTransport = ({
         const event = JSON.parse(msg.data) as TransportEvent;
         console.log("onmessage", event);
         receive.next(event);
-        if (event.type === "pong") {
+        if (event.type === "ping") {
           events.next({
             type: "ping",
             value: Date.now() - lastSentEventTimestamp,
