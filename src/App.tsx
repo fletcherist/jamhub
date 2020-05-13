@@ -12,18 +12,19 @@ import { Reverb } from "tone";
 
 import { Keyboard } from "./Keyboard";
 
-// const piano = new Piano({
-//   velocities: 5,
-// });
+const piano = new Piano({
+  velocities: 5,
+});
 
-// //connect it to the speaker output
-// const reverb = new Reverb({
-//   decay: 5,
-//   wet: 0.5,
-// });
+//connect it to the speaker output
+const reverb = new Reverb({
+  decay: 5,
+  wet: 0.5,
+});
 
-// piano.connect(reverb);
-// reverb.toDestination();
+piano.connect(reverb);
+reverb.toDestination();
+
 const synth = new Tone.Synth({
   oscillator: {
     type: "sine",
@@ -144,19 +145,18 @@ const createPlayer = (): Player => {
         // synth.triggerAttackRelease(event.note, "8n");
         const [type, pitch, velocity] = event.midi;
 
+        // if (type === 144) {
+        //   synth.triggerAttackRelease(
+        //     Tone.Frequency(pitch, "midi").toNote(),
+        //     "16n"
+        //   );
+        // }
         if (type === 144) {
-          synth.triggerAttackRelease(
-            Tone.Frequency(pitch, "midi").toNote(),
-            "16n"
-          );
+          piano.keyDown({ midi: pitch, velocity: velocity / 256 });
+        } else if (type === 128) {
+          piano.keyUp({ midi: pitch });
         }
       }
-
-      // if (type === 144) {
-      //   piano.keyDown({ midi: pitch, velocity: velocity / 256 });
-      // } else if (type === 128) {
-      //   piano.keyUp({ midi: pitch });
-      // }
     },
   };
 };
@@ -200,9 +200,7 @@ const webSocketReconnect = (
   const open = (): void => {
     sock = new WebSocket(url);
     sock.onmessage = onmessage;
-    sock.onopen = (event) => {
-      onopen(event);
-    };
+    sock.onopen = (event) => onopen(event);
     sock.onclose = async (event) => {
       await delay(1000);
       reconnect();
@@ -252,12 +250,15 @@ const createWebSocketTransport = ({
           events.next({ type: "connectionStatus", status: "disconnected" });
         },
         onerror: (event) => {
-          console.log(event);
+          console.error(event);
           events.next({ type: "connectionStatus", status: "error" });
         },
         onopen: (event) => {
           console.log(event);
           events.next({ type: "connectionStatus", status: "connected" });
+
+          sendPipeline.subscribe();
+          receivePipeline.subscribe();
         },
         onmessage: (msg) => {
           const event = JSON.parse(msg.data) as TransportEvent;
@@ -286,9 +287,6 @@ const createWebSocketTransport = ({
         })
       );
 
-      sendPipeline.subscribe();
-      receivePipeline.subscribe();
-
       (async () => {
         while (true) {
           await delay(5000);
@@ -313,7 +311,7 @@ const player = createPlayer();
 const webSocketTransport = createWebSocketTransport({
   player,
   url: `wss://api.jambox.online${window.location.pathname}`,
-  // url: "ws://localhost:8080/123",
+  // url: "ws://84.201.149.157/123",
 });
 
 const App: React.FC = () => {
@@ -328,11 +326,10 @@ const App: React.FC = () => {
   const [ping, setPing] = useState<number>(0);
 
   useEffect(() => {
-    // setPianoStatus("loading");
-    // piano.load().then(() => {
-    //   setPianoStatus("ready");
-    //   console.log("loaded!");
-    // });
+    setPianoStatus("loading");
+    piano.load().then(() => {
+      setPianoStatus("ready");
+    });
 
     const listener = transport.events
       .pipe(
@@ -417,7 +414,16 @@ const App: React.FC = () => {
           {transportStatus}
         </span>
       </div>
-      <div>piano: {pianoStatus}</div>
+      <div>
+        piano:{" "}
+        <span
+          style={{
+            ...(pianoStatus === "ready" && { color: "green" }),
+          }}
+        >
+          {pianoStatus}
+        </span>
+      </div>
       <div>ping: {ping}ms</div>
       <div>v0.0.2</div>
     </div>

@@ -194,6 +194,13 @@ export const Keyboard: React.FC<{
         octave.current = Math.min(9, octave.current + 1);
         return;
       }
+      if (key === "c") {
+        velocity.current = Math.max(1, velocity.current - 20);
+        return;
+      }
+      if (key === "v") {
+        velocity.current = Math.min(127, velocity.current + 20);
+      }
       const noteKey = key as KeyboardNoteKey;
       handleKeyboardNoteDown(noteKey);
     };
