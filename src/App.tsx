@@ -323,8 +323,8 @@ const createWebSocketTransport = ({
 const player = createPlayer();
 const webSocketTransport = createWebSocketTransport({
   player,
-  // url: `wss://api.jambox.online${window.location.pathname}`,
-  url: `ws://84.201.149.157${window.location.pathname}`,
+  url: `wss://api.jambox.online${window.location.pathname}`,
+  // url: `ws://84.201.149.157${window.location.pathname}`,
 });
 
 const App: React.FC = () => {
