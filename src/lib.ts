@@ -1,11 +1,13 @@
 export type MIDIEvent = [number, number, number];
 
+export type Instrument = "🎹" | "🎻";
 interface TransportEventPing {
   type: "ping";
 }
 interface TransportEventMIDI {
   type: "midi";
   midi: MIDIEvent;
+  instrument: Instrument;
 }
 export type TransportEvent = TransportEventMIDI | TransportEventPing;
 

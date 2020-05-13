@@ -1,7 +1,15 @@
 import React, { useState, useContext, useEffect, useRef } from "react";
 import * as Tone from "tone";
+import cx from "classnames";
 
-import { User, Room, pingEvent, TransportEvent, delay } from "./lib";
+import {
+  User,
+  Room,
+  pingEvent,
+  TransportEvent,
+  delay,
+  Instrument,
+} from "./lib";
 
 import { Subject, of, Observable } from "rxjs";
 import { mergeMap } from "rxjs/operators";
@@ -11,6 +19,8 @@ import { Piano } from "@tonejs/piano";
 import { Reverb } from "tone";
 
 import { Keyboard } from "./Keyboard";
+
+import css from "./App.module.css";
 
 const piano = new Piano({
   velocities: 5,
@@ -145,16 +155,19 @@ const createPlayer = (): Player => {
         // synth.triggerAttackRelease(event.note, "8n");
         const [type, pitch, velocity] = event.midi;
 
-        // if (type === 144) {
-        //   synth.triggerAttackRelease(
-        //     Tone.Frequency(pitch, "midi").toNote(),
-        //     "16n"
-        //   );
-        // }
-        if (type === 144) {
-          piano.keyDown({ midi: pitch, velocity: velocity / 256 });
-        } else if (type === 128) {
-          piano.keyUp({ midi: pitch });
+        if (event.instrument === "🎹") {
+          if (type === 144) {
+            piano.keyDown({ midi: pitch, velocity: velocity / 256 });
+          } else if (type === 128) {
+            piano.keyUp({ midi: pitch });
+          }
+        } else if (event.instrument === "🎻") {
+          if (type === 144) {
+            synth.triggerAttackRelease(
+              Tone.Frequency(pitch, "midi").toNote(),
+              "16n"
+            );
+          }
         }
       }
     },
@@ -324,6 +337,9 @@ const App: React.FC = () => {
     "not loaded" | "loading" | "ready"
   >("not loaded");
   const [ping, setPing] = useState<number>(0);
+  const [selectedInstrument, setSelectedInstrument] = useState<Instrument>(
+    "🎹"
+  );
 
   useEffect(() => {
     setPianoStatus("loading");
@@ -363,10 +379,18 @@ const App: React.FC = () => {
 
       if (type === 144) {
         // note on
-        transport.send({ type: "midi", midi: [type, pitch, velocity] });
+        transport.send({
+          type: "midi",
+          midi: [type, pitch, velocity],
+          instrument: selectedInstrument,
+        });
       } else if (type === 128) {
         // note off
-        transport.send({ type: "midi", midi: [type, pitch, velocity] });
+        transport.send({
+          type: "midi",
+          midi: [type, pitch, velocity],
+          instrument: selectedInstrument,
+        });
       }
     };
     const tryAccessMidi = async (): Promise<void> => {
@@ -394,12 +418,39 @@ const App: React.FC = () => {
   //   }, 666.6666);
   // }, []);
 
+  const instruments: Instrument[] = [
+    "🎹",
+    "🎻",
+    // "🎸", "🎤", "🎺", "🎧", "🥁", "🪕", "🎷"
+  ];
   return (
     <div>
+      {/* <h1>pick your instrument</h1> */}
+      <div className={css.instruments}>
+        {instruments.map((instrument) => {
+          return (
+            <div
+              className={cx(css.instrument, {
+                [css.instrumentActive]: selectedInstrument === instrument,
+              })}
+              onClick={() => {
+                setSelectedInstrument(instrument);
+              }}
+            >
+              {instrument}
+            </div>
+          );
+        })}
+      </div>
+
       <Keyboard
         onMIDIEvent={(event) => {
           console.log(event);
-          transport.send({ type: "midi", midi: event });
+          transport.send({
+            type: "midi",
+            midi: event,
+            instrument: selectedInstrument,
+          });
         }}
       />
       <div>
@@ -425,7 +476,7 @@ const App: React.FC = () => {
         </span>
       </div>
       <div>ping: {ping}ms</div>
-      <div>v0.0.2</div>
+      <div>v0.0.3</div>
     </div>
   );
 };

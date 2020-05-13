@@ -1,3 +1,7 @@
+v0.0.3
+
+- add instruments change feature
+
 v0.0.2
 
 - change velocity on keyboard
