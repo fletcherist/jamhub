@@ -57,7 +57,7 @@ const roomBroadcast = (id: string, event: WebSocketMessage) => {
     green(">"),
     `"${event}" to`,
     room.users.length,
-    "users"
+    "users",
   );
   for (const user of room.users) {
     user.sock.send(event);
@@ -91,17 +91,6 @@ const handle = async (req: ServerRequest) => {
     join();
     log(green("user connected"), user.emoji, room.users.length);
 
-    (async () => {
-      try {
-        while (true) {
-          await delay(5000);
-          await sock.ping();
-        }
-      } catch (error) {
-        return;
-      }
-    })();
-
     try {
       for await (const ev of sock) {
         if (typeof ev === "string") {
@@ -133,7 +122,7 @@ const handle = async (req: ServerRequest) => {
       console.error(
         `failed to receive frame: ${err}`,
         user.emoji,
-        room.users.length
+        room.users.length,
       );
       leave();
       if (!sock.isClosed) {
@@ -147,7 +136,7 @@ const handle = async (req: ServerRequest) => {
 };
 
 export const server = (
-  port: number
+  port: number,
 ): {
   close: () => void;
   run: () => Promise<void>;
