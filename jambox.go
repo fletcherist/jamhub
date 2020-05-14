@@ -223,10 +223,42 @@ func (u *User) writePump() {
 
 // Event represents web socket user event
 type Event struct {
-	Type string    `json:"type"`
-	User *UserWrap `json:"user,omitempty"`
-	Room *RoomWrap `json:"room,omitempty"`
-	Desc string    `json:"desc,omitempty"`
+	Type       string    `json:"type"`
+	UserID     string    `json:"user_id"`
+	Instrument string    `json:"instrument,omitempty"`
+	MIDI       *[]int64  `json:"midi,omitempty"`
+	User       *UserWrap `json:"user,omitempty"`
+	Room       *RoomWrap `json:"room,omitempty"`
+	Desc       string    `json:"desc,omitempty"`
+}
+
+// HandleEvent handles user event
+func (u *User) HandleEvent(eventRaw []byte) error {
+	var event *Event
+	err := json.Unmarshal(eventRaw, &event)
+	if err != nil {
+		return err
+	}
+	u.log("handle event:", event.Type)
+	event.UserID = u.ID
+	if event.Type == "ping" {
+		u.SendPingEvent()
+		u.BroadcastEventPing()
+		return nil
+	} else if event.Type == "midi" {
+		u.SendEvent(*event)
+		u.BroadcastEvent(*event)
+		return nil
+	} else if event.Type == "mute" {
+		u.info.Mute = true
+		u.BroadcastEventMute()
+		return nil
+	} else if event.Type == "unmute" {
+		u.info.Mute = false
+		u.BroadcastEventUnmute()
+		return nil
+	}
+	return u.SendErr(errNotImplemented)
 }
 
 // SendEvent sends json body to web socket
@@ -237,6 +269,11 @@ func (u *User) SendEvent(event Event) error {
 	}
 	u.send <- json
 	return nil
+}
+
+// SendPingEvent sends ping event
+func (u *User) SendPingEvent() error {
+	return u.SendEvent(Event{Type: "ping", UserID: u.ID})
 }
 
 // SendEventUser sends user to client to identify himself
@@ -257,6 +294,11 @@ func (u *User) BroadcastEvent(event Event) error {
 	}
 	u.room.Broadcast(json, u)
 	return nil
+}
+
+// BroadcastEventPing sends everyone user ping
+func (u *User) BroadcastEventPing() error {
+	return u.BroadcastEvent(Event{Type: "ping", UserID: u.ID})
 }
 
 // BroadcastEventJoin sends user_join event
@@ -289,27 +331,6 @@ func (u *User) log(msg ...interface{}) {
 		fmt.Sprintf("user %s:", u.ID),
 		fmt.Sprint(msg...),
 	)
-}
-
-// HandleEvent handles user event
-func (u *User) HandleEvent(eventRaw []byte) error {
-	var event *Event
-	err := json.Unmarshal(eventRaw, &event)
-	if err != nil {
-		return err
-	}
-	u.log("handle event", event.Type)
-	if event.Type == "mute" {
-		u.info.Mute = true
-		u.BroadcastEventMute()
-		return nil
-	} else if event.Type == "unmute" {
-		u.info.Mute = false
-		u.BroadcastEventUnmute()
-		return nil
-	}
-
-	return u.SendErr(errNotImplemented)
 }
 
 // serveWs handles websocket requests from the peer.

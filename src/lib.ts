@@ -3,13 +3,36 @@ export type MIDIEvent = [number, number, number];
 export type Instrument = "🎹" | "🎻";
 interface TransportEventPing {
   type: "ping";
+  // id: string;
 }
 interface TransportEventMIDI {
   type: "midi";
   midi: MIDIEvent;
   instrument: Instrument;
 }
-export type TransportEvent = TransportEventMIDI | TransportEventPing;
+interface TransportEventRoom {
+  type: "room";
+  room: Room;
+}
+interface TransportEventUser {
+  type: "user";
+  user: User;
+}
+interface TransportEventUserJoin {
+  type: "user_join";
+  user: User;
+}
+interface TransportEventUserLeave {
+  type: "user_leave";
+  user: User;
+}
+export type TransportEvent =
+  | TransportEventMIDI
+  | TransportEventPing
+  | TransportEventRoom
+  | TransportEventUser
+  | TransportEventUserJoin
+  | TransportEventUserLeave;
 
 export const pingEvent: TransportEventPing = { type: "ping" };
 

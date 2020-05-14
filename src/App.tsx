@@ -168,6 +168,8 @@ const createPlayer = (): Player => {
               "16n"
             );
           }
+        } else {
+          console.error("instrument not implemented", event.instrument);
         }
       }
     },
@@ -275,13 +277,21 @@ const createWebSocketTransport = ({
         },
         onmessage: (msg) => {
           const event = JSON.parse(msg.data) as TransportEvent;
-          console.log("onmessage", event);
+          // console.log("onmessage", event);
           receive.next(event);
           if (event.type === "ping") {
             events.next({
               type: "ping",
               value: Date.now() - lastSentEventTimestamp,
             });
+          } else if (event.type === "user") {
+            console.log("user event", event);
+          } else if (event.type === "room") {
+            console.log("room event", event);
+          } else if (event.type === "user_join") {
+            console.log(event.type, event);
+          } else if (event.type === "user_leave") {
+            console.log(event.type, event);
           }
         },
       });
@@ -323,8 +333,9 @@ const createWebSocketTransport = ({
 const player = createPlayer();
 const webSocketTransport = createWebSocketTransport({
   player,
-  url: `wss://api.jambox.online${window.location.pathname}`,
+  // url: `wss://api.jambox.online${window.location.pathname}`,
   // url: `ws://84.201.149.157${window.location.pathname}`,
+  url: `ws://localhost${window.location.pathname}`,
 });
 
 const App: React.FC = () => {
@@ -338,15 +349,19 @@ const App: React.FC = () => {
   >("not loaded");
   const [ping, setPing] = useState<number>(0);
   const [selectedInstrument, setSelectedInstrument] = useState<Instrument>(
-    "🎹"
+    "🎻"
   );
 
   useEffect(() => {
-    setPianoStatus("loading");
-    piano.load().then(() => {
-      setPianoStatus("ready");
-    });
+    if (selectedInstrument === "🎹") {
+      setPianoStatus("loading");
+      piano.load().then(() => {
+        setPianoStatus("ready");
+      });
+    }
+  }, [selectedInstrument]);
 
+  useEffect(() => {
     const listener = transport.events
       .pipe(
         mergeMap((event) => {
@@ -375,7 +390,7 @@ const App: React.FC = () => {
   useEffect(() => {
     const handleMidiEvent = (midiEvent: Event & { data: MIDIEvent }) => {
       const [type, pitch, velocity] = midiEvent.data;
-      console.log(midiEvent.data);
+      console.log("handleMidiEvent", midiEvent.data);
 
       if (type === 144) {
         // note on
@@ -407,7 +422,7 @@ const App: React.FC = () => {
       }
     };
     tryAccessMidi();
-  });
+  }, []);
 
   // useEffect(() => {
   //   setInterval(() => {
@@ -445,7 +460,7 @@ const App: React.FC = () => {
 
       <Keyboard
         onMIDIEvent={(event) => {
-          console.log(event);
+          console.log("onMIDIEvent", event);
           transport.send({
             type: "midi",
             midi: event,
