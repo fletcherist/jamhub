@@ -3,7 +3,9 @@ import * as Tone from "tone";
 import React, { useRef, useEffect, useState } from "react";
 import cx from "classnames";
 import css from "./Keyboard.module.css";
-import { MIDIEvent } from "./App";
+import { MIDIEvent, Transport } from "./App";
+import { mergeMap, filter } from "rxjs/operators";
+import { of } from "rxjs";
 
 type KeyboardNoteKey =
   | "a"
@@ -54,6 +56,13 @@ const keybardToNoteMap = new Map<KeyboardNoteKey, KeyboardNotePitch>([
   ["l", "D8"], // 1 octave higher than D
 ]);
 
+const noteToKeyboardMap = new Map<KeyboardNotePitch, KeyboardNoteKey>(
+  [...keybardToNoteMap.entries()].map(([keyboardKey, note]) => [
+    note, // swap map
+    keyboardKey,
+  ])
+);
+
 const keyCodeToNoteKeyMap = new Map<
   number,
   KeyboardNoteKey | KeyboardPitchVelocity
@@ -80,6 +89,7 @@ const keyCodeToNoteKeyMap = new Map<
   [67, "c"],
   [86, "v"],
 ]);
+
 const selectKeyboardKeyOctave = (
   key: KeyboardNotePitch,
   octave: number
@@ -145,7 +155,7 @@ const Black: React.FC<{
   );
 };
 
-export const Keyboard: React.FC<{
+export const MyKeyboard: React.FC<{
   onMIDIEvent: (event: MIDIEvent) => void;
 }> = ({ onMIDIEvent }) => {
   const octave = useRef<number>(4);
@@ -216,14 +226,86 @@ export const Keyboard: React.FC<{
     };
   }, [octave, refActiveKeys, handleKeyboardNoteDown]);
 
+  return (
+    <Keyboard
+      activeKeys={activeKeys}
+      onPressKey={handleKeyboardNoteDown}
+      onReleaseKey={handleKeyboardNoteUp}
+    />
+  );
+};
+
+export const UserKeyboard: React.FC<{
+  transport: Transport;
+  userId: string;
+}> = ({ transport, userId }) => {
+  const refActiveKeys = useRef<KeyboardNoteKey[]>([]);
+  const [activeKeys, setActiveKeys] = useState<KeyboardNoteKey[]>([]);
+
+  useEffect(() => {
+    const subscription = transport.receive
+      .pipe(
+        filter((event) => {
+          if (event.type === "midi" && event.user_id === userId) {
+            return true;
+          }
+          return false;
+        })
+      )
+      .subscribe((event) => {
+        if (event.type === "midi") {
+          const [type, pitch] = event.midi;
+          const toneNote = Tone.Frequency(pitch, "midi").toNote();
+          const note = toneNote.slice(
+            0,
+            toneNote.length - 1
+          ) as KeyboardNotePitch;
+          const key = noteToKeyboardMap.get(note);
+          if (!key) {
+            throw new Error("unexpected key");
+          }
+          if (type === 144) {
+            if (!refActiveKeys.current.includes(key)) {
+              refActiveKeys.current = [...refActiveKeys.current, key];
+              setActiveKeys(refActiveKeys.current);
+            }
+          } else if (type === 128) {
+            if (refActiveKeys.current.includes(key)) {
+              refActiveKeys.current = refActiveKeys.current.filter(
+                (activeKey) => activeKey !== key
+              );
+              setActiveKeys(refActiveKeys.current);
+            }
+          }
+          return;
+        }
+        throw new Error(`expected midi event. got: ${event.type}`);
+      });
+    return () => subscription.unsubscribe();
+  }, [transport, userId]);
+
+  return (
+    <Keyboard
+      activeKeys={activeKeys}
+      onPressKey={() => undefined}
+      onReleaseKey={() => undefined}
+    />
+  );
+};
+
+export const Keyboard: React.FC<{
+  activeKeys: KeyboardNoteKey[];
+  onPressKey: (key: KeyboardNoteKey) => void;
+  onReleaseKey: (key: KeyboardNoteKey) => void;
+}> = ({ activeKeys, onPressKey, onReleaseKey }) => {
   const WhiteBind: React.FC<{ keyboardKey: KeyboardNoteKey }> = ({
     keyboardKey,
   }): React.ReactElement => {
     return (
       <White
         active={activeKeys.includes(keyboardKey)}
-        onPress={() => handleKeyboardNoteDown(keyboardKey)}
-        onRelease={() => handleKeyboardNoteUp(keyboardKey)}
+        onPress={() => onPressKey(keyboardKey)}
+        onRelease={() => onReleaseKey(keyboardKey)}
       />
     );
   };
@@ -233,8 +315,8 @@ export const Keyboard: React.FC<{
     return (
       <Black
         active={activeKeys.includes(keyboardKey)}
-        onPress={() => handleKeyboardNoteDown(keyboardKey)}
-        onRelease={() => handleKeyboardNoteUp(keyboardKey)}
+        onPress={() => onPressKey(keyboardKey)}
+        onRelease={() => onReleaseKey(keyboardKey)}
       />
     );
   };
@@ -263,7 +345,11 @@ export const Keyboard: React.FC<{
         <BlackBind keyboardKey="u" />
       </div>
       <WhiteBind keyboardKey="j" />
-      <WhiteBind keyboardKey="k" />
+      {/* <div className={css.whiteWithBlack}>
+        <WhiteBind keyboardKey="k" />
+        <BlackBind keyboardKey="o" />
+      </div>
+      <WhiteBind keyboardKey="l" /> */}
     </div>
   );
 };

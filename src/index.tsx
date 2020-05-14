@@ -4,7 +4,7 @@ import "./index.css";
 import App from "./App";
 import * as serviceWorker from "./serviceWorker";
 
-import { Keyboard, Center } from "./Keyboard";
+import { Center } from "./Keyboard";
 
 ReactDOM.render(
   <React.StrictMode>

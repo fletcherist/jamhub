@@ -18,7 +18,7 @@ import { mergeMap } from "rxjs/operators";
 import { Piano } from "@tonejs/piano";
 import { Reverb } from "tone";
 
-import { Keyboard } from "./Keyboard";
+import { MyKeyboard, UserKeyboard } from "./Keyboard";
 
 import css from "./App.module.css";
 
@@ -136,7 +136,7 @@ interface LoggerEventPing {
 type LoggerEvent = LoggerEventConnectionStatus | LoggerEventPing;
 type TransportStatus = "disconnected" | "connecting" | "connected" | "error";
 
-interface Transport {
+export interface Transport {
   send: (event: TransportEvent) => void;
   connect: () => { disconnect: () => void };
   events: Observable<LoggerEvent>;
@@ -349,6 +349,8 @@ const Jambox: React.FC = () => {
   );
   const [user, setUser] = useState<User>();
 
+  const [midiAccess, setMidiAccess] = useState<any | undefined>(undefined);
+
   useEffect(() => {
     if (selectedInstrument === "🎹") {
       setPianoStatus("loading");
@@ -405,6 +407,39 @@ const Jambox: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    const tryAccessMidi = async (): Promise<void> => {
+      try {
+        if (midiAccess) {
+          console.log("midi access already granted");
+          return;
+        }
+        if (typeof (navigator as any).requestMIDIAccess === "undefined") {
+          throw new Error("midi is not supported");
+        }
+        const midiAccessTry = await (navigator as any).requestMIDIAccess();
+        setMidiAccess(midiAccessTry);
+      } catch (error) {
+        console.error("Could not access your MIDI devices.", error);
+      }
+    };
+    tryAccessMidi();
+  }, [midiAccess]);
+
+  useEffect(() => {
+    if (!midiAccess || !user) {
+      return;
+    }
+    const midiInputs = [...midiAccess.inputs.values()];
+    if (midiInputs.length === 0) {
+      console.error("no midi inputs available");
+      return;
+    }
+    const midiInput = midiInputs[0];
+    if (!midiInput) {
+      console.error(midiInputs, "no midi input", midiInput);
+      return;
+    }
+
     const handleMidiEvent = (midiEvent: Event & { data: MIDIEvent }) => {
       const [type, pitch, velocity] = midiEvent.data;
       console.log("handleMidiEvent", midiEvent.data);
@@ -415,6 +450,7 @@ const Jambox: React.FC = () => {
           type: "midi",
           midi: [type, pitch, velocity],
           instrument: selectedInstrument,
+          user_id: user.id,
         });
       } else if (type === 128) {
         // note off
@@ -422,24 +458,16 @@ const Jambox: React.FC = () => {
           type: "midi",
           midi: [type, pitch, velocity],
           instrument: selectedInstrument,
+          user_id: user.id,
         });
       }
     };
-    const tryAccessMidi = async (): Promise<void> => {
-      try {
-        if (typeof (navigator as any).requestMIDIAccess === "undefined") {
-          throw new Error("midi is not supported");
-        }
-        const midiAccess = await (navigator as any).requestMIDIAccess();
-        for (const midiInput of midiAccess.inputs.values()) {
-          midiInput.onmidimessage = handleMidiEvent;
-        }
-      } catch (error) {
-        console.error("Could not access your MIDI devices.", error);
-      }
+
+    midiInput.addEventListener("midimessage", handleMidiEvent);
+    return () => {
+      midiInput.removeEventListener("midimessage", handleMidiEvent);
     };
-    tryAccessMidi();
-  }, []);
+  }, [midiAccess, user]);
 
   // useEffect(() => {
   //   setInterval(() => {
@@ -460,7 +488,12 @@ const Jambox: React.FC = () => {
       <div>
         <h1>users</h1>
         {store.state.room.users.map((roomUser) => {
-          return <div>{roomUser.id}</div>;
+          return (
+            <div>
+              <UserKeyboard transport={transport} userId={roomUser.id} />
+              {roomUser.id}
+            </div>
+          );
         })}
       </div>
       {user && (
@@ -487,14 +520,17 @@ const Jambox: React.FC = () => {
         })}
       </div>
 
-      <Keyboard
+      <MyKeyboard
         onMIDIEvent={(event) => {
           console.log("onMIDIEvent", event);
-          transport.send({
-            type: "midi",
-            midi: event,
-            instrument: selectedInstrument,
-          });
+          if (user) {
+            transport.send({
+              type: "midi",
+              midi: event,
+              instrument: selectedInstrument,
+              user_id: user.id,
+            });
+          }
         }}
       />
       <div>

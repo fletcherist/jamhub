@@ -9,6 +9,7 @@ interface TransportEventMIDI {
   type: "midi";
   midi: MIDIEvent;
   instrument: Instrument;
+  user_id: string;
 }
 interface TransportEventRoom {
   type: "room";
