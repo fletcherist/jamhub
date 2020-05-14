@@ -140,6 +140,7 @@ interface Transport {
   send: (event: TransportEvent) => void;
   connect: () => { disconnect: () => void };
   events: Observable<LoggerEvent>;
+  receive: Observable<TransportEvent>;
 }
 
 interface Player {
@@ -193,6 +194,7 @@ const createLocalTransport = ({ player }: { player: Player }): Transport => {
       };
     },
     events: events.asObservable(),
+    receive: stream.asObservable(),
   };
 };
 
@@ -284,14 +286,6 @@ const createWebSocketTransport = ({
               type: "ping",
               value: Date.now() - lastSentEventTimestamp,
             });
-          } else if (event.type === "user") {
-            console.log("user event", event);
-          } else if (event.type === "room") {
-            console.log("room event", event);
-          } else if (event.type === "user_join") {
-            console.log(event.type, event);
-          } else if (event.type === "user_leave") {
-            console.log(event.type, event);
           }
         },
       });
@@ -327,6 +321,7 @@ const createWebSocketTransport = ({
       };
     },
     events: events.asObservable(),
+    receive: receive.asObservable(),
   };
 };
 
@@ -338,7 +333,8 @@ const webSocketTransport = createWebSocketTransport({
   url: `ws://localhost${window.location.pathname}`,
 });
 
-const App: React.FC = () => {
+const Jambox: React.FC = () => {
+  const store = useStore();
   // const transport = createLocalTransport({ player });
   const transport = webSocketTransport;
   const [transportStatus, setTransportStatus] = useState<TransportStatus>(
@@ -351,6 +347,7 @@ const App: React.FC = () => {
   const [selectedInstrument, setSelectedInstrument] = useState<Instrument>(
     "🎻"
   );
+  const [user, setUser] = useState<User>();
 
   useEffect(() => {
     if (selectedInstrument === "🎹") {
@@ -361,6 +358,26 @@ const App: React.FC = () => {
     }
   }, [selectedInstrument]);
 
+  useEffect(() => {
+    const listener = transport.receive.subscribe((event) => {
+      if (event.type === "ping") {
+        console.log(event.type);
+      } else if (event.type === "user") {
+        console.log("user event", event);
+        setUser(event.user);
+      } else if (event.type === "room") {
+        console.log("room event", event);
+        store.update({ room: event.room });
+      } else if (event.type === "user_join") {
+        console.log(event.type, event);
+        store.api.roomUserAdd(event.user);
+      } else if (event.type === "user_leave") {
+        console.log(event.type, event);
+        store.api.roomUserRemove(event.user);
+      }
+    });
+    return () => listener.unsubscribe();
+  }, [store]);
   useEffect(() => {
     const listener = transport.events
       .pipe(
@@ -440,6 +457,16 @@ const App: React.FC = () => {
   ];
   return (
     <div>
+      <div>
+        <h1>users</h1>
+        {store.state.room.users.map((roomUser) => {
+          return <div>{roomUser.id}</div>;
+        })}
+      </div>
+      <div>
+        <h1>me</h1>
+        {user?.id}
+      </div>
       {/* <h1>pick your instrument</h1> */}
       <div className={css.instruments}>
         {instruments.map((instrument) => {
@@ -493,6 +520,14 @@ const App: React.FC = () => {
       <div>ping: {ping}ms</div>
       <div>v0.0.3</div>
     </div>
+  );
+};
+
+const App: React.FC = () => {
+  return (
+    <StoreProvider>
+      <Jambox />
+    </StoreProvider>
   );
 };
 
