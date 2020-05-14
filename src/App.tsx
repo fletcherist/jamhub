@@ -328,9 +328,9 @@ const createWebSocketTransport = ({
 const player = createPlayer();
 const webSocketTransport = createWebSocketTransport({
   player,
-  // url: `wss://api.jambox.online${window.location.pathname}`,
+  url: `wss://api.jambox.online${window.location.pathname}`,
   // url: `ws://84.201.149.157${window.location.pathname}`,
-  url: `ws://localhost${window.location.pathname}`,
+  // url: `ws://localhost${window.location.pathname}`,
 });
 
 const Jambox: React.FC = () => {
@@ -463,10 +463,12 @@ const Jambox: React.FC = () => {
           return <div>{roomUser.id}</div>;
         })}
       </div>
-      <div>
-        <h1>me</h1>
-        {user?.id}
-      </div>
+      {user && (
+        <div>
+          <h1>me</h1>
+          {user.id}
+        </div>
+      )}
       {/* <h1>pick your instrument</h1> */}
       <div className={css.instruments}>
         {instruments.map((instrument) => {
