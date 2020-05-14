@@ -345,7 +345,7 @@ const Jambox: React.FC = () => {
   >("not loaded");
   const [ping, setPing] = useState<number>(0);
   const [selectedInstrument, setSelectedInstrument] = useState<Instrument>(
-    "🎻"
+    "🎹"
   );
   const [user, setUser] = useState<User>();
 
