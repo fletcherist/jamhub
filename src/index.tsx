@@ -5,11 +5,13 @@ import App from "./App";
 import * as serviceWorker from "./serviceWorker";
 
 import { Center } from "./Keyboard";
+import { Loops } from "./Sandbox";
 
 ReactDOM.render(
   <React.StrictMode>
     <div style={{ height: "100vh" }}>
       <Center>
+        {/* <Loops /> */}
         <App />
       </Center>
     </div>

@@ -47,6 +47,52 @@ const synth = new Tone.Synth({
   },
 }).toDestination();
 
+// based on sockette https://github.com/lukeed/sockette
+const webSocketReconnect = (
+  url: string,
+  {
+    onopen,
+    onerror,
+    onclose,
+    onmessage,
+  }: {
+    onopen: (ev: Event) => void;
+    onerror: (ev: Event) => void;
+    onclose: (ev: CloseEvent) => void;
+    onmessage: (ev: MessageEvent) => void;
+  }
+) => {
+  let sock: WebSocket;
+  const open = (): void => {
+    sock = new WebSocket(url);
+    sock.onmessage = onmessage;
+    sock.onopen = (event) => onopen(event);
+    sock.onclose = async (event) => {
+      await delay(1000);
+      reconnect();
+      onclose(event);
+    };
+    sock.onerror = (error) => {
+      onerror(error);
+      sock.close();
+    };
+  };
+
+  const close = (): void => sock.close();
+  const reconnect = () => open();
+  const send = (
+    data: string | ArrayBuffer | SharedArrayBuffer | Blob | ArrayBufferView
+  ): void => sock.send(data);
+
+  open();
+  return {
+    open,
+    close,
+    reconnect,
+    send,
+  };
+};
+
 export interface State {
   isMutedMicrophone: boolean;
   isMutedSpeaker: boolean;
@@ -178,69 +224,29 @@ const createPlayer = (): Player => {
 };
 
 const createLocalTransport = ({ player }: { player: Player }): Transport => {
-  const stream = new Subject<TransportEvent>();
+  const send = new Subject<TransportEvent>();
+  const receive = new Subject<TransportEvent>();
   const events = new Subject<LoggerEvent>();
-  stream.subscribe((event) => player.send(event));
   return {
     send: (event: TransportEvent) => {
-      stream.next(event);
+      console.log("send", event);
+      send.next(event);
     },
     connect: () => {
+      const subscription = send.subscribe((event) => {
+        player.send(event);
+        receive.next(event);
+      });
       events.next({ type: "connectionStatus", status: "connected" });
       return {
         disconnect: () => {
+          subscription.unsubscribe();
           events.next({ type: "connectionStatus", status: "disconnected" });
         },
       };
     },
     events: events.asObservable(),
-    receive: stream.asObservable(),
-  };
-};
-
-// based on sockette https://github.com/lukeed/sockette
-const webSocketReconnect = (
-  url: string,
-  {
-    onopen,
-    onerror,
-    onclose,
-    onmessage,
-  }: {
-    onopen: (ev: Event) => void;
-    onerror: (ev: Event) => void;
-    onclose: (ev: CloseEvent) => void;
-    onmessage: (ev: MessageEvent) => void;
-  }
-) => {
-  let sock: WebSocket;
-  const open = (): void => {
-    sock = new WebSocket(url);
-    sock.onmessage = onmessage;
-    sock.onopen = (event) => onopen(event);
-    sock.onclose = async (event) => {
-      await delay(1000);
-      reconnect();
-      onclose(event);
-    };
-    sock.onerror = (error) => {
-      onerror(error);
-      sock.close();
-    };
-  };
-
-  const close = (): void => sock.close();
-  const reconnect = () => open();
-  const send = (
-    data: string | ArrayBuffer | SharedArrayBuffer | Blob | ArrayBufferView
-  ): void => sock.send(data);
-
-  open();
-  return {
-    open,
-    close,
-    reconnect,
-    send,
+    receive: receive.asObservable(),
   };
 };
 
@@ -332,11 +338,13 @@ const webSocketTransport = createWebSocketTransport({
   // url: `ws://84.201.149.157${window.location.pathname}`,
   // url: `ws://localhost${window.location.pathname}`,
 });
+const localTransport = createLocalTransport({ player });
 
 const Jambox: React.FC = () => {
   const store = useStore();
+  const transport = localTransport;
+  // const transport = webSocketTransport;
   // const transport = createLocalTransport({ player });
-  const transport = webSocketTransport;
   const [transportStatus, setTransportStatus] = useState<TransportStatus>(
     "disconnected"
   );
@@ -345,7 +353,7 @@ const Jambox: React.FC = () => {
   >("not loaded");
   const [ping, setPing] = useState<number>(0);
   const [selectedInstrument, setSelectedInstrument] = useState<Instrument>(
-    "🎹"
+    "🎻"
   );
   const [user, setUser] = useState<User>();
 
@@ -523,14 +531,16 @@ const Jambox: React.FC = () => {
       <MyKeyboard
         onMIDIEvent={(event) => {
           console.log("onMIDIEvent", event);
-          if (user) {
-            transport.send({
-              type: "midi",
-              midi: event,
-              instrument: selectedInstrument,
-              user_id: user.id,
-            });
+          if (!user) {
+            console.error("no user");
           }
+
+          transport.send({
+            type: "midi",
+            midi: event,
+            instrument: selectedInstrument,
+            user_id: user ? user.id : "0",
+          });
         }}
       />
       <div>
