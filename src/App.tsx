@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect, useRef } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import * as Tone from "tone";
 import cx from "classnames";
 
@@ -16,36 +16,51 @@ import { mergeMap } from "rxjs/operators";
 // import { LoggerEvent } from "./lib.ts";
 
 import { Piano } from "@tonejs/piano";
-import { Reverb } from "tone";
 
 import { MyKeyboard, UserKeyboard } from "./Keyboard";
 
 import css from "./App.module.css";
 
+//connect it to the speaker output
+const effectReverb = new Tone.Reverb({
+  decay: 10,
+  wet: 0.5,
+});
+effectReverb.toDestination();
+const effectDelay = new Tone.Delay({
+  delayTime: 0.3,
+  maxDelay: 3,
+});
+effectDelay.toDestination();
+const effectTremolo = new Tone.Tremolo(9, 0.75).toDestination().start();
+
 const piano = new Piano({
   velocities: 5,
 });
+piano.connect(effectReverb);
 
-//connect it to the speaker output
-const reverb = new Reverb({
-  decay: 5,
-  wet: 0.5,
-});
+// const synth = new Tone.Synth({
+//   oscillator: {
+//     type: "sine",
+//   },
+//   envelope: {
+//     attack: 0.005,
+//     decay: 0.1,
+//     sustain: 0.3,
+//     release: 1,
+//   },
+// });
+// // synth.connect(effectDelay);
+// synth.connect(effectReverb);
+// synth.connect(effectTremolo);
 
-piano.connect(reverb);
-reverb.toDestination();
-
-const synth = new Tone.Synth({
-  oscillator: {
-    type: "sine",
-  },
-  envelope: {
-    attack: 0.005,
-    decay: 0.1,
-    sustain: 0.3,
-    release: 1,
-  },
-}).toDestination();
+var autoWah = new Tone.AutoWah(50, 6, -30).toMaster();
+//initialize the synth and connect to autowah
+var synth = new Tone.Synth().connect(autoWah);
+//Q value influences the effect of the wah - default is 2
+autoWah.Q.value = 6;
+//more audible on higher notes
+synth.triggerAttackRelease("C4", "8n");
 
 // based on sockette https://github.com/lukeed/sockette
 const webSocketReconnect = (
