@@ -1,6 +1,6 @@
 export type MIDIEvent = [number, number, number];
 
-export type Instrument = "🎹" | "🎻";
+export type Instrument = "piano" | "guitar" | "marimba" | "epiano";
 interface TransportEventPing {
   type: "ping";
   // id: string;

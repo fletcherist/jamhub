@@ -58,9 +58,10 @@ class WAMController extends AudioWorkletNode {
 }
 
 export class DX7 extends WAMController {
-  private banks: string[];
-  private patches: string[];
-  private bank: string[];
+  public banks: string[];
+  public presets: Map<string, number[]>;
+  // public patches: string[];
+  // public bank: string[];
   constructor(audioContex: AudioContext) {
     const options: WAMControllerOptions = {
       numberOfInputs: 0,
@@ -78,8 +79,9 @@ export class DX7 extends WAMController {
       "analog1.syx",
       "Dexed_01.syx",
     ];
-    this.patches = [];
-    this.bank = [];
+    this.presets = new Map<string, number[]>();
+    // this.patches = [];
+    // this.bank = [];
   }
 
   get title() {
@@ -97,8 +99,7 @@ export class DX7 extends WAMController {
   }
 
   async loadBank(filename: string) {
-    function extractName(data: any[]) {
-      console.log("extractName", data);
+    function extractName(data: any[]): string {
       var offset = 118; // 118 for packed, 145 for unpacked
       var name = "";
       for (var n = 0; n < 10; n++) {
@@ -126,18 +127,16 @@ export class DX7 extends WAMController {
     if (data.byteLength !== 4104) {
       throw new Error("data.byteLength !== 4104");
     }
-    this.patches = [];
-    this.bank = [];
+    this.presets.clear();
     data = new Uint8Array(data);
     data = (data as any).subarray(6, 4102);
     for (var i = 0; i < 32; i++) {
       var offset = i * 128;
-      var voice = (data as any).subarray(offset, offset + 128);
-      var name = extractName(voice);
-      this.patches.push(name);
-      this.bank.push(voice);
+      const voice = (data as any).subarray(offset, offset + 128);
+      const name = extractName(voice);
+      this.presets.set(name, voice);
     }
-    return this.patches;
+    return this.presets;
   }
 }
 // const importDoc = document.currentScript.ownerDocument;

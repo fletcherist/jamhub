@@ -213,15 +213,36 @@ interface Player {
 }
 
 const usePlayer = (): Player => {
-  const refDx7 = useRef<DX7>();
+  const guitar1 = useRef<DX7>();
+  const marimba = useRef<DX7>();
+  const epiano = useRef<DX7>();
+
+  type Preset = "BRASS   1 " | "GUITAR  1 " | "MARIMBA   " | "E.PIANO 1 ";
+
   useEffect(() => {
+    const loadDx7 = async (preset: Preset): Promise<DX7> => {
+      await loadWAMProcessor(audioContext);
+      await DX7.importScripts(audioContext);
+      const dx7 = new DX7(audioContext);
+
+      Tone.connect(dx7 as AudioNode, effectReverb);
+      // dx7.connect(dx7.context.destination);
+      await dx7.loadBank("rom1A.syx");
+      const presetNames = [...dx7.presets.keys()];
+      console.log("presetNames", presetNames);
+      dx7.setPatch(dx7.presets.get(preset));
+      return dx7;
+    };
     async function main() {
       try {
-        await loadWAMProcessor(audioContext);
-        await DX7.importScripts(audioContext);
-        const dx7 = new DX7(audioContext);
-        dx7.connect(dx7.context.destination);
-        refDx7.current = dx7;
+        const [dx7guitar1, dx7marimba, dx7epiano] = await Promise.all([
+          loadDx7("GUITAR  1 "),
+          loadDx7("MARIMBA   "),
+          loadDx7("E.PIANO 1 "),
+        ]);
+        guitar1.current = dx7guitar1;
+        marimba.current = dx7marimba;
+        epiano.current = dx7epiano;
       } catch (error) {
         console.error(error);
       }
@@ -237,18 +258,30 @@ const usePlayer = (): Player => {
         // synth.triggerAttackRelease(event.note, "8n");
         const [type, pitch, velocity] = event.midi;
 
-        if (event.instrument === "🎹") {
+        if (event.instrument === "piano") {
           if (type === 144) {
             piano.keyDown({ midi: pitch, velocity: velocity / 256 });
           } else if (type === 128) {
             piano.keyUp({ midi: pitch });
           }
-        } else if (event.instrument === "🎻") {
-          if (!refDx7.current) {
+        } else if (event.instrument === "marimba") {
+          if (!marimba.current) {
             console.error("dx7 is not loaded");
             return;
           }
-          refDx7.current.onMidi(event.midi);
+          marimba.current.onMidi(event.midi);
+        } else if (event.instrument === "guitar") {
+          if (!guitar1.current) {
+            console.error("dx7 is not loaded");
+            return;
+          }
+          guitar1.current.onMidi(event.midi);
+        } else if (event.instrument === "epiano") {
+          if (!epiano.current) {
+            console.error("dx7 is not loaded");
+            return;
+          }
+          epiano.current.onMidi(event.midi);
         } else {
           console.error("instrument not implemented", event.instrument);
         }
@@ -392,20 +425,26 @@ const Jambox: React.FC = () => {
   >("not loaded");
   const [ping, setPing] = useState<number>(0);
   const [selectedInstrument, setSelectedInstrument] = useState<Instrument>(
-    "🎻"
+    "marimba"
   );
   const [user, setUser] = useState<User>();
 
   const [midiAccess, setMidiAccess] = useState<any | undefined>(undefined);
 
   useEffect(() => {
-    if (selectedInstrument === "🎹") {
-      setPianoStatus("loading");
-      piano.load().then(() => {
-        setPianoStatus("ready");
-      });
-    }
-  }, [selectedInstrument]);
+    setPianoStatus("loading");
+    piano.load().then(() => {
+      setPianoStatus("ready");
+    });
+  }, []);
+  // useEffect(() => {
+  //   if (selectedInstrument === "🎹") {
+  //     setPianoStatus("loading");
+  //     piano.load().then(() => {
+  //       setPianoStatus("ready");
+  //     });
+  //   }
+  // }, [selectedInstrument]);
 
   useEffect(() => {
     const listener = transport.receive.subscribe((event) => {
@@ -526,8 +565,10 @@ const Jambox: React.FC = () => {
   // }, []);
 
   const instruments: Instrument[] = [
-    "🎹",
-    "🎻",
+    "piano",
+    "guitar",
+    "marimba",
+    "epiano",
     // "🎸", "🎤", "🎺", "🎧", "🥁", "🪕", "🎷"
   ];
   return (
