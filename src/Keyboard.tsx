@@ -197,7 +197,7 @@ export const MyKeyboard: React.FC<{
     const handleKeydown = (event: KeyboardEvent) => {
       const key = keyCodeToNoteKeyMap.get(event.keyCode);
       if (key === "z") {
-        octave.current = Math.max(-1, octave.current - 1);
+        octave.current = Math.max(0, octave.current - 1);
         return;
       }
       if (key === "x") {

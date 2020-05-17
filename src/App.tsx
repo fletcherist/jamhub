@@ -437,14 +437,6 @@ const Jambox: React.FC = () => {
       setPianoStatus("ready");
     });
   }, []);
-  // useEffect(() => {
-  //   if (selectedInstrument === "🎹") {
-  //     setPianoStatus("loading");
-  //     piano.load().then(() => {
-  //       setPianoStatus("ready");
-  //     });
-  //   }
-  // }, [selectedInstrument]);
 
   useEffect(() => {
     const listener = transport.receive.subscribe((event) => {
@@ -553,7 +545,7 @@ const Jambox: React.FC = () => {
     return () => {
       midiInput.removeEventListener("midimessage", handleMidiEvent);
     };
-  }, [midiAccess, user]);
+  }, [midiAccess, user, selectedInstrument]);
 
   // useEffect(() => {
   //   setInterval(() => {
