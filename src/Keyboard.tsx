@@ -262,7 +262,7 @@ export const UserKeyboard: React.FC<{
           ) as KeyboardNotePitch;
           const key = noteToKeyboardMap.get(note);
           if (!key) {
-            throw new Error("unexpected key");
+            throw new Error(`unexpected key ${toneNote}`);
           }
           if (type === 144) {
             if (!refActiveKeys.current.includes(key)) {
