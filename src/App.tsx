@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect } from "react";
+import React, { useState, useContext, useEffect, useRef } from "react";
 import * as Tone from "tone";
 import cx from "classnames";
 
@@ -18,8 +18,12 @@ import { mergeMap } from "rxjs/operators";
 import { Piano } from "@tonejs/piano";
 
 import { MyKeyboard, UserKeyboard } from "./Keyboard";
+import { DX7, loadWAMProcessor } from "./Sandbox";
 
 import css from "./App.module.css";
+
+const audioContext = new AudioContext();
+Tone.setContext(audioContext);
 
 //connect it to the speaker output
 const effectReverb = new Tone.Reverb({
@@ -54,13 +58,13 @@ piano.connect(effectReverb);
 // synth.connect(effectReverb);
 // synth.connect(effectTremolo);
 
-var autoWah = new Tone.AutoWah(50, 6, -30).toMaster();
-//initialize the synth and connect to autowah
-var synth = new Tone.Synth().connect(autoWah);
-//Q value influences the effect of the wah - default is 2
-autoWah.Q.value = 6;
-//more audible on higher notes
-synth.triggerAttackRelease("C4", "8n");
+// var autoWah = new Tone.AutoWah(50, 6, -30).toMaster();
+// //initialize the synth and connect to autowah
+// var synth = new Tone.Synth().connect(autoWah);
+// //Q value influences the effect of the wah - default is 2
+// autoWah.Q.value = 6;
+// //more audible on higher notes
+// synth.triggerAttackRelease("C4", "8n");
 
 // based on sockette https://github.com/lukeed/sockette
 const webSocketReconnect = (
@@ -208,7 +212,23 @@ interface Player {
   send: (event: TransportEvent) => void;
 }
 
-const createPlayer = (): Player => {
+const usePlayer = (): Player => {
+  const refDx7 = useRef<DX7>();
+  useEffect(() => {
+    async function main() {
+      try {
+        await loadWAMProcessor(audioContext);
+        await DX7.importScripts(audioContext);
+        const dx7 = new DX7(audioContext);
+        dx7.connect(dx7.context.destination);
+        refDx7.current = dx7;
+      } catch (error) {
+        console.error(error);
+      }
+    }
+    main();
+  }, []);
+
   return {
     send: (event: TransportEvent) => {
       if (event.type === "midi") {
@@ -224,12 +244,11 @@ const createPlayer = (): Player => {
             piano.keyUp({ midi: pitch });
           }
         } else if (event.instrument === "🎻") {
-          if (type === 144) {
-            synth.triggerAttackRelease(
-              Tone.Frequency(pitch, "midi").toNote(),
-              "16n"
-            );
+          if (!refDx7.current) {
+            console.error("dx7 is not loaded");
+            return;
           }
+          refDx7.current.onMidi(event.midi);
         } else {
           console.error("instrument not implemented", event.instrument);
         }
@@ -346,18 +365,23 @@ const createWebSocketTransport = ({
   };
 };
 
-const player = createPlayer();
-const webSocketTransport = createWebSocketTransport({
-  player,
-  url: `wss://api.jambox.online${window.location.pathname}`,
-  // url: `ws://84.201.149.157${window.location.pathname}`,
-  // url: `ws://localhost${window.location.pathname}`,
-});
-const localTransport = createLocalTransport({ player });
-
 const Jambox: React.FC = () => {
+  const player = usePlayer();
+
+  const webSocketTransport = useRef<Transport>(
+    createWebSocketTransport({
+      player,
+      // url: `wss://api.jambox.online${window.location.pathname}`,
+      url: `ws://84.201.149.157${window.location.pathname}`,
+      // url: `ws://localhost${window.location.pathname}`,
+    })
+  );
+  // const localTransport = useRef<Transport>(
+  //   createLocalTransport({ player })
+  // );
+
   const store = useStore();
-  const transport = localTransport;
+  const transport = webSocketTransport.current;
   // const transport = webSocketTransport;
   // const transport = createLocalTransport({ player });
   const [transportStatus, setTransportStatus] = useState<TransportStatus>(

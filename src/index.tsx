@@ -5,7 +5,7 @@ import App from "./App";
 import * as serviceWorker from "./serviceWorker";
 
 import { Center } from "./Keyboard";
-import { Loops } from "./Sandbox";
+// import { Loops } from "./Sandbox";
 
 ReactDOM.render(
   <React.StrictMode>

@@ -1,3 +1,7 @@
+v0.0.4
+
+- port [webaudiomodules](https://www.webaudiomodules.org/) to typescript and use their dx7 yahama WebAssembly synth
+
 v0.0.3
 
 - add instruments change feature

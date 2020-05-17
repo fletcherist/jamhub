@@ -1,6 +1,7 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import * as Tone from "tone";
 import { MIDIEvent } from "./lib";
+import { UserKeyboard, MyKeyboard } from "./Keyboard";
 
 const player = new Tone.Player({
   url:
@@ -8,6 +9,9 @@ const player = new Tone.Player({
 }).toDestination();
 
 const ORIGIN = "https://fletcherist.github.io/webaudiomodules";
+
+export const loadWAMProcessor = (audioContext: AudioContext): Promise<void> =>
+  audioContext.audioWorklet.addModule(`${ORIGIN}/wam-processor.js`);
 
 interface WAMControllerOptions {
   numberOfInputs: number;
@@ -53,7 +57,7 @@ class WAMController extends AudioWorkletNode {
   }
 }
 
-class DX7 extends WAMController {
+export class DX7 extends WAMController {
   private banks: string[];
   private patches: string[];
   private bank: string[];
@@ -232,30 +236,23 @@ class DX7 extends WAMController {
 //   }
 // }
 
-async function main() {
-  try {
-    const audioContext = new AudioContext();
-    await audioContext.audioWorklet.addModule(`${ORIGIN}/wam-processor.js`);
-    await DX7.importScripts(audioContext);
-    const wam = new DX7(audioContext);
-    //   this._initPresets(wam);
-    setInterval(() => {
-      const note = 40;
-      wam.onMidi([0x90, note, 120]);
-      setTimeout(() => {
-        wam.onMidi([0x80, note, 120]);
-      }, 500);
-    }, 1000);
-    wam.connect(wam.context.destination);
-  } catch (error) {
-    console.error(error);
-  }
-}
-main();
-
+// https://d9olupt5igjta.cloudfront.net/samples/sample_files/12068/11209b403e60dc9cab69a11664cb14e82d869bcc/mp3/_80_bpm_DRUMS.mp3
 export const Loops: React.FC = () => {
+  const refWam = useRef<DX7>();
   useEffect(() => {
-    // https://d9olupt5igjta.cloudfront.net/samples/sample_files/12068/11209b403e60dc9cab69a11664cb14e82d869bcc/mp3/_80_bpm_DRUMS.mp3
+    async function main() {
+      try {
+        const audioContext = new AudioContext();
+        await audioContext.audioWorklet.addModule(`${ORIGIN}/wam-processor.js`);
+        await DX7.importScripts(audioContext);
+        const wam = new DX7(audioContext);
+        wam.connect(wam.context.destination);
+        refWam.current = wam;
+      } catch (error) {
+        console.error(error);
+      }
+    }
+    main();
   }, []);
   return (
     <div>
@@ -268,6 +265,14 @@ export const Loops: React.FC = () => {
         play
       </button>
       hello world
+      <MyKeyboard
+        onMIDIEvent={(event) => {
+          if (!refWam.current) {
+            throw new Error("dx7 is not initialized");
+          }
+          refWam.current.onMidi(event);
+        }}
+      />
     </div>
   );
 };
