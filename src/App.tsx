@@ -17,7 +17,7 @@ import { mergeMap } from "rxjs/operators";
 
 import { Piano } from "@tonejs/piano";
 
-import { MyKeyboard, UserKeyboard } from "./Keyboard";
+import { MyKeyboard, UserKeyboard, UserKeyboardContainer } from "./Keyboard";
 
 import { DX7, loadWAMProcessor } from "./instruments";
 
@@ -583,13 +583,16 @@ const Jambox: React.FC = () => {
     // "🎸", "🎤", "🎺", "🎧", "🥁", "🪕", "🎷"
   ];
   return (
-    <div>
+    <div style={{ height: "100vh" }}>
       <div>
         <h1>users</h1>
         {store.state.room.users.map((roomUser) => {
           return (
             <div>
-              <UserKeyboard transport={transport} userId={roomUser.id} />
+              <UserKeyboardContainer
+                transport={transport}
+                userId={roomUser.id}
+              />
               {roomUser.id}
             </div>
           );

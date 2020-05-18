@@ -29,42 +29,44 @@ export const Storybook: React.FC = () => {
       </Row> */}
       <Center>
         <div>
-          <Row>
-            <Card style={{ height: 166 }}>
-              <Tree initialExpand>
-                <Tree.Folder name="instruments">
-                  <Tree.File name="marimba" />
-                  <Tree.File
-                    name="electronic piano"
-                    className={css.instrumentSelected}
-                  />
-                  <Tree.File name="grand piano" extra="30mb loading..." />
-                </Tree.Folder>
-              </Tree>
-              <Spacer y={0.5} />
-            </Card>
-            <Spacer x={1} />
-            <div
-            // style={{ padding: "0px 50px" }}
-            >
-              <User ping={80} />
-              <MyKeyboard onMIDIEvent={() => undefined} />
-              <div>
-                <Tooltip text={"octave down"}>
-                  <Keyboard>z</Keyboard>
-                </Tooltip>
-                <Tooltip text={"octave up"}>
-                  <Keyboard>x</Keyboard>
-                </Tooltip>
-                <Tooltip text={"less velocity"}>
-                  <Keyboard>c</Keyboard>
-                </Tooltip>
-                <Tooltip text={"more velocity"}>
-                  <Keyboard>v</Keyboard>
-                </Tooltip>
+          <Card shadow>
+            <Row>
+              <div style={{ height: 166 }}>
+                <Tree initialExpand>
+                  <Tree.Folder name="instruments">
+                    <Tree.File name="marimba" />
+                    <Tree.File
+                      name="electronic piano"
+                      className={css.instrumentSelected}
+                    />
+                    <Tree.File name="grand piano" extra="30mb loading..." />
+                  </Tree.Folder>
+                </Tree>
+                <Spacer y={0.5} />
               </div>
-            </div>
-          </Row>
+              <Spacer x={1} />
+              <div
+              // style={{ padding: "0px 50px" }}
+              >
+                <User ping={80} />
+                <MyKeyboard onMIDIEvent={() => undefined} />
+                <div>
+                  <Tooltip text={"octave down"}>
+                    <Keyboard>z</Keyboard>
+                  </Tooltip>
+                  <Tooltip text={"octave up"}>
+                    <Keyboard>x</Keyboard>
+                  </Tooltip>
+                  <Tooltip text={"less velocity"}>
+                    <Keyboard>c</Keyboard>
+                  </Tooltip>
+                  <Tooltip text={"more velocity"}>
+                    <Keyboard>v</Keyboard>
+                  </Tooltip>
+                </div>
+              </div>
+            </Row>
+          </Card>
           <Text>
             Join our{" "}
             <Link href="https://discord.gg/upa4tP" icon color target="_blank">

@@ -5,7 +5,7 @@ import cx from "classnames";
 import css from "./Keyboard.module.css";
 import { MIDIEvent, Transport } from "./App";
 import { mergeMap, filter } from "rxjs/operators";
-import { of } from "rxjs";
+import { of, Subject } from "rxjs";
 
 type KeyboardNoteKey =
   | "a"
@@ -220,13 +220,15 @@ export const MyKeyboard: React.FC<{
   );
 };
 
-export const UserKeyboard: React.FC<{
+interface KeyboardMIDIEvent {
+  type: "press" | "release";
+  key: KeyboardNoteKey;
+}
+export const UserKeyboardContainer: React.FC<{
   transport: Transport;
   userId: string;
 }> = ({ transport, userId }) => {
-  const refActiveKeys = useRef<KeyboardNoteKey[]>([]);
-  const [activeKeys, setActiveKeys] = useState<KeyboardNoteKey[]>([]);
-
+  const keyboardEvents = new Subject<KeyboardMIDIEvent>();
   useEffect(() => {
     const subscription = transport.receive
       .pipe(
@@ -250,17 +252,9 @@ export const UserKeyboard: React.FC<{
             throw new Error(`unexpected key ${toneNote}`);
           }
           if (type === 144) {
-            if (!refActiveKeys.current.includes(key)) {
-              refActiveKeys.current = [...refActiveKeys.current, key];
-              setActiveKeys(refActiveKeys.current);
-            }
+            keyboardEvents.next({ type: "press", key });
           } else if (type === 128) {
-            if (refActiveKeys.current.includes(key)) {
-              refActiveKeys.current = refActiveKeys.current.filter(
-                (activeKey) => activeKey !== key
-              );
-              setActiveKeys(refActiveKeys.current);
-            }
+            keyboardEvents.next({ type: "release", key });
           }
           return;
         }
@@ -268,6 +262,34 @@ export const UserKeyboard: React.FC<{
       });
     return () => subscription.unsubscribe();
   }, [transport, userId]);
+
+  return <UserKeyboard keyboardEvents={keyboardEvents} />;
+};
+export const UserKeyboard: React.FC<{
+  keyboardEvents?: Subject<KeyboardMIDIEvent>;
+}> = ({ keyboardEvents = new Subject<KeyboardMIDIEvent>() }) => {
+  const refActiveKeys = useRef<KeyboardNoteKey[]>([]);
+  const [activeKeys, setActiveKeys] = useState<KeyboardNoteKey[]>([]);
+  useEffect(() => {
+    const subscription = keyboardEvents.subscribe((event) => {
+      if (event.type === "press") {
+        if (!refActiveKeys.current.includes(event.key)) {
+          refActiveKeys.current = [...refActiveKeys.current, event.key];
+          setActiveKeys(refActiveKeys.current);
+        }
+      } else if (event.type === "release") {
+        if (refActiveKeys.current.includes(event.key)) {
+          refActiveKeys.current = refActiveKeys.current.filter(
+            (activeKey) => activeKey !== event.key
+          );
+          setActiveKeys(refActiveKeys.current);
+        }
+      }
+    });
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [keyboardEvents]);
 
   return (
     <Keyboard

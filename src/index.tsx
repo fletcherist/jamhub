@@ -15,7 +15,6 @@ ReactDOM.render(
       {/* <App /> */}
       <Storybook />
     </ZeitProvider>
-    {/* <div style={{ height: "100vh" }}></div> */}
   </React.StrictMode>,
   document.getElementById("root")
 );
