@@ -29,39 +29,48 @@ export const Storybook: React.FC = () => {
       </Row> */}
       <Center>
         <div>
-          <Card shadow style={{ padding: "0px 50px" }}>
-            <Tree initialExpand>
-              <Tree.Folder name="instruments">
-                <Tree.File name="marimba" />
-                <Tree.File name="electronic piano" />
-                <Tree.File name="grand piano" extra="30mb loading..." />
-              </Tree.Folder>
-            </Tree>
-            <Spacer y={0.5} />
-            <User ping={80} />
-            <MyKeyboard onMIDIEvent={() => undefined} />
-            <div>
-              <Tooltip text={"octave down"}>
-                <Keyboard>z</Keyboard>
-              </Tooltip>
-              <Tooltip text={"octave up"}>
-                <Keyboard>x</Keyboard>
-              </Tooltip>
-              <Tooltip text={"less velocity"}>
-                <Keyboard>c</Keyboard>
-              </Tooltip>
-              <Tooltip text={"more velocity"}>
-                <Keyboard>v</Keyboard>
-              </Tooltip>
+          <Row>
+            <Card style={{ height: 166 }}>
+              <Tree initialExpand>
+                <Tree.Folder name="instruments">
+                  <Tree.File name="marimba" />
+                  <Tree.File
+                    name="electronic piano"
+                    className={css.instrumentSelected}
+                  />
+                  <Tree.File name="grand piano" extra="30mb loading..." />
+                </Tree.Folder>
+              </Tree>
+              <Spacer y={0.5} />
+            </Card>
+            <Spacer x={1} />
+            <div
+            // style={{ padding: "0px 50px" }}
+            >
+              <User ping={80} />
+              <MyKeyboard onMIDIEvent={() => undefined} />
+              <div>
+                <Tooltip text={"octave down"}>
+                  <Keyboard>z</Keyboard>
+                </Tooltip>
+                <Tooltip text={"octave up"}>
+                  <Keyboard>x</Keyboard>
+                </Tooltip>
+                <Tooltip text={"less velocity"}>
+                  <Keyboard>c</Keyboard>
+                </Tooltip>
+                <Tooltip text={"more velocity"}>
+                  <Keyboard>v</Keyboard>
+                </Tooltip>
+              </div>
             </div>
-          </Card>
-          <Spacer y={0.5} />
+          </Row>
           <Text>
             Join our{" "}
-            <Link href="#" icon color>
+            <Link href="https://discord.gg/upa4tP" icon color target="_blank">
               Discord
             </Link>
-            community
+            community of musicians
           </Text>
         </div>
       </Center>
