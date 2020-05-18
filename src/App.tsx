@@ -18,7 +18,8 @@ import { mergeMap } from "rxjs/operators";
 import { Piano } from "@tonejs/piano";
 
 import { MyKeyboard, UserKeyboard } from "./Keyboard";
-import { DX7, loadWAMProcessor } from "./Sandbox";
+
+import { DX7, loadWAMProcessor } from "./instruments";
 
 import css from "./App.module.css";
 
@@ -548,13 +549,31 @@ const Jambox: React.FC = () => {
   }, [midiAccess, user, selectedInstrument]);
 
   // useEffect(() => {
-  //   setInterval(() => {
+  //   const interval = setInterval(() => {
+  //     if (!user) {
+  //       return;
+  //     }
   //     console.log("tick");
-  //     transport.send({ midi: [144, 108, 0.2] });
-  //     transport.send({ midi: [128, 108, 0.2] });
+  //     transport.send({
+  //       midi: [144, 50, 1],
+  //       type: "midi",
+  //       instrument: "epiano",
+  //       user_id: user.id,
+  //     });
+  //     setTimeout(() => {
+  //       transport.send({
+  //         midi: [128, 50, 1],
+  //         type: "midi",
+  //         instrument: "epiano",
+  //         user_id: user.id,
+  //       });
+  //     }, 100);
   //     // 666.6666
-  //   }, 666.6666);
-  // }, []);
+  //   }, 1000);
+  //   return () => {
+  //     clearInterval(interval);
+  //   };
+  // }, [user]);
 
   const instruments: Instrument[] = [
     "piano",
