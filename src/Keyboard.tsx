@@ -279,7 +279,7 @@ export const UserKeyboardContainer: React.FC<{
         throw new Error(`expected midi event. got: ${event.type}`);
       });
     return () => subscription.unsubscribe();
-  }, [transport, userId]);
+  }, [transport, userId, keyboardEvents]);
 
   return <UserKeyboard keyboardEvents={keyboardEvents} />;
 };
