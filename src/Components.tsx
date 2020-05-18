@@ -7,8 +7,6 @@ import {
   Text,
   Radio,
   Description,
-  Keyboard,
-  Tooltip,
   Row,
   Loading,
   Tree,
@@ -21,26 +19,26 @@ import {
 } from "@zeit-ui/react";
 
 import { MyKeyboard, UserKeyboard } from "./Keyboard";
-import { Instrument } from "./lib";
+import * as Lib from "./lib";
 
+export const Instrument: React.FC<{
+  name: Lib.Instrument;
+  onClick: (event: React.MouseEvent) => void;
+  selected: boolean;
+}> = ({ name, onClick, selected }) => {
+  return (
+    <Button
+      // className={cx({
+      //   [css.instrumentSelected]: selected,
+      // })}
+      shadow={selected}
+      onClick={onClick}
+    >
+      {name}
+    </Button>
+  );
+};
 export const Storybook: React.FC = () => {
-  const Instrument: React.FC<{
-    name: Instrument;
-    onClick: (event: React.MouseEvent) => void;
-    selected: boolean;
-  }> = ({ name, onClick, selected }) => {
-    return (
-      <Button
-        className={cx({
-          [css.instrumentSelected]: selected,
-        })}
-        onClick={onClick}
-      >
-        {name}
-      </Button>
-    );
-  };
-
   return (
     <div>
       {/* <UserStory /> */}
@@ -64,7 +62,7 @@ export const Storybook: React.FC = () => {
                   <Instrument
                     name="guitar"
                     onClick={() => undefined}
-                    selected={false}
+                    selected={true}
                   />
                   <Instrument
                     name="piano"
@@ -76,57 +74,26 @@ export const Storybook: React.FC = () => {
               </div>
               <Spacer x={1} />
               <div>
-                <User ping={80} />
                 <MyKeyboard onMIDIEvent={() => undefined} />
-                <div>
-                  <Tooltip text={"octave down"}>
-                    <Keyboard>z</Keyboard>
-                  </Tooltip>
-                  <Tooltip text={"octave up"}>
-                    <Keyboard>x</Keyboard>
-                  </Tooltip>
-                  <Tooltip text={"less velocity"}>
-                    <Keyboard>c</Keyboard>
-                  </Tooltip>
-                  <Tooltip text={"more velocity"}>
-                    <Keyboard>v</Keyboard>
-                  </Tooltip>
-                </div>
               </div>
             </Row>
           </Card>
-          <Text>
-            Join our{" "}
-            <Link href="https://discord.gg/upa4tP" icon color target="_blank">
-              Discord
-            </Link>
-            community of musicians
-          </Text>
+          <JoinDiscordLink />
         </div>
       </Center>
     </div>
   );
 };
 
-const UserStory = () => {
+export const JoinDiscordLink = () => {
   return (
-    <div>
-      user
-      <User ping={80} />
-    </div>
-  );
-};
-
-const User: React.FC<{
-  ping: number;
-}> = ({ ping }) => {
-  return (
-    <div>
-      <Text h6>
-        {ping}ms
-        <Dot style={{ marginLeft: 5 }} type="success" />
-      </Text>
-    </div>
+    <Text>
+      Join our{" "}
+      <Link href="https://discord.gg/upa4tP" icon color target="_blank">
+        Discord
+      </Link>
+      community of musicians
+    </Text>
   );
 };
 

@@ -7,6 +7,8 @@ import { MIDIEvent, Transport } from "./App";
 import { mergeMap, filter } from "rxjs/operators";
 import { of, Subject } from "rxjs";
 
+import { Keyboard as KeyboardDescription, Tooltip } from "@zeit-ui/react";
+
 type KeyboardNoteKey =
   | "a"
   | "s"
@@ -212,11 +214,27 @@ export const MyKeyboard: React.FC<{
   }, [octave, refActiveKeys, handleKeyboardNoteDown]);
 
   return (
-    <Keyboard
-      activeKeys={activeKeys}
-      onPressKey={handleKeyboardNoteDown}
-      onReleaseKey={handleKeyboardNoteUp}
-    />
+    <div>
+      <Keyboard
+        activeKeys={activeKeys}
+        onPressKey={handleKeyboardNoteDown}
+        onReleaseKey={handleKeyboardNoteUp}
+      />
+      <div>
+        <Tooltip text={"octave down"}>
+          <KeyboardDescription>z</KeyboardDescription>
+        </Tooltip>
+        <Tooltip text={"octave up"}>
+          <KeyboardDescription>x</KeyboardDescription>
+        </Tooltip>
+        <Tooltip text={"less velocity"}>
+          <KeyboardDescription>c</KeyboardDescription>
+        </Tooltip>
+        <Tooltip text={"more velocity"}>
+          <KeyboardDescription>v</KeyboardDescription>
+        </Tooltip>
+      </div>
+    </div>
   );
 };
 

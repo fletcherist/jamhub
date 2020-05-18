@@ -2,14 +2,9 @@ import React, { useState, useContext, useEffect, useRef } from "react";
 import * as Tone from "tone";
 import cx from "classnames";
 
-import {
-  User,
-  Room,
-  pingEvent,
-  TransportEvent,
-  delay,
-  Instrument,
-} from "./lib";
+import { Room, pingEvent, TransportEvent, delay } from "./lib";
+
+import * as Lib from "./lib";
 
 import { Subject, of, Observable } from "rxjs";
 import { mergeMap } from "rxjs/operators";
@@ -22,6 +17,16 @@ import { MyKeyboard, UserKeyboard, UserKeyboardContainer } from "./Keyboard";
 import { DX7, loadWAMProcessor } from "./instruments";
 
 import css from "./App.module.css";
+import { Center, Instrument, JoinDiscordLink } from "./Components";
+import {
+  Description,
+  ButtonGroup,
+  Row,
+  Card,
+  Spacer,
+  Text,
+  Dot,
+} from "@zeit-ui/react";
 
 const audioContext = new AudioContext();
 Tone.setContext(audioContext);
@@ -116,14 +121,14 @@ const webSocketReconnect = (
 export interface State {
   isMutedMicrophone: boolean;
   isMutedSpeaker: boolean;
-  user?: User;
+  user?: Lib.User;
   room: Room;
 }
 
 interface Api {
-  roomUserAdd: (user: User) => void;
-  roomUserRemove: (user: User) => void;
-  roomUserUpdate: (user: User) => void;
+  roomUserAdd: (user: Lib.User) => void;
+  roomUserRemove: (user: Lib.User) => void;
+  roomUserUpdate: (user: Lib.User) => void;
 }
 interface Store {
   state: State;
@@ -425,10 +430,10 @@ const Jambox: React.FC = () => {
     "not loaded" | "loading" | "ready"
   >("not loaded");
   const [ping, setPing] = useState<number>(0);
-  const [selectedInstrument, setSelectedInstrument] = useState<Instrument>(
-    "marimba"
+  const [selectedInstrument, setSelectedInstrument] = useState<Lib.Instrument>(
+    "epiano"
   );
-  const [user, setUser] = useState<User>();
+  const [user, setUser] = useState<Lib.User>();
 
   const [midiAccess, setMidiAccess] = useState<any | undefined>(undefined);
 
@@ -575,7 +580,7 @@ const Jambox: React.FC = () => {
   //   };
   // }, [user]);
 
-  const instruments: Instrument[] = [
+  const instruments: Lib.Instrument[] = [
     "piano",
     "guitar",
     "marimba",
@@ -584,83 +589,102 @@ const Jambox: React.FC = () => {
   ];
   return (
     <div style={{ height: "100vh" }}>
-      <div>
-        <h1>users</h1>
-        {store.state.room.users.map((roomUser) => {
-          return (
-            <div>
-              <UserKeyboardContainer
-                transport={transport}
-                userId={roomUser.id}
-              />
-              {roomUser.id}
-            </div>
-          );
-        })}
-      </div>
-      {user && (
+      <Row style={{ flexGrow: 2 }}>
+        <div>
+          <h1>users</h1>
+          {store.state.room.users.map((roomUser) => {
+            return (
+              <div>
+                <UserKeyboardContainer
+                  transport={transport}
+                  userId={roomUser.id}
+                />
+                {roomUser.id}
+              </div>
+            );
+          })}
+        </div>
+        {/* {user && (
         <div>
           <h1>me</h1>
           {user.id}
         </div>
-      )}
-      {/* <h1>pick your instrument</h1> */}
-      <div className={css.instruments}>
-        {instruments.map((instrument) => {
-          return (
-            <div
-              className={cx(css.instrument, {
-                [css.instrumentActive]: selectedInstrument === instrument,
-              })}
-              onClick={() => {
-                setSelectedInstrument(instrument);
-              }}
-            >
-              {instrument}
+      )} */}
+      </Row>
+      <div>
+        <Card shadow>
+          <Row>
+            <div style={{ height: 200 }}>
+              <Description title="Instruments" />
+              <ButtonGroup vertical style={{ width: 150 }}>
+                {instruments.map((instrument) => {
+                  return (
+                    <Instrument
+                      name={instrument}
+                      onClick={() => setSelectedInstrument(instrument)}
+                      selected={false}
+                    />
+                  );
+                })}
+              </ButtonGroup>
+              <Spacer y={0.5} />
             </div>
-          );
-        })}
-      </div>
+            <Spacer x={1} />
+            <div>
+              <Row>
+                <Text small>
+                  piano:{" "}
+                  <span
+                    style={{
+                      ...(pianoStatus === "ready" && { color: "green" }),
+                    }}
+                  >
+                    {pianoStatus}
+                  </span>
+                </Text>
+                <Spacer x={0.5} />
+                <Text small>
+                  transport:{" "}
+                  <span
+                    style={{
+                      ...(transportStatus === "connected" && {
+                        color: "green",
+                      }),
+                      ...(transportStatus === "error" && { color: "red" }),
+                      // color: transportStatus === "connected" ? "green" : "black",
+                    }}
+                  >
+                    {transportStatus}
+                  </span>
+                </Text>
+                <Spacer x={0.5} />
+                <Text small>
+                  {ping}ms
+                  <Dot style={{ marginLeft: 5 }} type="success" />
+                </Text>
+              </Row>
+              <Spacer y={0.5} />
 
-      <MyKeyboard
-        onMIDIEvent={(event) => {
-          console.log("onMIDIEvent", event);
-          if (!user) {
-            console.error("no user");
-          }
-
-          transport.send({
-            type: "midi",
-            midi: event,
-            instrument: selectedInstrument,
-            user_id: user ? user.id : "0",
-          });
-        }}
-      />
-      <div>
-        transport:{" "}
-        <span
-          style={{
-            ...(transportStatus === "connected" && { color: "green" }),
-            ...(transportStatus === "error" && { color: "red" }),
-            // color: transportStatus === "connected" ? "green" : "black",
-          }}
-        >
-          {transportStatus}
-        </span>
+              <MyKeyboard
+                onMIDIEvent={(event) => {
+                  console.log("onMIDIEvent", event);
+                  if (!user) {
+                    console.error("no user");
+                  }
+                  transport.send({
+                    type: "midi",
+                    midi: event,
+                    instrument: selectedInstrument,
+                    user_id: user ? user.id : "0",
+                  });
+                }}
+              />
+            </div>
+          </Row>
+        </Card>
+        <JoinDiscordLink />
+        <div>v0.0.3</div>
       </div>
-      <div>
-        piano:{" "}
-        <span
-          style={{
-            ...(pianoStatus === "ready" && { color: "green" }),
-          }}
-        >
-          {pianoStatus}
-        </span>
-      </div>
-      <div>ping: {ping}ms</div>
-      <div>v0.0.3</div>
     </div>
   );
 };
