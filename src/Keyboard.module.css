@@ -1,6 +1,5 @@
 .container {
   display: flex;
-  justify-content: center;
 
   --width: 50px;
   --height: calc(var(--width) * 2);
@@ -15,7 +14,7 @@
   padding: 0;
 }
 .white {
-  border: 1px solid black;
+  border: 1px solid rgba(0, 0, 0, 0.1);
   height: var(--height);
   width: var(--width);
 }
@@ -34,7 +33,7 @@
   position: absolute;
   width: var(--width-black);
   height: var(--height-black);
-  background-color: black;
+  background-color: rgba(0, 0, 0, 1);
   top: 0;
   left: 50%;
   outline-width: 0;

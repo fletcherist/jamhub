@@ -109,21 +109,6 @@ const mapKeyboardKeyToNote = (key: KeyboardNoteKey, octave: number): string => {
   return `${note.replace("8", "")}${selectKeyboardKeyOctave(note, octave)}`;
 };
 
-export const Center: React.FC = ({ children }) => {
-  return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        height: "100%",
-      }}
-    >
-      {children}
-    </div>
-  );
-};
-
 const White: React.FC<{
   active: boolean;
   onPress: () => void;

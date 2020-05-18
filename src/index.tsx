@@ -3,18 +3,19 @@ import ReactDOM from "react-dom";
 import "./index.css";
 import App from "./App";
 import * as serviceWorker from "./serviceWorker";
+import { ZeitProvider, CssBaseline } from "@zeit-ui/react";
 
-import { Center } from "./Keyboard";
+import { Storybook } from "./Components";
 // import { Loops } from "./Sandbox";
 
 ReactDOM.render(
   <React.StrictMode>
-    <div style={{ height: "100vh" }}>
-      <Center>
-        {/* <Loops /> */}
-        <App />
-      </Center>
-    </div>
+    <ZeitProvider>
+      <CssBaseline />
+      {/* <App /> */}
+      <Storybook />
+    </ZeitProvider>
+    {/* <div style={{ height: "100vh" }}></div> */}
   </React.StrictMode>,
   document.getElementById("root")
 );
