@@ -1,6 +1,7 @@
 import React from "react";
 import css from "./Components.module.css";
 
+import cx from "classnames";
 import {
   Dot,
   Text,
@@ -15,11 +16,31 @@ import {
   Link,
   Spacer,
   Card,
+  Button,
+  ButtonGroup,
 } from "@zeit-ui/react";
 
-import { MyKeyboard } from "./Keyboard";
+import { MyKeyboard, UserKeyboard } from "./Keyboard";
+import { Instrument } from "./lib";
 
 export const Storybook: React.FC = () => {
+  const Instrument: React.FC<{
+    name: Instrument;
+    onClick: (event: React.MouseEvent) => void;
+    selected: boolean;
+  }> = ({ name, onClick, selected }) => {
+    return (
+      <Button
+        className={cx({
+          [css.instrumentSelected]: selected,
+        })}
+        onClick={onClick}
+      >
+        {name}
+      </Button>
+    );
+  };
+
   return (
     <div>
       {/* <UserStory /> */}
@@ -27,27 +48,34 @@ export const Storybook: React.FC = () => {
       {/* <Row style={{ padding: "10px 0" }}>
         <Loading />
       </Row> */}
+      <UserKeyboard />
       <Center>
         <div>
           <Card shadow>
             <Row>
               <div style={{ height: 166 }}>
-                <Tree initialExpand>
-                  <Tree.Folder name="instruments">
-                    <Tree.File name="marimba" />
-                    <Tree.File
-                      name="electronic piano"
-                      className={css.instrumentSelected}
-                    />
-                    <Tree.File name="grand piano" extra="30mb loading..." />
-                  </Tree.Folder>
-                </Tree>
+                <Description title="Instruments" />
+                <ButtonGroup vertical style={{ width: 150 }}>
+                  <Instrument
+                    name="epiano"
+                    onClick={() => undefined}
+                    selected={false}
+                  />
+                  <Instrument
+                    name="guitar"
+                    onClick={() => undefined}
+                    selected={false}
+                  />
+                  <Instrument
+                    name="piano"
+                    onClick={() => undefined}
+                    selected={false}
+                  />
+                </ButtonGroup>
                 <Spacer y={0.5} />
               </div>
               <Spacer x={1} />
-              <div
-              // style={{ padding: "0px 50px" }}
-              >
+              <div>
                 <User ping={80} />
                 <MyKeyboard onMIDIEvent={() => undefined} />
                 <div>
@@ -76,35 +104,6 @@ export const Storybook: React.FC = () => {
           </Text>
         </div>
       </Center>
-    </div>
-  );
-};
-
-const InstrumentsListStory = () => {
-  return (
-    <div>
-      <InstrumentsList />
-    </div>
-  );
-};
-const InstrumentsList = () => {
-  return (
-    <div>
-      {/* <Description title="Instruments" content="Select you insrument" /> */}
-
-      {/* <Radio.Group value="1" onChange={(val) => console.log(val)}>
-        <Radio value="1">
-          Grand
-          <Radio.Description>
-            <Row style={{ padding: "10px 0" }}>
-              <Loading>loading</Loading>
-            </Row>
-          </Radio.Description>
-        </Radio>
-        <Radio value="2">
-          Option 2<Radio.Desc>for Option2</Radio.Desc>
-        </Radio>
-      </Radio.Group> */}
     </div>
   );
 };
