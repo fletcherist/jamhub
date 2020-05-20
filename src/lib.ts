@@ -1,29 +1,34 @@
 export type MIDIEvent = [number, number, number];
 
 export type Instrument = "piano" | "guitar" | "marimba" | "epiano";
-interface TransportEventPing {
+export interface TransportEventPing {
+  user_id: string;
   type: "ping";
-  // id: string;
+  value: number;
 }
-interface TransportEventMIDI {
+interface TransportEventPingOutgoing {
+  type: "ping";
+  value: number;
+}
+export interface TransportEventMIDI {
   type: "midi";
   midi: MIDIEvent;
   instrument: Instrument;
   user_id: string;
 }
-interface TransportEventRoom {
+export interface TransportEventRoom {
   type: "room";
   room: Room;
 }
-interface TransportEventUser {
+export interface TransportEventUser {
   type: "user";
   user: User;
 }
-interface TransportEventUserJoin {
+export interface TransportEventUserJoin {
   type: "user_join";
   user: User;
 }
-interface TransportEventUserLeave {
+export interface TransportEventUserLeave {
   type: "user_leave";
   user: User;
 }
@@ -33,9 +38,12 @@ export type TransportEvent =
   | TransportEventRoom
   | TransportEventUser
   | TransportEventUserJoin
-  | TransportEventUserLeave;
+  | TransportEventUserLeave
+  | TransportEventPingOutgoing;
 
-export const pingEvent: TransportEventPing = { type: "ping" };
+export const createPingEvent = (): TransportEventPingOutgoing => {
+  return { type: "ping", value: Date.now() };
+};
 
 // export interface TransportEvent {
 //   type:

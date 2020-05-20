@@ -2,12 +2,12 @@ import React, { useState, useContext, useEffect, useRef } from "react";
 import * as Tone from "tone";
 import cx from "classnames";
 
-import { Room, pingEvent, TransportEvent, delay } from "./lib";
+import { Room, createPingEvent, TransportEvent, delay } from "./lib";
 
 import * as Lib from "./lib";
 
 import { Subject, of, Observable } from "rxjs";
-import { mergeMap } from "rxjs/operators";
+import { mergeMap, filter } from "rxjs/operators";
 // import { LoggerEvent } from "./lib.ts";
 
 import { Piano } from "@tonejs/piano";
@@ -200,12 +200,8 @@ interface LoggerEventConnectionStatus {
   type: "connectionStatus";
   status: TransportStatus;
 }
-interface LoggerEventPing {
-  type: "ping";
-  value: number; // ms
-}
 
-type LoggerEvent = LoggerEventConnectionStatus | LoggerEventPing;
+type LoggerEvent = LoggerEventConnectionStatus;
 type TransportStatus = "disconnected" | "connecting" | "connected" | "error";
 
 export interface Transport {
@@ -334,7 +330,6 @@ const createWebSocketTransport = ({
   const send = new Subject<TransportEvent>();
   const receive = new Subject<TransportEvent>();
   const events = new Subject<LoggerEvent>();
-  let lastSentEventTimestamp: number = Date.now();
   return {
     send: (event: TransportEvent) => {
       send.next(event);
@@ -361,12 +356,6 @@ const createWebSocketTransport = ({
           const event = JSON.parse(msg.data) as TransportEvent;
           // console.log("onmessage", event);
           receive.next(event);
-          if (event.type === "ping") {
-            events.next({
-              type: "ping",
-              value: Date.now() - lastSentEventTimestamp,
-            });
-          }
         },
       });
 
@@ -387,8 +376,7 @@ const createWebSocketTransport = ({
       (async () => {
         while (true) {
           await delay(5000);
-          lastSentEventTimestamp = Date.now();
-          sock.send(JSON.stringify(pingEvent));
+          send.next(createPingEvent());
         }
       })();
 
@@ -405,6 +393,14 @@ const createWebSocketTransport = ({
   };
 };
 
+const createTransportRouter = (transport: Transport) => {
+  const ping = transport.receive.pipe(
+    filter((event) => event.type === "ping")
+  ) as Observable<Lib.TransportEventPing>;
+
+  return { ping };
+};
+
 const Jambox: React.FC = () => {
   const player = usePlayer();
 
@@ -419,9 +415,12 @@ const Jambox: React.FC = () => {
   // const localTransport = useRef<Transport>(
   //   createLocalTransport({ player })
   // );
+  const [usersPing, setUsersPing] = useState<{ [key: string]: number }>({});
 
   const store = useStore();
   const transport = webSocketTransport.current;
+
+  const router = createTransportRouter(transport);
   // const transport = webSocketTransport;
   // const transport = createLocalTransport({ player });
   const [transportStatus, setTransportStatus] = useState<TransportStatus>(
@@ -430,13 +429,21 @@ const Jambox: React.FC = () => {
   const [pianoStatus, setPianoStatus] = useState<
     "not loaded" | "loading" | "ready"
   >("not loaded");
-  const [ping, setPing] = useState<number>(0);
   const [selectedInstrument, setSelectedInstrument] = useState<Lib.Instrument>(
     "epiano"
   );
   const [user, setUser] = useState<Lib.User>();
-
   const [midiAccess, setMidiAccess] = useState<any | undefined>(undefined);
+
+  useEffect(() => {
+    const subscription = router.ping.subscribe((pingEvent) => {
+      setUsersPing({
+        ...usersPing,
+        ...{ [pingEvent.user_id]: pingEvent.value },
+      });
+    });
+    return () => subscription.unsubscribe();
+  }, [router, usersPing]);
 
   useEffect(() => {
     setPianoStatus("loading");
@@ -472,8 +479,6 @@ const Jambox: React.FC = () => {
           console.log(event);
           if (event.type === "connectionStatus") {
             setTransportStatus(event.status);
-          } else if (event.type === "ping") {
-            setPing(event.value);
           }
           return of(event);
         })
@@ -660,10 +665,12 @@ const Jambox: React.FC = () => {
                     </span>
                   </Text>
                   <Spacer x={0.5} />
-                  <Text small>
-                    {ping}ms
-                    <Dot style={{ marginLeft: 5 }} type="success" />
-                  </Text>
+                  {user && (
+                    <Text small>
+                      {usersPing[user.id]}ms
+                      <Dot style={{ marginLeft: 5 }} type="success" />
+                    </Text>
+                  )}
                 </Row>
                 <Spacer y={0.5} />
                 <MyKeyboard

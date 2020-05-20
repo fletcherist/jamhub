@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"math"
 	"os"
 	"time"
 
@@ -25,6 +26,14 @@ var (
 	errInvalidPacket  = errors.New("packet is nil")
 	errNotImplemented = errors.New("not implemented")
 )
+
+const millisInSecond = 1000
+const nsInSecond = 1000000
+
+// FromUnixMilli Converts Unix Epoch from milliseconds to time.Time
+func FromUnixMilli(ms int64) time.Time {
+	return time.Unix(ms/int64(millisInSecond), (ms%int64(millisInSecond))*int64(nsInSecond))
+}
 
 const (
 	// Time allowed to write a message to the peer.
@@ -230,6 +239,7 @@ type Event struct {
 	User       *UserWrap `json:"user,omitempty"`
 	Room       *RoomWrap `json:"room,omitempty"`
 	Desc       string    `json:"desc,omitempty"`
+	Value      int64     `json:"value"`
 }
 
 // HandleEvent handles user event
@@ -242,8 +252,12 @@ func (u *User) HandleEvent(eventRaw []byte) error {
 	u.log("handle event:", event.Type)
 	event.UserID = u.ID
 	if event.Type == "ping" {
-		u.SendPingEvent()
-		u.BroadcastEventPing()
+		pingTimestamp := FromUnixMilli(event.Value)
+		pingToServer := time.Now().Sub(pingTimestamp)
+		pingToServerMs := int64(math.Abs(float64(pingToServer.Milliseconds())))
+		// fmt.Println("PING MS:", pingToServerMs)
+		u.SendPingEvent(pingToServerMs)
+		u.BroadcastEventPing(pingToServerMs)
 		return nil
 	} else if event.Type == "midi" {
 		u.SendEvent(*event)
@@ -272,8 +286,8 @@ func (u *User) SendEvent(event Event) error {
 }
 
 // SendPingEvent sends ping event
-func (u *User) SendPingEvent() error {
-	return u.SendEvent(Event{Type: "ping", UserID: u.ID})
+func (u *User) SendPingEvent(ping int64) error {
+	return u.SendEvent(Event{Type: "ping", UserID: u.ID, Value: ping})
 }
 
 // SendEventUser sends user to client to identify himself
@@ -297,8 +311,8 @@ func (u *User) BroadcastEvent(event Event) error {
 }
 
 // BroadcastEventPing sends everyone user ping
-func (u *User) BroadcastEventPing() error {
-	return u.BroadcastEvent(Event{Type: "ping", UserID: u.ID})
+func (u *User) BroadcastEventPing(ping int64) error {
+	return u.BroadcastEvent(Event{Type: "ping", UserID: u.ID, Value: ping})
 }
 
 // BroadcastEventJoin sends user_join event
