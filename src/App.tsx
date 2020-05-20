@@ -239,19 +239,32 @@ const usePlayer = (): Player => {
 
 const Ping: React.FC<{
   userId: string;
-  pingChannel: Subject<Lib.TransportEventPing>;
+  pingChannel: Observable<Lib.TransportEventPing>;
 }> = ({ userId, pingChannel }) => {
   const [ping, setPing] = useState<number>(0);
   useEffect(() => {
     const subscription = pingChannel.subscribe((pingEvent) => {
       if (pingEvent.userId === userId) {
-        setPing(ping);
+        setPing(pingEvent.value);
       }
     });
     return () => subscription.unsubscribe();
   }, [pingChannel, userId]);
+  // useEffect(() => {
+  //   const subscription = router.ping.subscribe((pingEvent) => {
+  //     setUsersPing({
+  //       ...usersPing,
+  //       ...{ [pingEvent.userId]: pingEvent.value },
+  //     });
+  //   });
+  //   return () => subscription.unsubscribe();
+  // }, [router, usersPing]);
 
-  return <Text small>{ping}ms </Text>;
+  return (
+    <Text small>
+      {ping}ms <Dot style={{ marginLeft: 5 }} type="success" />
+    </Text>
+  );
 };
 
 const Jambox: React.FC = () => {
@@ -267,7 +280,7 @@ const Jambox: React.FC = () => {
   // const localTransport = useRef<Transport>(
   //   createLocalTransport({ player })
   // );
-  const [usersPing, setUsersPing] = useState<{ [key: string]: number }>({});
+  // const [usersPing, setUsersPing] = useState<{ [key: string]: number }>({});
 
   const store = useStore();
   const transport = webSocketTransport.current;
@@ -286,16 +299,6 @@ const Jambox: React.FC = () => {
   );
   const [user, setUser] = useState<Lib.User>();
   const [midiAccess, setMidiAccess] = useState<any | undefined>(undefined);
-
-  useEffect(() => {
-    const subscription = router.ping.subscribe((pingEvent) => {
-      setUsersPing({
-        ...usersPing,
-        ...{ [pingEvent.userId]: pingEvent.value },
-      });
-    });
-    return () => subscription.unsubscribe();
-  }, [router, usersPing]);
 
   useEffect(() => {
     setPianoStatus("loading");
@@ -459,7 +462,7 @@ const Jambox: React.FC = () => {
                   transport={transport}
                   userId={roomUser.id}
                 />
-
+                <Ping userId={roomUser.id} pingChannel={router.ping} />
                 {/* {roomUser.id} */}
               </div>
             );
@@ -520,12 +523,7 @@ const Jambox: React.FC = () => {
                     </span>
                   </Text>
                   <Spacer x={0.5} />
-                  {user && (
-                    <Text small>
-                      {usersPing[user.id]}ms
-                      <Dot style={{ marginLeft: 5 }} type="success" />
-                    </Text>
-                  )}
+                  {user && <Ping pingChannel={router.ping} userId={user.id} />}
                 </Row>
                 <Spacer y={0.5} />
                 <MyKeyboard
