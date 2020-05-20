@@ -289,7 +289,9 @@ const Jambox: React.FC = () => {
 
   useEffect(() => {
     const listener = transport.receive.subscribe((event) => {
-      if (event.type === "ping") {
+      if (event.type === "midi") {
+        player.send(event);
+      } else if (event.type === "ping") {
         console.log(event.type);
       } else if (event.type === "user") {
         console.log("user event", event);
@@ -306,7 +308,7 @@ const Jambox: React.FC = () => {
       }
     });
     return () => listener.unsubscribe();
-  }, [store]);
+  }, [store, player]);
   useEffect(() => {
     const listener = transport.events
       .pipe(
