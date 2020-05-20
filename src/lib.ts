@@ -1,8 +1,10 @@
+export const APP_VERSION = "v0.0.4";
+
 export type MIDIEvent = [number, number, number];
 
 export type Instrument = "piano" | "guitar" | "marimba" | "epiano";
 export interface TransportEventPing {
-  user_id: string;
+  userId: string;
   type: "ping";
   value: number;
 }
@@ -14,7 +16,7 @@ export interface TransportEventMIDI {
   type: "midi";
   midi: MIDIEvent;
   instrument: Instrument;
-  user_id: string;
+  userId: string;
 }
 export interface TransportEventRoom {
   type: "room";

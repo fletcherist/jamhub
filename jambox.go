@@ -233,7 +233,7 @@ func (u *User) writePump() {
 // Event represents web socket user event
 type Event struct {
 	Type       string    `json:"type"`
-	UserID     string    `json:"user_id"`
+	UserID     string    `json:"userId"`
 	Instrument string    `json:"instrument,omitempty"`
 	MIDI       *[]int64  `json:"midi,omitempty"`
 	User       *UserWrap `json:"user,omitempty"`

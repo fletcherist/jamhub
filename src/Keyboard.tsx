@@ -254,7 +254,7 @@ export const UserKeyboardContainer: React.FC<{
     const subscription = transport.receive
       .pipe(
         filter((event) => {
-          if (event.type === "midi" && event.user_id === userId) {
+          if (event.type === "midi" && event.userId === userId) {
             return true;
           }
           return false;

@@ -237,6 +237,23 @@ const usePlayer = (): Player => {
   };
 };
 
+const Ping: React.FC<{
+  userId: string;
+  pingChannel: Subject<Lib.TransportEventPing>;
+}> = ({ userId, pingChannel }) => {
+  const [ping, setPing] = useState<number>(0);
+  useEffect(() => {
+    const subscription = pingChannel.subscribe((pingEvent) => {
+      if (pingEvent.userId === userId) {
+        setPing(ping);
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [pingChannel, userId]);
+
+  return <Text small>{ping}ms </Text>;
+};
+
 const Jambox: React.FC = () => {
   const player = usePlayer();
 
@@ -274,7 +291,7 @@ const Jambox: React.FC = () => {
     const subscription = router.ping.subscribe((pingEvent) => {
       setUsersPing({
         ...usersPing,
-        ...{ [pingEvent.user_id]: pingEvent.value },
+        ...{ [pingEvent.userId]: pingEvent.value },
       });
     });
     return () => subscription.unsubscribe();
@@ -377,7 +394,7 @@ const Jambox: React.FC = () => {
           type: "midi",
           midi: [type, pitch, velocity],
           instrument: selectedInstrument,
-          user_id: user.id,
+          userId: user.id,
         });
       } else if (type === 128) {
         // note off
@@ -385,7 +402,7 @@ const Jambox: React.FC = () => {
           type: "midi",
           midi: [type, pitch, velocity],
           instrument: selectedInstrument,
-          user_id: user.id,
+          userId: user.id,
         });
       }
     };
@@ -442,6 +459,7 @@ const Jambox: React.FC = () => {
                   transport={transport}
                   userId={roomUser.id}
                 />
+
                 {/* {roomUser.id} */}
               </div>
             );
@@ -520,7 +538,7 @@ const Jambox: React.FC = () => {
                       type: "midi",
                       midi: event,
                       instrument: selectedInstrument,
-                      user_id: user ? user.id : "0",
+                      userId: user ? user.id : "0",
                     });
                   }}
                 />
@@ -537,7 +555,7 @@ const Jambox: React.FC = () => {
           </Text>
           <Text small type="secondary">
             <Link href="https://github.com/fletcherist/jambox" target="_blank">
-              v0.0.3
+              {Lib.APP_VERSION}
             </Link>{" "}
             <Link
               href="https://github.com/fletcherist/jambox/issues"
