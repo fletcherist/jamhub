@@ -78,22 +78,10 @@ export const Storybook: React.FC = () => {
               </div>
             </Row>
           </Card>
-          <JoinDiscordLink />
+          {/* <JoinDiscordLink /> */}
         </div>
       </Center>
     </div>
-  );
-};
-
-export const JoinDiscordLink = () => {
-  return (
-    <Text>
-      Join our{" "}
-      <Link href="https://discord.gg/upa4tP" icon color target="_blank">
-        Discord
-      </Link>
-      community of musicians
-    </Text>
   );
 };
 

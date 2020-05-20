@@ -17,7 +17,7 @@ import { MyKeyboard, UserKeyboard, UserKeyboardContainer } from "./Keyboard";
 import { DX7, loadWAMProcessor } from "./instruments";
 
 import css from "./App.module.css";
-import { Center, Instrument, JoinDiscordLink } from "./Components";
+import { Center, Instrument } from "./Components";
 import {
   Description,
   ButtonGroup,
@@ -26,6 +26,7 @@ import {
   Spacer,
   Text,
   Dot,
+  Link,
 } from "@zeit-ui/react";
 
 const audioContext = new AudioContext();
@@ -588,9 +589,9 @@ const Jambox: React.FC = () => {
     // "🎸", "🎤", "🎺", "🎧", "🥁", "🪕", "🎷"
   ];
   return (
-    <div style={{ height: "100vh" }}>
+    <div style={{ height: "100vh", display: "flex", flexDirection: "column" }}>
       <Row style={{ flexGrow: 2 }}>
-        <div>
+        <div style={{ display: "flex", justifyContent: "center" }}>
           <h1>users</h1>
           {store.state.room.users.map((roomUser) => {
             return (
@@ -599,7 +600,7 @@ const Jambox: React.FC = () => {
                   transport={transport}
                   userId={roomUser.id}
                 />
-                {roomUser.id}
+                {/* {roomUser.id} */}
               </div>
             );
           })}
@@ -611,79 +612,100 @@ const Jambox: React.FC = () => {
         </div>
       )} */}
       </Row>
-      <div>
-        <Card shadow>
-          <Row>
-            <div style={{ height: 200 }}>
-              <Description title="Instruments" />
-              <ButtonGroup vertical style={{ width: 150 }}>
-                {instruments.map((instrument) => {
-                  return (
-                    <Instrument
-                      name={instrument}
-                      onClick={() => setSelectedInstrument(instrument)}
-                      selected={false}
-                    />
-                  );
-                })}
-              </ButtonGroup>
-              <Spacer y={0.5} />
-            </div>
-            <Spacer x={1} />
-            <div>
-              <Row>
-                <Text small>
-                  piano:{" "}
-                  <span
-                    style={{
-                      ...(pianoStatus === "ready" && { color: "green" }),
-                    }}
-                  >
-                    {pianoStatus}
-                  </span>
-                </Text>
-                <Spacer x={0.5} />
-                <Text small>
-                  transport:{" "}
-                  <span
-                    style={{
-                      ...(transportStatus === "connected" && {
-                        color: "green",
-                      }),
-                      ...(transportStatus === "error" && { color: "red" }),
-                      // color: transportStatus === "connected" ? "green" : "black",
-                    }}
-                  >
-                    {transportStatus}
-                  </span>
-                </Text>
-                <Spacer x={0.5} />
-                <Text small>
-                  {ping}ms
-                  <Dot style={{ marginLeft: 5 }} type="success" />
-                </Text>
-              </Row>
-              <Spacer y={0.5} />
-
-              <MyKeyboard
-                onMIDIEvent={(event) => {
-                  console.log("onMIDIEvent", event);
-                  if (!user) {
-                    console.error("no user");
-                  }
-                  transport.send({
-                    type: "midi",
-                    midi: event,
-                    instrument: selectedInstrument,
-                    user_id: user ? user.id : "0",
-                  });
-                }}
-              />
-            </div>
-          </Row>
-        </Card>
-        <JoinDiscordLink />
-        <div>v0.0.3</div>
+      <div style={{ display: "flex", justifyContent: "center" }}>
+        <div>
+          <Card shadow>
+            <Row>
+              <div style={{ height: 200 }}>
+                <Description title="Instruments" />
+                <ButtonGroup vertical style={{ width: 150 }}>
+                  {instruments.map((instrument) => {
+                    return (
+                      <Instrument
+                        name={instrument}
+                        onClick={() => setSelectedInstrument(instrument)}
+                        selected={false}
+                      />
+                    );
+                  })}
+                </ButtonGroup>
+                <Spacer y={0.5} />
+              </div>
+              <Spacer x={1} />
+              <div>
+                <Row>
+                  <Text small>
+                    piano:{" "}
+                    <span
+                      style={{
+                        ...(pianoStatus === "ready" && { color: "green" }),
+                      }}
+                    >
+                      {pianoStatus}
+                    </span>
+                  </Text>
+                  <Spacer x={0.5} />
+                  <Text small>
+                    transport:{" "}
+                    <span
+                      style={{
+                        ...(transportStatus === "connected" && {
+                          color: "green",
+                        }),
+                        ...(transportStatus === "error" && { color: "red" }),
+                        // color: transportStatus === "connected" ? "green" : "black",
+                      }}
+                    >
+                      {transportStatus}
+                    </span>
+                  </Text>
+                  <Spacer x={0.5} />
+                  <Text small>
+                    {ping}ms
+                    <Dot style={{ marginLeft: 5 }} type="success" />
+                  </Text>
+                </Row>
+                <Spacer y={0.5} />
+                <MyKeyboard
+                  onMIDIEvent={(event) => {
+                    console.log("onMIDIEvent", event);
+                    if (!user) {
+                      console.error("no user");
+                    }
+                    transport.send({
+                      type: "midi",
+                      midi: event,
+                      instrument: selectedInstrument,
+                      user_id: user ? user.id : "0",
+                    });
+                  }}
+                />
+              </div>
+            </Row>
+          </Card>
+          <Spacer y={0.5} />
+          <Text small>
+            Join our{" "}
+            <Link href="https://discord.gg/upa4tP" icon color target="_blank">
+              Discord
+            </Link>
+            community of musicians{" "}
+          </Text>
+          <Text small type="secondary">
+            <Link href="https://github.com/fletcherist/jambox" target="_blank">
+              v0.0.3
+            </Link>{" "}
+            <Link
+              href="https://github.com/fletcherist/jambox/issues"
+              icon
+              color
+              target="_blank"
+            >
+              report bug
+            </Link>
+          </Text>
+          <Spacer y={2} />
+        </div>
       </div>
     </div>
   );
