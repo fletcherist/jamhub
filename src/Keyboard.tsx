@@ -3,9 +3,12 @@ import * as Tone from "tone";
 import React, { useRef, useEffect, useState } from "react";
 import cx from "classnames";
 import css from "./Keyboard.module.css";
-import { MIDIEvent, Transport } from "./App";
-import { mergeMap, filter } from "rxjs/operators";
-import { of, Subject } from "rxjs";
+
+import { Transport } from "./transport";
+import { MIDIEvent } from "./lib";
+
+import { filter } from "rxjs/operators";
+import { Subject } from "rxjs";
 
 import { Keyboard as KeyboardDescription, Tooltip } from "@zeit-ui/react";
 

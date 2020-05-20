@@ -2,7 +2,7 @@ import React, { useState, useContext, useEffect, useRef } from "react";
 import * as Tone from "tone";
 import cx from "classnames";
 
-import { Room, createPingEvent, TransportEvent, delay } from "./lib";
+import { Room } from "./lib";
 
 import * as Lib from "./lib";
 
@@ -28,6 +28,12 @@ import {
   Dot,
   Link,
 } from "@zeit-ui/react";
+import {
+  createWebSocketTransport,
+  createTransportRouter,
+  Transport,
+  TransportStatus,
+} from "./transport";
 
 const audioContext = new AudioContext();
 Tone.setContext(audioContext);
@@ -72,52 +78,6 @@ piano.connect(effectReverb);
 // autoWah.Q.value = 6;
 // //more audible on higher notes
 // synth.triggerAttackRelease("C4", "8n");
-
-// based on sockette https://github.com/lukeed/sockette
-const webSocketReconnect = (
-  url: string,
-  {
-    onopen,
-    onerror,
-    onclose,
-    onmessage,
-  }: {
-    onopen: (ev: Event) => void;
-    onerror: (ev: Event) => void;
-    onclose: (ev: CloseEvent) => void;
-    onmessage: (ev: MessageEvent) => void;
-  }
-) => {
-  let sock: WebSocket;
-  const open = (): void => {
-    sock = new WebSocket(url);
-    sock.onmessage = onmessage;
-    sock.onopen = (event) => onopen(event);
-    sock.onclose = async (event) => {
-      await delay(1000);
-      reconnect();
-      onclose(event);
-    };
-    sock.onerror = (error) => {
-      onerror(error);
-      sock.close();
-    };
-  };
-
-  const close = (): void => sock.close();
-  const reconnect = () => open();
-  const send = (
-    data: string | ArrayBuffer | SharedArrayBuffer | Blob | ArrayBufferView
-  ): void => sock.send(data);
-
-  open();
-  return {
-    open,
-    close,
-    reconnect,
-    send,
-  };
-};
 
 export interface State {
   isMutedMicrophone: boolean;
@@ -190,29 +150,13 @@ export const useStore = (): Store => {
   return context as Store; // store is defined anyway
 };
 
-export type MIDIEvent = [number, number, number];
 // interface TransportEvent {
 //   // note: string;
 //   midi: MIDIEvent;
 // }
 
-interface LoggerEventConnectionStatus {
-  type: "connectionStatus";
-  status: TransportStatus;
-}
-
-type LoggerEvent = LoggerEventConnectionStatus;
-type TransportStatus = "disconnected" | "connecting" | "connected" | "error";
-
-export interface Transport {
-  send: (event: TransportEvent) => void;
-  connect: () => { disconnect: () => void };
-  events: Observable<LoggerEvent>;
-  receive: Observable<TransportEvent>;
-}
-
 interface Player {
-  send: (event: TransportEvent) => void;
+  send: (event: Lib.TransportEvent) => void;
 }
 
 const usePlayer = (): Player => {
@@ -254,7 +198,7 @@ const usePlayer = (): Player => {
   }, []);
 
   return {
-    send: (event: TransportEvent) => {
+    send: (event: Lib.TransportEvent) => {
       if (event.type === "midi") {
         console.log("player", event, event.midi);
         // synth.triggerAttackRelease("C4", "8n");
@@ -293,120 +237,11 @@ const usePlayer = (): Player => {
   };
 };
 
-const createLocalTransport = ({ player }: { player: Player }): Transport => {
-  const send = new Subject<TransportEvent>();
-  const receive = new Subject<TransportEvent>();
-  const events = new Subject<LoggerEvent>();
-  return {
-    send: (event: TransportEvent) => {
-      console.log("send", event);
-      send.next(event);
-    },
-    connect: () => {
-      const subscription = send.subscribe((event) => {
-        player.send(event);
-        receive.next(event);
-      });
-      events.next({ type: "connectionStatus", status: "connected" });
-      return {
-        disconnect: () => {
-          subscription.unsubscribe();
-          events.next({ type: "connectionStatus", status: "disconnected" });
-        },
-      };
-    },
-    events: events.asObservable(),
-    receive: receive.asObservable(),
-  };
-};
-
-const createWebSocketTransport = ({
-  url,
-  player,
-}: {
-  url: string;
-  player: Player;
-}): Transport => {
-  const send = new Subject<TransportEvent>();
-  const receive = new Subject<TransportEvent>();
-  const events = new Subject<LoggerEvent>();
-  return {
-    send: (event: TransportEvent) => {
-      send.next(event);
-    },
-    connect: () => {
-      events.next({ type: "connectionStatus", status: "connecting" });
-      const sock = webSocketReconnect(url, {
-        onclose: (event) => {
-          console.log(event);
-          events.next({ type: "connectionStatus", status: "disconnected" });
-        },
-        onerror: (event) => {
-          console.error(event);
-          events.next({ type: "connectionStatus", status: "error" });
-        },
-        onopen: (event) => {
-          console.log(event);
-          events.next({ type: "connectionStatus", status: "connected" });
-
-          sendPipeline.subscribe();
-          receivePipeline.subscribe();
-        },
-        onmessage: (msg) => {
-          const event = JSON.parse(msg.data) as TransportEvent;
-          // console.log("onmessage", event);
-          receive.next(event);
-        },
-      });
-
-      // send/receieve data pipelines
-      const sendPipeline = send.pipe(
-        mergeMap((event) => {
-          sock.send(JSON.stringify(event));
-          return of(event);
-        })
-      );
-      const receivePipeline = receive.pipe(
-        mergeMap((event) => {
-          player.send(event);
-          return of(event);
-        })
-      );
-
-      (async () => {
-        while (true) {
-          await delay(5000);
-          send.next(createPingEvent());
-        }
-      })();
-
-      return {
-        disconnect: () => {
-          send.complete();
-          receive.complete();
-          sock.close();
-        },
-      };
-    },
-    events: events.asObservable(),
-    receive: receive.asObservable(),
-  };
-};
-
-const createTransportRouter = (transport: Transport) => {
-  const ping = transport.receive.pipe(
-    filter((event) => event.type === "ping")
-  ) as Observable<Lib.TransportEventPing>;
-
-  return { ping };
-};
-
 const Jambox: React.FC = () => {
   const player = usePlayer();
 
   const webSocketTransport = useRef<Transport>(
     createWebSocketTransport({
-      player,
       url: `wss://api.jambox.online${window.location.pathname}`,
       // url: `ws://84.201.149.157${window.location.pathname}`,
       // url: `ws://localhost${window.location.pathname}`,
@@ -530,7 +365,7 @@ const Jambox: React.FC = () => {
       return;
     }
 
-    const handleMidiEvent = (midiEvent: Event & { data: MIDIEvent }) => {
+    const handleMidiEvent = (midiEvent: Event & { data: Lib.MIDIEvent }) => {
       const [type, pitch, velocity] = midiEvent.data;
       console.log("handleMidiEvent", midiEvent.data);
 
