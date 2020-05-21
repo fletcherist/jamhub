@@ -1,18 +1,19 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import "./index.css";
-import App from "./App";
-import * as serviceWorker from "./serviceWorker";
 import { ZeitProvider, CssBaseline } from "@zeit-ui/react";
 
+import App from "./App";
+import * as serviceWorker from "./serviceWorker";
+
 import { Storybook } from "./Components";
-// import { Loops } from "./Sandbox";
+import { Loops } from "./Sandbox";
 
 ReactDOM.render(
   <React.StrictMode>
     <ZeitProvider>
       <CssBaseline />
-      <App />
+      {/* <App /> */}
+      <Loops />
       {/* <Storybook /> */}
     </ZeitProvider>
   </React.StrictMode>,

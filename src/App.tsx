@@ -27,6 +27,7 @@ import {
   Text,
   Dot,
   Link,
+  Button,
 } from "@zeit-ui/react";
 import {
   createWebSocketTransport,
@@ -237,6 +238,8 @@ const usePlayer = (): Player => {
   };
 };
 
+// https://tonejs.github.io/examples/quantization.html
+
 const Ping: React.FC<{
   userId: string;
   pingChannel: Observable<Lib.TransportEventPing>;
@@ -261,7 +264,7 @@ const Ping: React.FC<{
   // }, [router, usersPing]);
 
   return (
-    <Text small>
+    <Text small type="secondary">
       {ping}ms <Dot style={{ marginLeft: 5 }} type="success" />
     </Text>
   );
@@ -312,7 +315,7 @@ const Jambox: React.FC = () => {
       if (event.type === "midi") {
         player.send(event);
       } else if (event.type === "ping") {
-        console.log(event.type);
+        // console.log(event.type);
       } else if (event.type === "user") {
         console.log("user event", event);
         setUser(event.user);
@@ -328,7 +331,7 @@ const Jambox: React.FC = () => {
       }
     });
     return () => listener.unsubscribe();
-  }, [store, player]);
+  }, [store, player, transport]);
   useEffect(() => {
     const listener = transport.events
       .pipe(
