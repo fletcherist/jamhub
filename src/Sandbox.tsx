@@ -3,30 +3,120 @@ import * as Tone from "tone";
 import { MIDIEvent } from "./lib";
 import { UserKeyboard, MyKeyboard } from "./Keyboard";
 
-const player = new Tone.Player({
-  url:
-    "https://nbrosowsky.github.io/tonejs-instruments/samples/bass-electric/E4.mp3",
-}).toDestination();
-
-const synth = new Tone.Synth().toDestination();
-
 export function sample<T>(list: T[]): T {
   return list[Math.floor(Math.random() * list.length)];
 }
 
-const notes = ["C4", "D3", "E3", "G3", "F3"];
+const kicks = new Tone.Sampler({
+  urls: {
+    C1: "kick/kick1.mp3",
+    D1: "kick/kick2.mp3",
+    E1: "kick/kick3.mp3",
+  },
+  baseUrl: "https://fletcherist.github.io/jamlib/",
+}).toDestination();
 
-// //play a note every quarter-note
-// const loop = new Tone.Loop((time) => {
-//   console.log("loop trigger", time);
-//   synth.triggerAttackRelease(note, "8n", time);
-// }, "4n");
+const snares = new Tone.Sampler({
+  urls: {
+    C1: "snare/snare1.mp3",
+    D1: "snare/snare2.mp3",
+    E1: "snare/snare3.mp3",
+    F1: "snare/snare4.mp3",
+    G1: "snare/snare5.mp3",
+  },
+  baseUrl: "https://fletcherist.github.io/jamlib/",
+}).toDestination();
+
+interface Sample {
+  play: (time: number) => void;
+}
+
+const kick = (): Sample => {
+  return {
+    play: (time: number): void => {
+      kicks.triggerAttackRelease("C1", "16n", time);
+    },
+  };
+};
+const snare = (): Sample => {
+  return {
+    play: (time: number): void => {
+      snares.triggerAttackRelease("C1", "4n", time);
+    },
+  };
+};
+const silence = (): Sample => {
+  return {
+    play: () => undefined,
+  };
+};
+
+const getPosition = (date: Date): { bars: number; beats: number } => {
+  const unix = Math.floor(date.getTime() / 1000);
+  const ticks = unix % 16;
+  console.log("ticks", ticks);
+  const beats = ticks % 4;
+  const bars = Math.floor(ticks / 4);
+  return { bars, beats };
+};
+
+const grid: Array<Sample[]> = [
+  [kick()],
+  [silence()],
+  [silence()],
+  [silence()],
+  [kick(), snare()],
+  [silence()],
+  [silence()],
+  [silence()],
+  [kick()],
+  [silence()],
+  [silence()],
+  [silence()],
+  [kick(), snare()],
+  [silence()],
+  [silence()],
+  [silence()],
+];
 
 const loop = new Tone.Sequence(
-  (time, col) => {
-    console.log(col);
-    const velocity = Math.random() * 0.5 + 0.5;
-    synth.triggerAttackRelease(sample(notes), "16n", time, velocity);
+  (time, count) => {
+    console.log("samples", count);
+    const samples = grid[count];
+    for (const sample of samples) {
+      sample.play(time);
+    }
+    // for (const sample of samples) {
+    //   sample.play(time);
+    // }
+
+    // console.log(
+    //   col,
+    //   "Tone.Transport.now()",
+    //   // Tone.Transport.now(),
+    //   Tone.Transport.position
+    // );
+
+    // const now = new Date();
+    // const { bars, beats } = getPosition(now);
+    // const [toneBars, toneBeats] = Tone.Transport.position.toString().split(":");
+
+    // console.log(
+    //   "seconds",
+    //   now.getSeconds(),
+    //   "bars",
+    //   bars,
+    //   "tone bars",
+    //   toneBars,
+    //   "beats",
+    //   beats,
+    //   "tone beats",
+    //   toneBeats
+    // );
+
+    // const velocity = Math.random() * 0.5 + 0.5;
+
+    // synth.triggerAttackRelease(notes[col], "16n", time, velocity);
     // var column = document.querySelector("tone-step-sequencer").currentColumn;
     // column.forEach(function(val, i){
     // 	if (val){
@@ -35,11 +125,12 @@ const loop = new Tone.Sequence(
     // 	}
     // });
     //set the columne on the correct draw frame
-    Tone.Draw.schedule(() => {
-      // document.querySelector("tone-step-sequencer").setAttribute("highlight", col);
-    }, time);
+    // Tone.Draw.schedule(() => {
+    //   // document.querySelector("tone-step-sequencer").setAttribute("highlight", col);
+    // }, time);
   },
   [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+  // [[kick()]],
   "16n"
 ).start("0m");
 
@@ -64,7 +155,7 @@ export const Loops: React.FC = () => {
           // player.start();
           Tone.Transport.bpm.value = 60;
           Tone.Transport.loopStart = "0m";
-          Tone.Transport.loopEnd = "1m";
+          Tone.Transport.loopEnd = "4m";
           Tone.Transport.loop = true;
 
           const now = new Date();
@@ -72,12 +163,24 @@ export const Loops: React.FC = () => {
           const durationNowNextSecond = nextSecond - now.getTime(); // duration between now and next second
           const durationInSeconds = durationNowNextSecond / 1000;
 
+          const { bars, beats } = getPosition(now);
+          console.log("seconds", now.getSeconds(), "bars", bars);
+
           console.log("start in", durationInSeconds);
-          Tone.Transport.start(`+${durationInSeconds}`, "3:0:0");
+          Tone.Transport.start(`+${durationInSeconds}`, `${bars}:${beats}:0`);
+          // Tone.Transport.position = "0:0:2";
+          // Tone.Transport.start(`+${durationInSeconds}`);
           console.log("started");
         }}
       >
         start
+      </button>
+      <button
+        onClick={() => {
+          Tone.Transport.pause();
+        }}
+      >
+        pause
       </button>
       <button
         onClick={() => {
