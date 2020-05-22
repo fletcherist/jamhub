@@ -142,7 +142,8 @@ const getPosition = (date: Date): { bars: number; beats: number } => {
   return { bars, beats };
 };
 
-export function startTransportSync() {
+export async function startTransportSync() {
+  await Tone.start();
   Tone.Transport.bpm.value = 60;
   Tone.Transport.loopStart = "0m";
   Tone.Transport.loopEnd = "4m";

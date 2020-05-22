@@ -1,4 +1,4 @@
-export const APP_VERSION = "v0.0.4";
+export const APP_VERSION = "v0.0.5";
 
 export type MIDIEvent = [number, number, number];
 
