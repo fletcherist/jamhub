@@ -127,98 +127,46 @@ const grid: Array<Sample[]> = [
   [],
 ];
 
-const loop = new Tone.Sequence(
+export const drumLoop1 = new Tone.Sequence(
   (time, count) => {
     console.log("samples", count);
     const samples = grid[count];
     for (const sample of samples) {
       sample.play(time);
     }
-    // for (const sample of samples) {
-    //   sample.play(time);
-    // }
-
-    // console.log(
-    //   col,
-    //   "Tone.Transport.now()",
-    //   // Tone.Transport.now(),
-    //   Tone.Transport.position
-    // );
-
-    // const now = new Date();
-    // const { bars, beats } = getPosition(now);
-    // const [toneBars, toneBeats] = Tone.Transport.position.toString().split(":");
-
-    // console.log(
-    //   "seconds",
-    //   now.getSeconds(),
-    //   "bars",
-    //   bars,
-    //   "tone bars",
-    //   toneBars,
-    //   "beats",
-    //   beats,
-    //   "tone beats",
-    //   toneBeats
-    // );
-
-    // const velocity = Math.random() * 0.5 + 0.5;
-
-    // synth.triggerAttackRelease(notes[col], "16n", time, velocity);
-    // var column = document.querySelector("tone-step-sequencer").currentColumn;
-    // column.forEach(function(val, i){
-    // 	if (val){
-    // 		//slightly randomized velocities
-    // 		keys.get(noteNames[i]).start(time, 0, "32n", 0, vel);
-    // 	}
-    // });
-    //set the columne on the correct draw frame
     // Tone.Draw.schedule(() => {
     //   // document.querySelector("tone-step-sequencer").setAttribute("highlight", col);
     // }, time);
   },
   [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
-  // [[kick()]],
   "16n"
-).start("0m");
+);
 
-//bind the interface
-// document.querySelector("tone-transport").bind(Tone.Transport);
-Tone.Transport.on("loopStart", (...args) => {
-  console.log(args);
-});
-Tone.Transport.on("stop", () => {
-  setTimeout(() => {
-    // document.querySelector("tone-step-sequencer").setAttribute("highlight", "-1");
-  }, 100);
-});
+export function startTransportSync() {
+  Tone.Transport.bpm.value = 60;
+  Tone.Transport.loopStart = "0m";
+  Tone.Transport.loopEnd = "4m";
+  Tone.Transport.loop = true;
 
-// https://d9olupt5igjta.cloudfront.net/samples/sample_files/12068/11209b403e60dc9cab69a11664cb14e82d869bcc/mp3/_80_bpm_DRUMS.mp3
+  const now = new Date();
+  const nextSecond = (Math.floor(now.getTime() / 1000) + 1) * 1000;
+  const durationNowNextSecond = nextSecond - now.getTime(); // duration between now and next second
+  const durationInSeconds = durationNowNextSecond / 1000;
+
+  const { bars, beats } = getPosition(now);
+  // console.log("seconds", now.getSeconds(), "bars", bars);
+  // console.log("start in", durationInSeconds);
+  Tone.Transport.start(`+${durationInSeconds}`, `${bars}:${beats}:0`);
+  // Tone.Transport.position = "0:0:2";
+  // Tone.Transport.start(`+${durationInSeconds}`);
+}
+
 export const Loops: React.FC = () => {
   return (
     <div>
       <button
         onClick={async () => {
-          await Tone.start();
-          // player.start();
-          Tone.Transport.bpm.value = 60;
-          Tone.Transport.loopStart = "0m";
-          Tone.Transport.loopEnd = "4m";
-          Tone.Transport.loop = true;
-
-          const now = new Date();
-          const nextSecond = (Math.floor(now.getTime() / 1000) + 1) * 1000;
-          const durationNowNextSecond = nextSecond - now.getTime(); // duration between now and next second
-          const durationInSeconds = durationNowNextSecond / 1000;
-
-          const { bars, beats } = getPosition(now);
-          console.log("seconds", now.getSeconds(), "bars", bars);
-
-          console.log("start in", durationInSeconds);
-          Tone.Transport.start(`+${durationInSeconds}`, `${bars}:${beats}:0`);
-          // Tone.Transport.position = "0:0:2";
-          // Tone.Transport.start(`+${durationInSeconds}`);
-          console.log("started");
+          startTransportSync();
         }}
       >
         start
@@ -239,10 +187,17 @@ export const Loops: React.FC = () => {
       </button>
       <button
         onClick={() => {
-          loop.start("0m");
+          drumLoop1.start(0);
         }}
       >
         play loop
+      </button>
+      <button
+        onClick={() => {
+          drumLoop1.stop(0);
+        }}
+      >
+        stop loop
       </button>
       hello world
     </div>
