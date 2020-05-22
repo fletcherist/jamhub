@@ -277,6 +277,7 @@ const DrumLoop1 = () => {
   return (
     <Button
       onClick={() => {
+        Tone.start();
         if (isPlaying) {
           drumLoop1.stop(0);
         } else {
