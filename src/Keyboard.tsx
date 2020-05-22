@@ -202,6 +202,9 @@ export const MyKeyboard: React.FC<{
         velocity.current = Math.min(127, velocity.current + 20);
       }
       const noteKey = key as KeyboardNoteKey;
+      if (event.metaKey || event.altKey || event.ctrlKey || event.shiftKey) {
+        return; // dont trigger keyboard action when cmd/ctrl/option pressed
+      }
       handleKeyboardNoteDown(noteKey);
     };
     const handleKeyup = (event: KeyboardEvent) => {

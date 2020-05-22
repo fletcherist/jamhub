@@ -1,3 +1,7 @@
+v0.0.5
+
+- synced drum loops between browsers
+
 v0.0.4
 
 - port [webaudiomodules](https://www.webaudiomodules.org/) to typescript and use their dx7 yahama WebAssembly synth
