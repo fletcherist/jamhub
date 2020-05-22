@@ -7,47 +7,95 @@ export function sample<T>(list: T[]): T {
   return list[Math.floor(Math.random() * list.length)];
 }
 
-const kicks = new Tone.Sampler({
-  urls: {
-    C1: "kick/kick1.mp3",
-    D1: "kick/kick2.mp3",
-    E1: "kick/kick3.mp3",
-  },
-  baseUrl: "https://fletcherist.github.io/jamlib/",
-}).toDestination();
+const baseUrl = (url: string): string =>
+  "https://fletcherist.github.io/jamlib/" + url;
+const samples = {
+  // kicks
+  kick1: baseUrl("kick/kick1.mp3"),
+  kick2: baseUrl("kick/kick2.mp3"),
+  kick3: baseUrl("kick/kick3.mp3"),
+  // snares
+  snare1: baseUrl("snare/snare1.mp3"),
+  snare2: baseUrl("snare/snare2.mp3"),
+  snare3: baseUrl("snare/snare3.mp3"),
+  snare4: baseUrl("snare/snare4.mp3"),
+  snare5: baseUrl("snare/snare5.mp3"),
+  snare6: baseUrl("snare/snare6.mp3"),
+  snare7: baseUrl("snare/snare7.mp3"),
+  snare8: baseUrl("snare/snare8.mp3"),
+  snare9: baseUrl("snare/snare9.mp3"),
+  snare10: baseUrl("snare/snare10.mp3"),
+  // hats
+  hat1: baseUrl("hat/hat1.mp3"),
+  hat2: baseUrl("hat/hat2.mp3"),
+  hat3: baseUrl("hat/hat3.mp3"),
+  hat4: baseUrl("hat/hat4.mp3"),
+  hat5: baseUrl("hat/hat5.mp3"),
+  hat6: baseUrl("hat/hat6.mp3"),
+  // perc
+  perc1: baseUrl("perc/perc1.mp3"),
+  perc2: baseUrl("perc/perc2.mp3"),
+  perc3: baseUrl("perc/perc3.mp3"),
+  perc4: baseUrl("perc/perc4.mp3"),
+};
 
-const snares = new Tone.Sampler({
+const drums = new Tone.Sampler({
   urls: {
-    C1: "snare/snare1.mp3",
-    D1: "snare/snare2.mp3",
-    E1: "snare/snare3.mp3",
-    F1: "snare/snare4.mp3",
-    G1: "snare/snare5.mp3",
+    C4: samples["kick1"],
+    D4: samples["perc3"],
+    E4: samples["snare1"],
   },
-  baseUrl: "https://fletcherist.github.io/jamlib/",
 }).toDestination();
 
 interface Sample {
   play: (time: number) => void;
 }
+interface SampleOptions {
+  velocity: number;
+  delay: number;
+}
+const defaultOptions: SampleOptions = {
+  velocity: 60,
+  delay: 0, // in ms
+};
 
-const kick = (): Sample => {
+const kick = (modifiedOptions?: Partial<SampleOptions>): Sample => {
+  const options: SampleOptions = { ...defaultOptions, ...modifiedOptions };
   return {
     play: (time: number): void => {
-      kicks.triggerAttackRelease("C1", "16n", time);
+      drums.triggerAttackRelease(
+        "C4",
+        "16n",
+        time + options.delay / 1000,
+        options.velocity / 127
+      );
     },
   };
 };
-const snare = (): Sample => {
+const snare = (modifiedOptions?: Partial<SampleOptions>): Sample => {
+  const options: SampleOptions = { ...defaultOptions, ...modifiedOptions };
   return {
     play: (time: number): void => {
-      snares.triggerAttackRelease("C1", "4n", time);
+      drums.triggerAttackRelease(
+        "E4",
+        "4n",
+        time + options.delay / 1000,
+        options.velocity / 127
+      );
     },
   };
 };
-const silence = (): Sample => {
+const hat = (modifiedOptions?: Partial<SampleOptions>): Sample => {
+  const options: SampleOptions = { ...defaultOptions, ...modifiedOptions };
   return {
-    play: () => undefined,
+    play: (time: number): void => {
+      drums.triggerAttackRelease(
+        "D4",
+        "4n",
+        time + options.delay / 1000,
+        options.velocity / 127
+      );
+    },
   };
 };
 
@@ -62,21 +110,21 @@ const getPosition = (date: Date): { bars: number; beats: number } => {
 
 const grid: Array<Sample[]> = [
   [kick()],
-  [silence()],
-  [silence()],
-  [silence()],
-  [kick(), snare()],
-  [silence()],
-  [silence()],
-  [silence()],
+  [],
+  [hat({ velocity: 30 })],
+  [],
+  [kick(), snare({ velocity: 70 })],
+  [],
+  [hat({ velocity: 20 })],
+  [kick({ delay: 60, velocity: 30 })],
   [kick()],
-  [silence()],
-  [silence()],
-  [silence()],
-  [kick(), snare()],
-  [silence()],
-  [silence()],
-  [silence()],
+  [],
+  [hat({ velocity: 20 })],
+  [],
+  [kick(), snare({ velocity: 60 })],
+  [],
+  [hat({ velocity: 20 })],
+  [],
 ];
 
 const loop = new Tone.Sequence(
