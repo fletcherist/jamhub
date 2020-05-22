@@ -12,8 +12,8 @@ ReactDOM.render(
   <React.StrictMode>
     <ZeitProvider>
       <CssBaseline />
-      {/* <App /> */}
-      <Loops />
+      <App />
+      {/* <Loops /> */}
       {/* <Storybook /> */}
     </ZeitProvider>
   </React.StrictMode>,

@@ -129,7 +129,7 @@ const grid: Array<Sample[]> = [
 
 export const drumLoop1 = new Tone.Sequence(
   (time, count) => {
-    console.log("samples", count);
+    // console.log("samples", count);
     const samples = grid[count];
     for (const sample of samples) {
       sample.play(time);
