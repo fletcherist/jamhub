@@ -38,8 +38,6 @@ import {
 
 import { startTransportSync, drumLoop1 } from "./Sandbox";
 
-startTransportSync();
-
 const audioContext = new AudioContext();
 Tone.setContext(audioContext);
 
@@ -282,6 +280,7 @@ const DrumLoop1 = () => {
         if (isPlaying) {
           drumLoop1.stop(0);
         } else {
+          startTransportSync();
           drumLoop1.start(0);
         }
         setIsPlaying(!isPlaying);

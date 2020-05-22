@@ -99,15 +99,6 @@ const hat = (modifiedOptions?: Partial<SampleOptions>): Sample => {
   };
 };
 
-const getPosition = (date: Date): { bars: number; beats: number } => {
-  const unix = Math.floor(date.getTime() / 1000);
-  const ticks = unix % 16;
-  console.log("ticks", ticks);
-  const beats = ticks % 4;
-  const bars = Math.floor(ticks / 4);
-  return { bars, beats };
-};
-
 const grid: Array<Sample[]> = [
   [kick()],
   [],
@@ -141,6 +132,15 @@ export const drumLoop1 = new Tone.Sequence(
   [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
   "16n"
 );
+
+const getPosition = (date: Date): { bars: number; beats: number } => {
+  const unix = Math.floor(date.getTime() / 1000);
+  const ticks = unix % 16;
+  console.log("ticks", ticks);
+  const beats = ticks % 4;
+  const bars = Math.floor(ticks / 4);
+  return { bars, beats };
+};
 
 export function startTransportSync() {
   Tone.Transport.bpm.value = 60;
