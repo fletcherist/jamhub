@@ -2,3 +2,28 @@
   background-color: rgba(0, 0, 0, 0.1);
   font-weight: bold;
 }
+
+.cell {
+  background-color: rgba(0, 0, 0, 0.3);
+  width: 80px;
+  height: 80px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  /* margin: 3px; */
+}
+.cell:hover {
+  background-color: rgba(0, 0, 0, 0.35);
+}
+.cell:active {
+  background-color: rgba(0, 0, 0, 0.4);
+}
+
+.cellColumn {
+  /* display: flex; */
+}
+
+.cells {
+  display: flex;
+}

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import css from "./Components.module.css";
 
 import cx from "classnames";
@@ -84,6 +84,71 @@ export const Storybook: React.FC = () => {
           {/* <JoinDiscordLink /> */}
         </div>
       </Center>
+      <Sequencer />
+    </div>
+  );
+};
+
+type CellStatus = "playing" | "queued" | "stopped";
+const Cell: React.FC<{
+  status: CellStatus;
+  onClick: (event: React.MouseEvent) => void;
+}> = ({ status, onClick }) => {
+  return (
+    <div className={css.cell} style={{}} onClick={onClick}>
+      <svg width="32px" height="32px" viewBox="0 0 32 32">
+        <defs />
+        <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+          <g fill="#FFFFFF">
+            {status === "playing" ? (
+              <rect x="0" y="0" width="32" height="32" />
+            ) : (
+              <polygon id="Path" points="3 0 31 16 3 32" />
+            )}
+          </g>
+        </g>
+      </svg>
+    </div>
+  );
+};
+
+export const CellContainer = () => {
+  const [status, setStatus] = useState<CellStatus>("stopped");
+  return (
+    <Cell
+      status={status}
+      onClick={() => {
+        if (status === "playing") {
+          setStatus("stopped");
+        } else if (status === "stopped") {
+          setStatus("playing");
+        }
+      }}
+    />
+  );
+};
+
+export const Sequencer = () => {
+  const gap = 0.2;
+  return (
+    <div className={css.cells}>
+      <div className={css.cellColumn}>
+        <div>Drums</div>
+        <Cell status="playing" onClick={() => undefined} />
+        <Spacer y={gap} />
+        <Cell status="queued" onClick={() => undefined} />
+        <Spacer y={gap} />
+        <CellContainer />
+      </div>
+      <Spacer x={gap} />
+      <div className={css.cellColumn}>
+        <div>Drums</div>
+        <Cell status="playing" onClick={() => undefined} />
+        <Spacer y={gap} />
+        <Cell status="queued" onClick={() => undefined} />
+        <Spacer y={gap} />
+        <CellContainer />
+      </div>
     </div>
   );
 };

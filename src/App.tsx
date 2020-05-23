@@ -488,6 +488,25 @@ const Jambox: React.FC = () => {
           }}
         >
           <div style={{ padding: "1rem" }}>
+            {user && (
+              <div style={{}}>
+                <div
+                  style={{
+                    backgroundColor: "#68acff",
+                    borderTopLeftRadius: 8,
+                    borderTopRightRadius: 8,
+                    paddingTop: "1rem",
+                  }}
+                >
+                  <User src="https://unix.bio/assets/avatar.png" name="You">
+                    ping: <Ping userId={user.id} pingChannel={router.ping} />
+                  </User>
+                </div>
+
+                <UserKeyboardContainer transport={transport} userId={user.id} />
+              </div>
+            )}
+            <Spacer y={0.5} />
             {store.state.room.users.map((roomUser) => {
               return (
                 <>
@@ -507,8 +526,6 @@ const Jambox: React.FC = () => {
                       transport={transport}
                       userId={roomUser.id}
                     />
-
-                    {/* {roomUser.id} */}
                   </div>
                   <Spacer y={0.5} />
                 </>
@@ -517,7 +534,8 @@ const Jambox: React.FC = () => {
           </div>
         </div>
         <div style={{ flexGrow: 2, padding: "1rem" }}>
-          <Description title="Instruments" content="Select your instrument" />
+          <Text h1>Instruments</Text>
+          {/* <Description title="Instruments" content="Select your instrument" /> */}
           {instruments.map((instrument) => {
             return (
               <Instrument
@@ -573,11 +591,6 @@ const Jambox: React.FC = () => {
                   </span>
                 </Text>
                 <Spacer x={0.5} />
-                {user && (
-                  <Text small>
-                    <Ping pingChannel={router.ping} userId={user.id} />
-                  </Text>
-                )}
               </Row>
               <Spacer y={0.5} />
               <MyKeyboard
