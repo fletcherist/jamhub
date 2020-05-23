@@ -10,7 +10,11 @@ import { MIDIEvent } from "./lib";
 import { filter } from "rxjs/operators";
 import { Subject } from "rxjs";
 
-import { Keyboard as KeyboardDescription, Tooltip } from "@zeit-ui/react";
+import {
+  Keyboard as KeyboardDescription,
+  Tooltip,
+  Spacer,
+} from "@zeit-ui/react";
 
 type KeyboardNoteKey =
   | "a"
@@ -114,13 +118,20 @@ const mapKeyboardKeyToNote = (key: KeyboardNoteKey, octave: number): string => {
   return `${note.replace("8", "")}${selectKeyboardKeyOctave(note, octave)}`;
 };
 
+const getWhiteWidth = (size: number): number => size;
+const getWhiteHeight = (size: number): number => size * 2;
+const getBlackWidth = (size: number): number => getWhiteWidth(size) * 0.8;
+const getBlackHeight = (size: number): number => getWhiteHeight(size) * 0.5;
+
 const White: React.FC<{
   active: boolean;
   onPress: () => void;
   onRelease: () => void;
-}> = ({ active, onPress, onRelease }) => {
+  size: number;
+}> = ({ active, onPress, onRelease, size }) => {
   return (
     <button
+      style={{ width: getWhiteWidth(size), height: getWhiteHeight(size) }}
       onPointerDown={onPress}
       onPointerUp={onRelease}
       className={cx(css.white, {
@@ -133,9 +144,11 @@ const Black: React.FC<{
   active: boolean;
   onPress: () => void;
   onRelease: () => void;
-}> = ({ active, onPress, onRelease }) => {
+  size: number;
+}> = ({ active, onPress, onRelease, size }) => {
   return (
     <button
+      style={{ height: getBlackHeight(size), width: getBlackWidth(size) }}
       onPointerDown={onPress}
       onPointerUp={onRelease}
       className={cx(css.black, {
@@ -221,11 +234,6 @@ export const MyKeyboard: React.FC<{
 
   return (
     <div>
-      <Keyboard
-        activeKeys={activeKeys}
-        onPressKey={handleKeyboardNoteDown}
-        onReleaseKey={handleKeyboardNoteUp}
-      />
       <div>
         <Tooltip text={"octave down"}>
           <KeyboardDescription>z</KeyboardDescription>
@@ -240,6 +248,13 @@ export const MyKeyboard: React.FC<{
           <KeyboardDescription>v</KeyboardDescription>
         </Tooltip>
       </div>
+      <Spacer y={0.5} />
+      <Keyboard
+        activeKeys={activeKeys}
+        onPressKey={handleKeyboardNoteDown}
+        onReleaseKey={handleKeyboardNoteUp}
+        size={50}
+      />
     </div>
   );
 };
@@ -317,6 +332,7 @@ export const UserKeyboard: React.FC<{
 
   return (
     <Keyboard
+      size={30}
       activeKeys={activeKeys}
       onPressKey={() => undefined}
       onReleaseKey={() => undefined}
@@ -328,12 +344,14 @@ export const Keyboard: React.FC<{
   activeKeys: KeyboardNoteKey[];
   onPressKey: (key: KeyboardNoteKey) => void;
   onReleaseKey: (key: KeyboardNoteKey) => void;
-}> = ({ activeKeys, onPressKey, onReleaseKey }) => {
+  size: number;
+}> = ({ activeKeys, onPressKey, onReleaseKey, size }) => {
   const WhiteBind: React.FC<{ keyboardKey: KeyboardNoteKey }> = ({
     keyboardKey,
   }): React.ReactElement => {
     return (
       <White
+        size={size}
         active={activeKeys.includes(keyboardKey)}
         onPress={() => onPressKey(keyboardKey)}
         onRelease={() => onReleaseKey(keyboardKey)}
@@ -345,6 +363,7 @@ export const Keyboard: React.FC<{
   }): React.ReactElement => {
     return (
       <Black
+        size={size}
         active={activeKeys.includes(keyboardKey)}
         onPress={() => onPressKey(keyboardKey)}
         onRelease={() => onReleaseKey(keyboardKey)}

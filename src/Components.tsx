@@ -16,6 +16,7 @@ import {
   Card,
   Button,
   ButtonGroup,
+  Spinner,
 } from "@zeit-ui/react";
 
 import { MyKeyboard, UserKeyboard } from "./Keyboard";
@@ -25,17 +26,18 @@ export const Instrument: React.FC<{
   name: Lib.Instrument;
   onClick: (event: React.MouseEvent) => void;
   selected: boolean;
-}> = ({ name, onClick, selected }) => {
+  loaded: boolean;
+}> = ({ name, onClick, selected, loaded = false }) => {
   return (
-    <Button
-      // className={cx({
-      //   [css.instrumentSelected]: selected,
-      // })}
-      shadow={selected}
+    <div
+      style={{ opacity: !loaded ? 0.6 : 1 }}
+      className={cx({
+        [css.instrumentSelected]: selected,
+      })}
       onClick={onClick}
     >
-      {name}
-    </Button>
+      <Text span>{name}</Text>
+    </div>
   );
 };
 export const Storybook: React.FC = () => {
@@ -53,23 +55,24 @@ export const Storybook: React.FC = () => {
             <Row>
               <div style={{ height: 166 }}>
                 <Description title="Instruments" />
-                <ButtonGroup vertical style={{ width: 150 }}>
-                  <Instrument
-                    name="epiano"
-                    onClick={() => undefined}
-                    selected={false}
-                  />
-                  <Instrument
-                    name="guitar"
-                    onClick={() => undefined}
-                    selected={true}
-                  />
-                  <Instrument
-                    name="piano"
-                    onClick={() => undefined}
-                    selected={false}
-                  />
-                </ButtonGroup>
+                <Instrument
+                  name="epiano"
+                  onClick={() => undefined}
+                  selected={false}
+                  loaded={false}
+                />
+                <Instrument
+                  name="guitar"
+                  onClick={() => undefined}
+                  selected={true}
+                  loaded={false}
+                />
+                <Instrument
+                  name="piano"
+                  onClick={() => undefined}
+                  selected={false}
+                  loaded={true}
+                />
                 <Spacer y={0.5} />
               </div>
               <Spacer x={1} />

@@ -28,6 +28,7 @@ import {
   Dot,
   Link,
   Button,
+  User,
 } from "@zeit-ui/react";
 import {
   createWebSocketTransport,
@@ -178,8 +179,8 @@ const usePlayer = (): Player => {
       Tone.connect(dx7 as AudioNode, effectReverb);
       // dx7.connect(dx7.context.destination);
       await dx7.loadBank("rom1A.syx");
-      const presetNames = [...dx7.presets.keys()];
-      console.log("presetNames", presetNames);
+      // const presetNames = [...dx7.presets.keys()];
+      // console.log("presetNames", presetNames);
       dx7.setPatch(dx7.presets.get(preset));
       return dx7;
     };
@@ -478,16 +479,25 @@ const Jambox: React.FC = () => {
   return (
     <div style={{ height: "100vh", display: "flex", flexDirection: "column" }}>
       <Row style={{ flexGrow: 2 }}>
-        <div style={{ display: "flex", justifyContent: "center" }}>
-          <h1>users</h1>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            backgroundColor: "rgba(0,40,0,0.1)",
+          }}
+        >
           {store.state.room.users.map((roomUser) => {
             return (
               <div>
+                <User src="https://unix.bio/assets/avatar.png" name="Witt">
+                  JavaScript engineer{" "}
+                  <Ping userId={roomUser.id} pingChannel={router.ping} />
+                </User>
                 <UserKeyboardContainer
                   transport={transport}
                   userId={roomUser.id}
                 />
-                <Ping userId={roomUser.id} pingChannel={router.ping} />
+
                 {/* {roomUser.id} */}
               </div>
             );
@@ -507,72 +517,69 @@ const Jambox: React.FC = () => {
       <Spacer y={0.5} />
       <div style={{ display: "flex", justifyContent: "center" }}>
         <div>
-          <Card shadow>
-            <Row>
-              <div style={{ height: 200 }}>
-                <Description title="Instruments" />
-                <ButtonGroup vertical style={{ width: 150 }}>
-                  {instruments.map((instrument) => {
-                    return (
-                      <Instrument
-                        name={instrument}
-                        onClick={() => setSelectedInstrument(instrument)}
-                        selected={false}
-                      />
-                    );
-                  })}
-                </ButtonGroup>
-                <Spacer y={0.5} />
-              </div>
-              <Spacer x={1} />
-              <div>
-                <Row>
-                  <Text small>
-                    piano:{" "}
-                    <span
-                      style={{
-                        ...(pianoStatus === "ready" && { color: "green" }),
-                      }}
-                    >
-                      {pianoStatus}
-                    </span>
-                  </Text>
-                  <Spacer x={0.5} />
-                  <Text small>
-                    transport:{" "}
-                    <span
-                      style={{
-                        ...(transportStatus === "connected" && {
-                          color: "green",
-                        }),
-                        ...(transportStatus === "error" && { color: "red" }),
-                        // color: transportStatus === "connected" ? "green" : "black",
-                      }}
-                    >
-                      {transportStatus}
-                    </span>
-                  </Text>
-                  <Spacer x={0.5} />
-                  {user && <Ping pingChannel={router.ping} userId={user.id} />}
-                </Row>
-                <Spacer y={0.5} />
-                <MyKeyboard
-                  onMIDIEvent={(event) => {
-                    console.log("onMIDIEvent", event);
-                    if (!user) {
-                      console.error("no user");
-                    }
-                    transport.send({
-                      type: "midi",
-                      midi: event,
-                      instrument: selectedInstrument,
-                      userId: user ? user.id : "0",
-                    });
-                  }}
-                />
-              </div>
-            </Row>
-          </Card>
+          <Row>
+            <div style={{ height: 200 }}>
+              <Description title="Instruments" />
+              {instruments.map((instrument) => {
+                return (
+                  <Instrument
+                    name={instrument}
+                    onClick={() => setSelectedInstrument(instrument)}
+                    selected={false}
+                    loaded={false}
+                  />
+                );
+              })}
+              <Spacer y={0.5} />
+            </div>
+            <Spacer x={1} />
+            <div>
+              <Row>
+                <Text small>
+                  piano:{" "}
+                  <span
+                    style={{
+                      ...(pianoStatus === "ready" && { color: "green" }),
+                    }}
+                  >
+                    {pianoStatus}
+                  </span>
+                </Text>
+                <Spacer x={0.5} />
+                <Text small>
+                  transport:{" "}
+                  <span
+                    style={{
+                      ...(transportStatus === "connected" && {
+                        color: "green",
+                      }),
+                      ...(transportStatus === "error" && { color: "red" }),
+                      // color: transportStatus === "connected" ? "green" : "black",
+                    }}
+                  >
+                    {transportStatus}
+                  </span>
+                </Text>
+                <Spacer x={0.5} />
+                {user && <Ping pingChannel={router.ping} userId={user.id} />}
+              </Row>
+              <Spacer y={0.5} />
+              <MyKeyboard
+                onMIDIEvent={(event) => {
+                  console.log("onMIDIEvent", event);
+                  if (!user) {
+                    console.error("no user");
+                  }
+                  transport.send({
+                    type: "midi",
+                    midi: event,
+                    instrument: selectedInstrument,
+                    userId: user ? user.id : "0",
+                  });
+                }}
+              />
+            </div>
+          </Row>
           <Spacer y={0.5} />
           <Text small>
             Join our{" "}
