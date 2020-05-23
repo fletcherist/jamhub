@@ -130,7 +130,7 @@ const White: React.FC<{
   size: number;
 }> = ({ active, onPress, onRelease, size }) => {
   return (
-    <button
+    <div
       style={{ width: getWhiteWidth(size), height: getWhiteHeight(size) }}
       onPointerDown={onPress}
       onPointerUp={onRelease}
@@ -147,7 +147,7 @@ const Black: React.FC<{
   size: number;
 }> = ({ active, onPress, onRelease, size }) => {
   return (
-    <button
+    <div
       style={{ height: getBlackHeight(size), width: getBlackWidth(size) }}
       onPointerDown={onPress}
       onPointerUp={onRelease}

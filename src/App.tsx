@@ -29,6 +29,7 @@ import {
   Link,
   Button,
   User,
+  Col,
 } from "@zeit-ui/react";
 import {
   createWebSocketTransport,
@@ -266,11 +267,7 @@ const Ping: React.FC<{
   //   return () => subscription.unsubscribe();
   // }, [router, usersPing]);
 
-  return (
-    <Text small type="secondary">
-      {ping}ms <Dot style={{ marginLeft: 5 }} type="success" />
-    </Text>
-  );
+  return <span>{ping}ms</span>;
 };
 
 const DrumLoop1 = () => {
@@ -478,30 +475,60 @@ const Jambox: React.FC = () => {
   ];
   return (
     <div style={{ height: "100vh", display: "flex", flexDirection: "column" }}>
-      <Row style={{ flexGrow: 2 }}>
+      <Row
+        style={{
+          flexGrow: 2,
+          // backgroundColor: "rgba(0,0,0,0.05)"
+        }}
+      >
         <div
           style={{
             display: "flex",
-            justifyContent: "center",
-            backgroundColor: "rgba(0,40,0,0.1)",
+            backgroundColor: "rgba(0,0,0,0.05)",
           }}
         >
-          {store.state.room.users.map((roomUser) => {
-            return (
-              <div>
-                <User src="https://unix.bio/assets/avatar.png" name="Witt">
-                  JavaScript engineer{" "}
-                  <Ping userId={roomUser.id} pingChannel={router.ping} />
-                </User>
-                <UserKeyboardContainer
-                  transport={transport}
-                  userId={roomUser.id}
-                />
+          <div style={{ padding: "1rem" }}>
+            {store.state.room.users.map((roomUser) => {
+              return (
+                <>
+                  <div
+                    style={{
+                      backgroundColor: "white",
+                      borderTopLeftRadius: 8,
+                      borderTopRightRadius: 8,
+                      paddingTop: "1rem",
+                    }}
+                  >
+                    <User src="https://unix.bio/assets/avatar.png" name="Witt">
+                      ping:{" "}
+                      <Ping userId={roomUser.id} pingChannel={router.ping} />
+                    </User>
+                    <UserKeyboardContainer
+                      transport={transport}
+                      userId={roomUser.id}
+                    />
 
-                {/* {roomUser.id} */}
-              </div>
+                    {/* {roomUser.id} */}
+                  </div>
+                  <Spacer y={0.5} />
+                </>
+              );
+            })}
+          </div>
+        </div>
+        <div style={{ flexGrow: 2, padding: "1rem" }}>
+          <Description title="Instruments" content="Select your instrument" />
+          {instruments.map((instrument) => {
+            return (
+              <Instrument
+                name={instrument}
+                onClick={() => setSelectedInstrument(instrument)}
+                selected={false}
+                loaded={false}
+              />
             );
           })}
+          <Spacer y={0.5} />
         </div>
         {/* {user && (
         <div>
@@ -518,21 +545,6 @@ const Jambox: React.FC = () => {
       <div style={{ display: "flex", justifyContent: "center" }}>
         <div>
           <Row>
-            <div style={{ height: 200 }}>
-              <Description title="Instruments" />
-              {instruments.map((instrument) => {
-                return (
-                  <Instrument
-                    name={instrument}
-                    onClick={() => setSelectedInstrument(instrument)}
-                    selected={false}
-                    loaded={false}
-                  />
-                );
-              })}
-              <Spacer y={0.5} />
-            </div>
-            <Spacer x={1} />
             <div>
               <Row>
                 <Text small>
@@ -561,7 +573,11 @@ const Jambox: React.FC = () => {
                   </span>
                 </Text>
                 <Spacer x={0.5} />
-                {user && <Ping pingChannel={router.ping} userId={user.id} />}
+                {user && (
+                  <Text small>
+                    <Ping pingChannel={router.ping} userId={user.id} />
+                  </Text>
+                )}
               </Row>
               <Spacer y={0.5} />
               <MyKeyboard
