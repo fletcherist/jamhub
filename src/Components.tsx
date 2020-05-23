@@ -21,6 +21,12 @@ import {
 
 import { MyKeyboard, UserKeyboard } from "./Keyboard";
 import * as Lib from "./lib";
+import {
+  Sequence,
+  emptySequence,
+  createDrumLoop,
+  startTransportSync,
+} from "./Sandbox";
 
 export const Instrument: React.FC<{
   name: Lib.Instrument;
@@ -81,7 +87,6 @@ export const Storybook: React.FC = () => {
               </div>
             </Row>
           </Card>
-          {/* <JoinDiscordLink /> */}
         </div>
       </Center>
       <Sequencer />
@@ -112,42 +117,49 @@ const Cell: React.FC<{
   );
 };
 
-export const CellContainer = () => {
+export const CellContainer: React.FC<{
+  sequence: Sequence;
+}> = ({ sequence }) => {
   const [status, setStatus] = useState<CellStatus>("stopped");
   return (
     <Cell
       status={status}
       onClick={() => {
+        startTransportSync();
         if (status === "playing") {
           setStatus("stopped");
+          sequence.stop();
         } else if (status === "stopped") {
           setStatus("playing");
+          sequence.start();
         }
       }}
     />
   );
 };
 
+const drumLoop = createDrumLoop();
+
 export const Sequencer = () => {
-  const gap = 0.2;
+  const gap = 0.1;
   return (
     <div className={css.cells}>
-      <div className={css.cellColumn}>
-        <div>Drums</div>
-        <Cell status="playing" onClick={() => undefined} />
+      <div>
+        <div className={css.cellLabel}>drums</div>
+        <CellContainer sequence={drumLoop} />
         <Spacer y={gap} />
-        <Cell status="queued" onClick={() => undefined} />
+        <CellContainer sequence={emptySequence} />
         <Spacer y={gap} />
-        <CellContainer />
+        <CellContainer sequence={emptySequence} />
       </div>
       <Spacer x={gap} />
-      <div className={css.cellColumn}>
-        <div>Drums</div>
-        <Cell status="playing" onClick={() => undefined} />
+      <div>
+        <div className={css.cellLabel}>wavetable</div>
+        <CellContainer sequence={emptySequence} />
         <Spacer y={gap} />
-        <Cell status="queued" onClick={() => undefined} />
+        <CellContainer sequence={emptySequence} />
         <Spacer y={gap} />
-        <CellContainer />
+        <CellContainer sequence={emptySequence} />
       </div>
     </div>
   );

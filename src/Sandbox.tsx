@@ -99,39 +99,53 @@ const hat = (modifiedOptions?: Partial<SampleOptions>): Sample => {
   };
 };
 
-const grid: Array<Sample[]> = [
-  [kick()],
-  [],
-  [hat({ velocity: 30 })],
-  [],
-  [kick(), snare({ velocity: 70 })],
-  [],
-  [hat({ velocity: 20 })],
-  [kick({ delay: 60, velocity: 30 })],
-  [kick()],
-  [],
-  [hat({ velocity: 20 })],
-  [],
-  [kick(), snare({ velocity: 60 })],
-  [],
-  [hat({ velocity: 20 })],
-  [],
-];
+export interface Sequence {
+  start: () => void;
+  stop: () => void;
+}
+export const emptySequence: Sequence = {
+  start: () => undefined,
+  stop: () => undefined,
+};
 
-export const drumLoop1 = new Tone.Sequence(
-  (time, count) => {
-    // console.log("samples", count);
-    const samples = grid[count];
-    for (const sample of samples) {
-      sample.play(time);
-    }
-    // Tone.Draw.schedule(() => {
-    //   // document.querySelector("tone-step-sequencer").setAttribute("highlight", col);
-    // }, time);
-  },
-  [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
-  "16n"
-);
+export const createDrumLoop = (): Sequence => {
+  const grid: Array<Sample[]> = [
+    [kick()],
+    [],
+    [hat({ velocity: 30 })],
+    [],
+    [kick(), snare({ velocity: 70 })],
+    [],
+    [hat({ velocity: 20 })],
+    [kick({ delay: 60, velocity: 30 })],
+    [kick()],
+    [],
+    [hat({ velocity: 20 })],
+    [],
+    [kick(), snare({ velocity: 60 })],
+    [],
+    [hat({ velocity: 20 })],
+    [],
+  ];
+  const drumLoop1 = new Tone.Sequence(
+    (time, count) => {
+      // console.log("samples", count);
+      const samples = grid[count];
+      for (const sample of samples) {
+        sample.play(time);
+      }
+      // Tone.Draw.schedule(() => {
+      //   // document.querySelector("tone-step-sequencer").setAttribute("highlight", col);
+      // }, time);
+    },
+    [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+    "16n"
+  );
+  return {
+    stop: () => drumLoop1.stop(0),
+    start: () => drumLoop1.start(0),
+  };
+};
 
 const getPosition = (date: Date): { bars: number; beats: number } => {
   const unix = Math.floor(date.getTime() / 1000);
@@ -185,20 +199,6 @@ export const Loops: React.FC = () => {
         }}
       >
         stop
-      </button>
-      <button
-        onClick={() => {
-          drumLoop1.start(0);
-        }}
-      >
-        play loop
-      </button>
-      <button
-        onClick={() => {
-          drumLoop1.stop(0);
-        }}
-      >
-        stop loop
       </button>
       hello world
     </div>

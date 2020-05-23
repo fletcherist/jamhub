@@ -38,7 +38,7 @@ import {
   TransportStatus,
 } from "./transport";
 
-import { startTransportSync, drumLoop1 } from "./Sandbox";
+import { startTransportSync } from "./Sandbox";
 
 const audioContext = new AudioContext();
 Tone.setContext(audioContext);
@@ -268,26 +268,6 @@ const Ping: React.FC<{
   // }, [router, usersPing]);
 
   return <span>{ping}ms</span>;
-};
-
-const DrumLoop1 = () => {
-  const [isPlaying, setIsPlaying] = useState<boolean>(false);
-  return (
-    <Button
-      onClick={() => {
-        Tone.start();
-        if (isPlaying) {
-          drumLoop1.stop(0);
-        } else {
-          startTransportSync();
-          drumLoop1.start(0);
-        }
-        setIsPlaying(!isPlaying);
-      }}
-    >
-      {isPlaying ? "stop" : "start"} loop
-    </Button>
-  );
 };
 
 const Jambox: React.FC = () => {
@@ -555,10 +535,6 @@ const Jambox: React.FC = () => {
         </div>
       )} */}
       </Row>
-      <Spacer y={0.5} />
-      <div style={{ display: "flex", justifyContent: "center" }}>
-        <DrumLoop1 />
-      </div>
       <Spacer y={0.5} />
       <div style={{ display: "flex", justifyContent: "center" }}>
         <div>
