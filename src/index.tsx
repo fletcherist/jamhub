@@ -12,9 +12,9 @@ ReactDOM.render(
   <React.StrictMode>
     <ZeitProvider>
       <CssBaseline />
-      {/* <App /> */}
+      <App />
       {/* <Loops /> */}
-      <Storybook />
+      {/* <Storybook /> */}
     </ZeitProvider>
   </React.StrictMode>,
   document.getElementById("root")

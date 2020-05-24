@@ -588,7 +588,7 @@ const Jambox: React.FC = () => {
           <Spacer y={0.5} />
           <Text small>
             Join our{" "}
-            <Link href="https://discord.gg/upa4tP" icon color target="_blank">
+            <Link href="https://discord.gg/W9juhMx" icon color target="_blank">
               Discord
             </Link>
             community of musicians{" "}

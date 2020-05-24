@@ -42,7 +42,7 @@ const samples = {
 const drums = new Tone.Sampler({
   urls: {
     C4: samples["kick1"],
-    D4: samples["perc3"],
+    D4: samples["hat6"],
     E4: samples["snare1"],
   },
 }).toDestination();
