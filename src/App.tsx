@@ -30,6 +30,7 @@ import {
   Button,
   User,
   Col,
+  Radio,
 } from "@zeit-ui/react";
 import {
   createWebSocketTransport,
@@ -155,19 +156,37 @@ export const useStore = (): Store => {
   return context as Store; // store is defined anyway
 };
 
-// interface TransportEvent {
-//   // note: string;
-//   midi: MIDIEvent;
-// }
-
+type LoadingStatus = {
+  [key in Lib.Instrument]: "not loaded" | "loading" | "failed" | "ok";
+};
 interface Player {
   send: (event: Lib.TransportEvent) => void;
+  loadingStatus: LoadingStatus;
 }
 
 const usePlayer = (): Player => {
   const guitar1 = useRef<DX7>();
   const marimba = useRef<DX7>();
   const epiano = useRef<DX7>();
+
+  const defaultLoadingStatus: LoadingStatus = {
+    epiano: "not loaded",
+    guitar: "not loaded",
+    marimba: "not loaded",
+    piano: "not loaded",
+  };
+  const refLoadingStatus = useRef<LoadingStatus>(defaultLoadingStatus);
+  const [loadingStatus, setLoadingStatus] = useState<LoadingStatus>(
+    defaultLoadingStatus
+  );
+  const updateIsLoaded = (partial: Partial<LoadingStatus>) => {
+    const newLoadingStatus: LoadingStatus = {
+      ...refLoadingStatus.current,
+      ...partial,
+    };
+    setLoadingStatus(newLoadingStatus);
+    refLoadingStatus.current = newLoadingStatus;
+  };
 
   type Preset = "BRASS   1 " | "GUITAR  1 " | "MARIMBA   " | "E.PIANO 1 ";
 
@@ -185,16 +204,52 @@ const usePlayer = (): Player => {
       dx7.setPatch(dx7.presets.get(preset));
       return dx7;
     };
+    const loadEpiano = async () => {
+      try {
+        updateIsLoaded({ epiano: "loading" });
+        const dx7epiano = await loadDx7("E.PIANO 1 ");
+        epiano.current = dx7epiano;
+        updateIsLoaded({ epiano: "ok" });
+      } catch (error) {
+        updateIsLoaded({ epiano: "failed" });
+      }
+    };
+    const loadMarimba = async () => {
+      try {
+        updateIsLoaded({ marimba: "loading" });
+        const dx7marimba = await loadDx7("MARIMBA   ");
+        marimba.current = dx7marimba;
+        updateIsLoaded({ marimba: "ok" });
+      } catch (error) {
+        updateIsLoaded({ marimba: "failed" });
+      }
+    };
+    const loadGuitar = async () => {
+      try {
+        updateIsLoaded({ guitar: "loading" });
+        const dx7guitar1 = await loadDx7("GUITAR  1 ");
+        guitar1.current = dx7guitar1;
+        updateIsLoaded({ guitar: "ok" });
+      } catch (error) {
+        updateIsLoaded({ guitar: "failed" });
+      }
+    };
+    const loadPiano = async () => {
+      try {
+        updateIsLoaded({ piano: "loading" });
+        await piano.load();
+        updateIsLoaded({ piano: "ok" });
+      } catch (error) {
+        updateIsLoaded({ piano: "failed" });
+      }
+    };
+
     async function main() {
       try {
-        const [dx7guitar1, dx7marimba, dx7epiano] = await Promise.all([
-          loadDx7("GUITAR  1 "),
-          loadDx7("MARIMBA   "),
-          loadDx7("E.PIANO 1 "),
-        ]);
-        guitar1.current = dx7guitar1;
-        marimba.current = dx7marimba;
-        epiano.current = dx7epiano;
+        await loadEpiano();
+        await loadMarimba();
+        await loadGuitar();
+        await loadPiano();
       } catch (error) {
         console.error(error);
       }
@@ -203,6 +258,7 @@ const usePlayer = (): Player => {
   }, []);
 
   return {
+    loadingStatus,
     send: (event: Lib.TransportEvent) => {
       if (event.type === "midi") {
         console.log("player", event, event.midi);
@@ -294,21 +350,11 @@ const Jambox: React.FC = () => {
   const [transportStatus, setTransportStatus] = useState<TransportStatus>(
     "disconnected"
   );
-  const [pianoStatus, setPianoStatus] = useState<
-    "not loaded" | "loading" | "ready"
-  >("not loaded");
   const [selectedInstrument, setSelectedInstrument] = useState<Lib.Instrument>(
     "epiano"
   );
   const [user, setUser] = useState<Lib.User>();
   const [midiAccess, setMidiAccess] = useState<any | undefined>(undefined);
-
-  useEffect(() => {
-    setPianoStatus("loading");
-    piano.load().then(() => {
-      setPianoStatus("ready");
-    });
-  }, []);
 
   useEffect(() => {
     const listener = transport.receive.subscribe((event) => {
@@ -393,7 +439,6 @@ const Jambox: React.FC = () => {
     const handleMidiEvent = (midiEvent: Event & { data: Lib.MIDIEvent }) => {
       const [type, pitch, velocity] = midiEvent.data;
       console.log("handleMidiEvent", midiEvent.data);
-
       if (type === 144) {
         // note on
         transport.send({
@@ -468,25 +513,6 @@ const Jambox: React.FC = () => {
           }}
         >
           <div style={{ padding: "1rem" }}>
-            {user && (
-              <div style={{}}>
-                <div
-                  style={{
-                    backgroundColor: "#68acff",
-                    borderTopLeftRadius: 8,
-                    borderTopRightRadius: 8,
-                    paddingTop: "1rem",
-                  }}
-                >
-                  <User src="https://unix.bio/assets/avatar.png" name="You">
-                    ping: <Ping userId={user.id} pingChannel={router.ping} />
-                  </User>
-                </div>
-
-                <UserKeyboardContainer transport={transport} userId={user.id} />
-              </div>
-            )}
-            <Spacer y={0.5} />
             {store.state.room.users.map((roomUser) => {
               return (
                 <>
@@ -513,21 +539,7 @@ const Jambox: React.FC = () => {
             })}
           </div>
         </div>
-        <div style={{ flexGrow: 2, padding: "1rem" }}>
-          <Text h1>Instruments</Text>
-          {/* <Description title="Instruments" content="Select your instrument" /> */}
-          {instruments.map((instrument) => {
-            return (
-              <Instrument
-                name={instrument}
-                onClick={() => setSelectedInstrument(instrument)}
-                selected={false}
-                loaded={false}
-              />
-            );
-          })}
-          <Spacer y={0.5} />
-        </div>
+        <div style={{ flexGrow: 2, padding: "1rem" }}></div>
         {/* {user && (
         <div>
           <h1>me</h1>
@@ -536,21 +548,54 @@ const Jambox: React.FC = () => {
       )} */}
       </Row>
       <Spacer y={0.5} />
+      <Radio.Group value="1" useRow style={{ justifyContent: "center" }}>
+        <Radio
+          value="1"
+          disabled={player.loadingStatus.piano === "loading"}
+          onClick={() => setSelectedInstrument("piano")}
+        >
+          grand piano
+          <Radio.Desc>
+            {player.loadingStatus.piano === "loading"
+              ? "loading..."
+              : "soft & ambient"}{" "}
+          </Radio.Desc>
+        </Radio>
+        <Radio
+          value="2"
+          disabled={player.loadingStatus.guitar === "loading"}
+          onClick={() => setSelectedInstrument("guitar")}
+        >
+          guitar<Radio.Desc>{player.loadingStatus.guitar}</Radio.Desc>
+        </Radio>
+        <Radio
+          value="3"
+          disabled={player.loadingStatus.marimba === "loading"}
+          onClick={() => setSelectedInstrument("marimba")}
+        >
+          marimba<Radio.Desc>{player.loadingStatus.marimba}</Radio.Desc>
+        </Radio>
+        <Radio
+          value="4"
+          disabled={player.loadingStatus.epiano === "loading"}
+          onClick={() => setSelectedInstrument("epiano")}
+        >
+          e-piano<Radio.Desc>{player.loadingStatus.epiano}</Radio.Desc>
+        </Radio>
+      </Radio.Group>
       <div style={{ display: "flex", justifyContent: "center" }}>
         <div>
           <Row>
             <div>
               <Row>
                 <Text small>
-                  piano:{" "}
-                  <span
-                    style={{
-                      ...(pianoStatus === "ready" && { color: "green" }),
-                    }}
-                  >
-                    {pianoStatus}
-                  </span>
+                  {user && (
+                    <span>
+                      ping: <Ping userId={user.id} pingChannel={router.ping} />
+                    </span>
+                  )}
                 </Text>
+
                 <Spacer x={0.5} />
                 <Text small>
                   transport:{" "}
