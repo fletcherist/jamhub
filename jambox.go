@@ -1,6 +1,8 @@
 package main
 
 import (
+	"context"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -10,6 +12,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
+	"golang.org/x/crypto/acme/autocert"
 
 	"net/http"
 
@@ -544,21 +547,48 @@ func main() {
 		serveWs(rooms, w, r)
 	})
 
-	// go rooms.Watch()
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "80"
 		log.Printf("Defaulting to port %s", port)
 	}
 	addr := fmt.Sprintf(":%s", port)
-	fmt.Printf("listening on %s\n", addr)
 
 	srv := &http.Server{
 		Handler:      router,
 		Addr:         addr,
-		WriteTimeout: 15 * time.Second,
-		ReadTimeout:  15 * time.Second,
+		WriteTimeout: 5 * time.Second,
+		ReadTimeout:  5 * time.Second,
 	}
+	var m *autocert.Manager
+	hostPolicy := func(ctx context.Context, host string) error {
+		// Note: change to your real host
+		allowedHost := "ru1.jambox.online"
+		if host == allowedHost {
+			return nil
+		}
+		return fmt.Errorf("acme/autocert: only %s host is allowed", allowedHost)
+	}
+	m = &autocert.Manager{
+		Prompt:     autocert.AcceptTOS,
+		HostPolicy: hostPolicy,
+		Cache:      autocert.DirCache("."),
+	}
+	srv.Addr = ":443"
+	srv.TLSConfig = &tls.Config{GetCertificate: m.GetCertificate}
+	go func() {
+		fmt.Printf("listening https on %s\n", srv.Addr)
+		log.Fatal(srv.ListenAndServeTLS("", ""))
+	}()
 
-	log.Fatal(srv.ListenAndServe())
+	httpSrv := &http.Server{
+		Addr:         ":80",
+		WriteTimeout: 5 * time.Second,
+		ReadTimeout:  5 * time.Second,
+	}
+	httpSrv.Handler = m.HTTPHandler(httpSrv.Handler)
+	err := httpSrv.ListenAndServe()
+	if err != nil {
+		log.Fatalf("httpSrv.ListenAndServe() failed with %s", err)
+	}
 }

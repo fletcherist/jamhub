@@ -331,7 +331,7 @@ const Jambox: React.FC = () => {
 
   const webSocketTransport = useRef<Transport>(
     createWebSocketTransport({
-      url: `wss://api.jambox.online${window.location.pathname}`,
+      url: `wss://ru1.jambox.online${window.location.pathname}`,
       // url: `ws://84.201.149.157${window.location.pathname}`,
       // url: `ws://localhost${window.location.pathname}`,
     })
