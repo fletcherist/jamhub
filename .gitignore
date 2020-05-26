@@ -128,3 +128,4 @@ yarn-error.log*
 .vscode
 makefile
 jambox
+jamhub

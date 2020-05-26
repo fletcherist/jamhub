@@ -1,0 +1,14 @@
+[Unit]
+Description=jamhub
+
+[Service]
+Type=simple
+ExecStart=/opt/bin/jamhub
+Restart=always
+RestartSec=20s
+User=root
+PermissionsStartOnly=true
+LimitNOFILE=infinity
+
+[Install]
+WantedBy=multi-user.target

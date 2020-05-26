@@ -326,12 +326,12 @@ const Ping: React.FC<{
   return <span>{ping}ms</span>;
 };
 
-const Jambox: React.FC = () => {
+const Jamhub: React.FC = () => {
   const player = usePlayer();
 
   const webSocketTransport = useRef<Transport>(
     createWebSocketTransport({
-      url: `wss://ru1.jambox.online${window.location.pathname}`,
+      url: `wss://ru1.jamhub.io${window.location.pathname}`,
       // url: `ws://84.201.149.157${window.location.pathname}`,
       // url: `ws://localhost${window.location.pathname}`,
     })
@@ -639,11 +639,11 @@ const Jambox: React.FC = () => {
             community of musicians{" "}
           </Text>
           <Text small type="secondary">
-            <Link href="https://github.com/fletcherist/jambox" target="_blank">
+            <Link href="https://github.com/fletcherist/jamhub" target="_blank">
               {Lib.APP_VERSION}
             </Link>{" "}
             <Link
-              href="https://github.com/fletcherist/jambox/issues"
+              href="https://github.com/fletcherist/jamhub/issues"
               icon
               color
               target="_blank"
@@ -661,7 +661,7 @@ const Jambox: React.FC = () => {
 const App: React.FC = () => {
   return (
     <StoreProvider>
-      <Jambox />
+      <Jamhub />
     </StoreProvider>
   );
 };
