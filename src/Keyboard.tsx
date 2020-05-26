@@ -1,6 +1,6 @@
 import * as Tone from "tone";
 
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect, useState, useCallback } from "react";
 import cx from "classnames";
 import css from "./Keyboard.module.css";
 
@@ -166,38 +166,41 @@ export const MyKeyboard: React.FC<{
   const refActiveKeys = useRef<KeyboardNoteKey[]>([]);
   const [activeKeys, setActiveKeys] = useState<KeyboardNoteKey[]>([]);
 
-  const handleKeyboardNoteDown = (key: KeyboardNoteKey) => {
-    const note = parseKeyboardKey(key, octave.current);
-    if (!note) {
-      return;
-    }
-    const pitch = Tone.Frequency(note).toMidi();
-    //   transport.send({ midi: [144, pitch, 30] });
-    //   setTimeout(() => {
-    //     transport.send({ midi: [128, pitch, 64] });
-    //   }, 500);
-    if (!refActiveKeys.current.includes(key)) {
-      refActiveKeys.current = [...refActiveKeys.current, key];
-      setActiveKeys(refActiveKeys.current);
-      onMIDIEvent([144, pitch, velocity.current]);
-    }
-  };
-  const handleKeyboardNoteUp = (key: KeyboardNoteKey) => {
-    const note = parseKeyboardKey(key, octave.current);
-    if (!note) {
-      return;
-    }
-    const pitch = Tone.Frequency(note).toMidi();
-    if (refActiveKeys.current.includes(key)) {
-      refActiveKeys.current = refActiveKeys.current.filter(
-        (activeKey) => activeKey !== key
-      );
-      setActiveKeys(refActiveKeys.current);
-      onMIDIEvent([128, pitch, velocity.current]);
-    }
-  };
+  const handleKeyboardNoteDown = useCallback(
+    (key: KeyboardNoteKey) => {
+      const note = parseKeyboardKey(key, octave.current);
+      if (!note) {
+        return;
+      }
+      const pitch = Tone.Frequency(note).toMidi();
+      if (!refActiveKeys.current.includes(key)) {
+        refActiveKeys.current = [...refActiveKeys.current, key];
+        setActiveKeys(refActiveKeys.current);
+        onMIDIEvent([144, pitch, velocity.current]);
+      }
+    },
+    [onMIDIEvent]
+  );
+  const handleKeyboardNoteUp = useCallback(
+    (key: KeyboardNoteKey) => {
+      const note = parseKeyboardKey(key, octave.current);
+      if (!note) {
+        return;
+      }
+      const pitch = Tone.Frequency(note).toMidi();
+      if (refActiveKeys.current.includes(key)) {
+        refActiveKeys.current = refActiveKeys.current.filter(
+          (activeKey) => activeKey !== key
+        );
+        setActiveKeys(refActiveKeys.current);
+        onMIDIEvent([128, pitch, velocity.current]);
+      }
+    },
+    [onMIDIEvent]
+  );
   useEffect(() => {
     const handleKeydown = (event: KeyboardEvent) => {
+      console.log("keydown", event.key);
       const key = keyCodeToNoteKeyMap.get(event.keyCode);
       if (key === "z") {
         octave.current = Math.max(0, octave.current - 1);
@@ -230,7 +233,7 @@ export const MyKeyboard: React.FC<{
       document.removeEventListener("keydown", handleKeydown);
       document.removeEventListener("keyup", handleKeyup);
     };
-  }, [octave, refActiveKeys, handleKeyboardNoteDown]);
+  }, [octave, handleKeyboardNoteDown, handleKeyboardNoteUp]);
 
   return (
     <div>
