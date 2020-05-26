@@ -499,7 +499,14 @@ const Jamhub: React.FC = () => {
     // "🎸", "🎤", "🎺", "🎧", "🥁", "🪕", "🎷"
   ];
   return (
-    <div style={{ height: "100vh", display: "flex", flexDirection: "column" }}>
+    <div
+      style={{
+        height: "100vh",
+        display: "flex",
+        flexDirection: "column",
+        background: "antiquewhite",
+      }}
+    >
       <Row
         style={{
           flexGrow: 2,

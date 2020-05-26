@@ -17,6 +17,7 @@
   border: 1px solid rgba(0, 0, 0, 0.1);
   height: var(--height);
   width: var(--width);
+  background-color: white;
 }
 .white:active {
   background-color: rgba(0, 0, 0, 0.2);

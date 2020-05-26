@@ -346,9 +346,7 @@ export const Keyboard: React.FC<{
   onReleaseKey: (key: KeyboardNoteKey) => void;
   size: number;
 }> = ({ activeKeys, onPressKey, onReleaseKey, size }) => {
-  const WhiteBind: React.FC<{ keyboardKey: KeyboardNoteKey }> = ({
-    keyboardKey,
-  }): React.ReactElement => {
+  const white = (keyboardKey: KeyboardNoteKey): React.ReactElement => {
     return (
       <White
         size={size}
@@ -358,9 +356,7 @@ export const Keyboard: React.FC<{
       />
     );
   };
-  const BlackBind: React.FC<{ keyboardKey: KeyboardNoteKey }> = ({
-    keyboardKey,
-  }): React.ReactElement => {
+  const black = (keyboardKey: KeyboardNoteKey) => {
     return (
       <Black
         size={size}
@@ -374,27 +370,27 @@ export const Keyboard: React.FC<{
   return (
     <div className={css.container}>
       <div className={css.whiteWithBlack}>
-        <WhiteBind keyboardKey="a" />
-        <BlackBind keyboardKey="w" />
+        {white("a")}
+        {black("w")}
       </div>
       <div className={css.whiteWithBlack}>
-        <WhiteBind keyboardKey="s" />
-        <BlackBind keyboardKey="e" />
+        {white("s")}
+        {black("e")}
       </div>
-      <WhiteBind keyboardKey="d" />
+      {white("d")}
       <div className={css.whiteWithBlack}>
-        <WhiteBind keyboardKey="f" />
-        <BlackBind keyboardKey="t" />
-      </div>
-      <div className={css.whiteWithBlack}>
-        <WhiteBind keyboardKey="g" />
-        <BlackBind keyboardKey="y" />
+        {white("f")}
+        {black("t")}
       </div>
       <div className={css.whiteWithBlack}>
-        <WhiteBind keyboardKey="h" />
-        <BlackBind keyboardKey="u" />
+        {white("g")}
+        {black("y")}
       </div>
-      <WhiteBind keyboardKey="j" />
+      <div className={css.whiteWithBlack}>
+        {white("h")}
+        {black("u")}
+      </div>
+      {white("j")}
       {/* <div className={css.whiteWithBlack}>
         <WhiteBind keyboardKey="k" />
         <BlackBind keyboardKey="o" />
