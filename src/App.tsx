@@ -161,8 +161,9 @@ const usePlayer = (): Player => {
       await loadWAMProcessor(audioContext);
       await DX7.importScripts(audioContext);
       const dx7 = new DX7(audioContext);
-
-      Tone.connect(dx7 as AudioNode, effects.effectReverb);
+      dx7.connect(audioContext.destination);
+      // dx7.co
+      // Tone.connect(dx7 as AudioNode, effects.effectReverb);
       // dx7.connect(dx7.context.destination);
       await dx7.loadBank("rom1A.syx");
       // const presetNames = [...dx7.presets.keys()];
@@ -177,6 +178,7 @@ const usePlayer = (): Player => {
         epiano.current = dx7epiano;
         updateIsLoaded({ epiano: "ok" });
       } catch (error) {
+        console.error(error);
         updateIsLoaded({ epiano: "failed" });
       }
     };
@@ -187,6 +189,7 @@ const usePlayer = (): Player => {
         marimba.current = dx7marimba;
         updateIsLoaded({ marimba: "ok" });
       } catch (error) {
+        console.error(error);
         updateIsLoaded({ marimba: "failed" });
       }
     };
@@ -197,6 +200,7 @@ const usePlayer = (): Player => {
         guitar1.current = dx7guitar1;
         updateIsLoaded({ guitar: "ok" });
       } catch (error) {
+        console.error(error);
         updateIsLoaded({ guitar: "failed" });
       }
     };
@@ -206,6 +210,7 @@ const usePlayer = (): Player => {
         await instruments.piano.load();
         updateIsLoaded({ piano: "ok" });
       } catch (error) {
+        console.error(error);
         updateIsLoaded({ piano: "failed" });
       }
     };
@@ -492,12 +497,6 @@ const Jamhub: React.FC = () => {
           </div>
         </div>
         <div style={{ flexGrow: 2, padding: "1rem" }}></div>
-        {/* {user && (
-        <div>
-          <h1>me</h1>
-          {user.id}
-        </div>
-      )} */}
       </Row>
       <Spacer y={0.5} />
       <Radio.Group value="5" useRow style={{ justifyContent: "center" }}>
