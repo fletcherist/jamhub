@@ -223,6 +223,35 @@ const CreateLink: React.FC = () => {
   );
 };
 
+const SocialButtons = () => {
+  return (
+    <div className={css.socialIcons}>
+      <a
+        href={`https://twitter.com/intent/tweet?text=${encodeURI(
+          `https://jamhub.io/ tool for online music collaboration`
+        )}`}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <div className={css.socialIcon}>
+          <Twitter />
+        </div>
+      </a>
+      <a
+        href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURI(
+          `https://jamhub.io/ tool for online music collaboration`
+        )}`}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <div className={css.socialIcon}>
+          <Facebook />
+        </div>
+      </a>
+    </div>
+  );
+};
+
 export const Landing: React.FC = () => {
   return (
     <div
@@ -243,30 +272,6 @@ export const Landing: React.FC = () => {
             <b>low-latency</b>. good-sound instruments & drums. <b>free</b>
           </Text>
         </div>
-        <div className={css.socialIcons}>
-          <a
-            href={`https://twitter.com/intent/tweet?text=${encodeURI(
-              `https://jamhub.io/ tool for online music collaboration`
-            )}`}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <div className={css.socialIcon}>
-              <Twitter />
-            </div>
-          </a>
-          <a
-            href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURI(
-              `https://jamhub.io/ tool for online music collaboration`
-            )}`}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <div className={css.socialIcon}>
-              <Facebook />
-            </div>
-          </a>
-        </div>
 
         <Spacer y={1} />
         <div style={{ display: "flex", justifyContent: "center" }}>
@@ -274,6 +279,10 @@ export const Landing: React.FC = () => {
             <Card shadow>
               <CreateLink />
             </Card>
+            <Spacer y={1} />
+            <div style={{ display: "flex", justifyContent: "flex-end" }}>
+              <SocialButtons />
+            </div>
           </div>
         </div>
       </div>
