@@ -17,6 +17,8 @@ import {
   Button,
   ButtonGroup,
   Spinner,
+  Input,
+  Snippet,
 } from "@zeit-ui/react";
 
 import { MyKeyboard, UserKeyboard } from "./Keyboard";
@@ -176,6 +178,78 @@ export const Center: React.FC = ({ children }) => {
       }}
     >
       {children}
+    </div>
+  );
+};
+
+const CreateLink: React.FC = () => {
+  const [path, setPath] = useState<string>("");
+
+  const url = `https://jamhub.io/${path}`;
+  return (
+    <div
+      style={{
+        textAlign: "center",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <Text b>Create and share the link with friends</Text>
+      <Spacer y={0.5} />
+      <Input
+        onChange={(event) => {
+          setPath(event.target.value);
+        }}
+        value={path}
+        label="jamhub.io/"
+        size="large"
+        placeholder="e.g. tiny-clouds"
+        clearable
+        width="100%"
+      />{" "}
+      <Spacer y={0.5} />
+      <Snippet type="dark" text={url} width="100%" />
+      <Spacer y={1} />
+      <a href={url} target="_blank" rel="noopener noreferrer">
+        <Button size="small" disabled={path.length === 0}>
+          Go Live
+        </Button>
+      </a>
+    </div>
+  );
+};
+
+export const Landing: React.FC = () => {
+  return (
+    <div
+      style={{
+        minHeight: "100vh",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        alignItems: "center",
+      }}
+    >
+      <div style={{ maxWidth: 400 }}>
+        <div style={{ textAlign: "center" }}>
+          <Text h2>Jam with friends online</Text>
+          <Text p>
+            tool for online music collaboration. <b>midi</b> support.
+            <br />
+            <b>low-latency</b>. good-sound instruments & drums. <b>free</b>
+          </Text>
+        </div>
+        <Spacer y={1} />
+        <div style={{ display: "flex", justifyContent: "center" }}>
+          <div>
+            <Card shadow>
+              <CreateLink />
+            </Card>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

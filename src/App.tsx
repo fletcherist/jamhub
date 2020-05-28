@@ -49,16 +49,6 @@ import { startTransportSync } from "./Sandbox";
 const audioContext = new AudioContext();
 Tone.setContext(audioContext);
 
-// synth.connect(effectDelay);
-
-// var autoWah = new Tone.AutoWah(50, 6, -30).toMaster();
-// //initialize the synth and connect to autowah
-// var synth = new Tone.Synth().connect(autoWah);
-// //Q value influences the effect of the wah - default is 2
-// autoWah.Q.value = 6;
-// //more audible on higher notes
-// synth.triggerAttackRelease("C4", "8n");
-
 export interface State {
   isMutedMicrophone: boolean;
   isMutedSpeaker: boolean;
@@ -317,37 +307,6 @@ const Ping: React.FC<{
   return <span>{ping}ms</span>;
 };
 
-const CreateLink: React.FC = () => {
-  const [link, setLink] = useState<string>("");
-  return (
-    <div
-      style={{
-        textAlign: "center",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      <Text b>Create and share the link with friends</Text>
-      <Spacer y={0.5} />
-      <Input
-        onChange={(event) => {
-          setLink(event.target.value);
-        }}
-        value={link}
-        label="jamhub.io/"
-        size="large"
-        placeholder="e.g. tiny-clouds"
-        clearable
-        width="330px"
-      />{" "}
-      <Spacer y={0.5} />
-      <Snippet type="dark" text={`https://jamhub.io/${link}`} width="276px" />
-    </div>
-  );
-};
-
 const Jamhub: React.FC = () => {
   const player = usePlayer();
 
@@ -540,7 +499,6 @@ const Jamhub: React.FC = () => {
         </div>
       )} */}
       </Row>
-      <CreateLink />
       <Spacer y={0.5} />
       <Radio.Group value="5" useRow style={{ justifyContent: "center" }}>
         <Radio

@@ -21,7 +21,8 @@
     "classnames": "2.2.6",
     "@types/classnames": "2.2.10",
     "@zeit-ui/react": "1.6.0",
-    "react-router": "5.2.0"
+    "react-router-dom": "5.2.0",
+    "@types/react-router-dom": "5.1.5"
   },
   "scripts": {
     "start": "react-scripts start",
