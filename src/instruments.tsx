@@ -1,3 +1,6 @@
+import * as Tone from "tone";
+import { Piano } from "@tonejs/piano";
+
 const ORIGIN = "https://fletcherist.github.io/webaudiomodules";
 
 export const loadWAMProcessor = (audioContext: AudioContext): Promise<void> =>
@@ -127,3 +130,85 @@ export class DX7 extends WAMController {
     return this.presets;
   }
 }
+
+//connect it to the speaker output
+const effectReverb = new Tone.Reverb({
+  decay: 10,
+  wet: 0.5,
+});
+effectReverb.toDestination();
+const effectDelay = new Tone.Delay({
+  delayTime: 0.3,
+  maxDelay: 3,
+});
+effectDelay.toDestination();
+// const effectTremolo = new Tone.Tremolo(9, 0.75).toDestination().start();
+
+const piano = new Piano({
+  velocities: 5,
+});
+piano.connect(effectReverb);
+
+const sine = new Tone.Synth({
+  oscillator: {
+    type: "sine",
+  },
+  envelope: {
+    attack: 0.005,
+    decay: 0.1,
+    sustain: 0.3,
+    release: 1,
+  },
+});
+const sineGain = new Tone.Gain(0.5);
+sine.connect(sineGain).connect(effectReverb);
+
+const baseUrl = (url: string): string =>
+  "https://fletcherist.github.io/jamlib/" + url;
+const samples = {
+  // kicks
+  kick1: baseUrl("kick/kick1.mp3"),
+  kick2: baseUrl("kick/kick2.mp3"),
+  kick3: baseUrl("kick/kick3.mp3"),
+  // snares
+  snare1: baseUrl("snare/snare1.mp3"),
+  snare2: baseUrl("snare/snare2.mp3"),
+  snare3: baseUrl("snare/snare3.mp3"),
+  snare4: baseUrl("snare/snare4.mp3"),
+  snare5: baseUrl("snare/snare5.mp3"),
+  snare6: baseUrl("snare/snare6.mp3"),
+  snare7: baseUrl("snare/snare7.mp3"),
+  snare8: baseUrl("snare/snare8.mp3"),
+  snare9: baseUrl("snare/snare9.mp3"),
+  snare10: baseUrl("snare/snare10.mp3"),
+  // hats
+  hat1: baseUrl("hat/hat1.mp3"),
+  hat2: baseUrl("hat/hat2.mp3"),
+  hat3: baseUrl("hat/hat3.mp3"),
+  hat4: baseUrl("hat/hat4.mp3"),
+  hat5: baseUrl("hat/hat5.mp3"),
+  hat6: baseUrl("hat/hat6.mp3"),
+  // perc
+  perc1: baseUrl("perc/perc1.mp3"),
+  perc2: baseUrl("perc/perc2.mp3"),
+  perc3: baseUrl("perc/perc3.mp3"),
+  perc4: baseUrl("perc/perc4.mp3"),
+};
+
+const drums = new Tone.Sampler({
+  urls: {
+    C4: samples["kick1"],
+    D4: samples["hat6"],
+    E4: samples["snare1"],
+  },
+}).toDestination();
+
+export const effects = {
+  effectReverb,
+  effectDelay,
+};
+export const instruments = {
+  piano,
+  sine,
+  drums,
+};

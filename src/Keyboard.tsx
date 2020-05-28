@@ -172,7 +172,7 @@ export const MyKeyboard: React.FC<{
       if (!note) {
         return;
       }
-      const pitch = Tone.Frequency(note).toMidi();
+      const pitch = noteToMidi(note);
       if (!refActiveKeys.current.includes(key)) {
         refActiveKeys.current = [...refActiveKeys.current, key];
         setActiveKeys(refActiveKeys.current);
@@ -187,7 +187,7 @@ export const MyKeyboard: React.FC<{
       if (!note) {
         return;
       }
-      const pitch = Tone.Frequency(note).toMidi();
+      const pitch = noteToMidi(note);
       if (refActiveKeys.current.includes(key)) {
         refActiveKeys.current = refActiveKeys.current.filter(
           (activeKey) => activeKey !== key
@@ -262,6 +262,11 @@ export const MyKeyboard: React.FC<{
   );
 };
 
+export const midiToNote = (pitch: number): string =>
+  Tone.Frequency(pitch, "midi").toNote();
+export const noteToMidi = (note: string): number =>
+  Tone.Frequency(note).toMidi();
+
 interface KeyboardMIDIEvent {
   type: "press" | "release";
   key: KeyboardNoteKey;
@@ -284,7 +289,7 @@ export const UserKeyboardContainer: React.FC<{
       .subscribe((event) => {
         if (event.type === "midi") {
           const [type, pitch] = event.midi;
-          const toneNote = Tone.Frequency(pitch, "midi").toNote();
+          const toneNote = midiToNote(pitch);
           const note = toneNote.slice(
             0,
             toneNote.length - 1

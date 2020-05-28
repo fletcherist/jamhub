@@ -2,7 +2,13 @@ export const APP_VERSION = "v0.0.51";
 
 export type MIDIEvent = [number, number, number];
 
-export type Instrument = "piano" | "guitar" | "marimba" | "epiano";
+export type Instrument =
+  | "piano"
+  | "guitar"
+  | "marimba"
+  | "epiano"
+  | "sine"
+  | "drums";
 export interface TransportEventPing {
   userId: string;
   type: "ping";

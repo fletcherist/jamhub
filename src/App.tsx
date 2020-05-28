@@ -10,11 +10,14 @@ import { Subject, of, Observable } from "rxjs";
 import { mergeMap, filter } from "rxjs/operators";
 // import { LoggerEvent } from "./lib.ts";
 
-import { Piano } from "@tonejs/piano";
+import {
+  MyKeyboard,
+  UserKeyboard,
+  UserKeyboardContainer,
+  midiToNote,
+} from "./Keyboard";
 
-import { MyKeyboard, UserKeyboard, UserKeyboardContainer } from "./Keyboard";
-
-import { DX7, loadWAMProcessor } from "./instruments";
+import { DX7, loadWAMProcessor, instruments, effects } from "./instruments";
 
 import css from "./App.module.css";
 import { Center, Instrument } from "./Components";
@@ -44,38 +47,7 @@ import { startTransportSync } from "./Sandbox";
 const audioContext = new AudioContext();
 Tone.setContext(audioContext);
 
-//connect it to the speaker output
-const effectReverb = new Tone.Reverb({
-  decay: 10,
-  wet: 0.5,
-});
-effectReverb.toDestination();
-const effectDelay = new Tone.Delay({
-  delayTime: 0.3,
-  maxDelay: 3,
-});
-effectDelay.toDestination();
-const effectTremolo = new Tone.Tremolo(9, 0.75).toDestination().start();
-
-const piano = new Piano({
-  velocities: 5,
-});
-piano.connect(effectReverb);
-
-// const synth = new Tone.Synth({
-//   oscillator: {
-//     type: "sine",
-//   },
-//   envelope: {
-//     attack: 0.005,
-//     decay: 0.1,
-//     sustain: 0.3,
-//     release: 1,
-//   },
-// });
-// // synth.connect(effectDelay);
-// synth.connect(effectReverb);
-// synth.connect(effectTremolo);
+// synth.connect(effectDelay);
 
 // var autoWah = new Tone.AutoWah(50, 6, -30).toMaster();
 // //initialize the synth and connect to autowah
@@ -174,6 +146,8 @@ const usePlayer = (): Player => {
     guitar: "not loaded",
     marimba: "not loaded",
     piano: "not loaded",
+    sine: "ok",
+    drums: "ok",
   };
   const refLoadingStatus = useRef<LoadingStatus>(defaultLoadingStatus);
   const [loadingStatus, setLoadingStatus] = useState<LoadingStatus>(
@@ -196,7 +170,7 @@ const usePlayer = (): Player => {
       await DX7.importScripts(audioContext);
       const dx7 = new DX7(audioContext);
 
-      Tone.connect(dx7 as AudioNode, effectReverb);
+      Tone.connect(dx7 as AudioNode, effects.effectReverb);
       // dx7.connect(dx7.context.destination);
       await dx7.loadBank("rom1A.syx");
       // const presetNames = [...dx7.presets.keys()];
@@ -237,7 +211,7 @@ const usePlayer = (): Player => {
     const loadPiano = async () => {
       try {
         updateIsLoaded({ piano: "loading" });
-        await piano.load();
+        await instruments.piano.load();
         updateIsLoaded({ piano: "ok" });
       } catch (error) {
         updateIsLoaded({ piano: "failed" });
@@ -268,9 +242,12 @@ const usePlayer = (): Player => {
 
         if (event.instrument === "piano") {
           if (type === 144) {
-            piano.keyDown({ midi: pitch, velocity: velocity / 256 });
+            instruments.piano.keyDown({
+              midi: pitch,
+              velocity: velocity / 256,
+            });
           } else if (type === 128) {
-            piano.keyUp({ midi: pitch });
+            instruments.piano.keyUp({ midi: pitch });
           }
         } else if (event.instrument === "marimba") {
           if (!marimba.current) {
@@ -290,6 +267,18 @@ const usePlayer = (): Player => {
             return;
           }
           epiano.current.onMidi(event.midi);
+        } else if (event.instrument === "sine") {
+          if (type === 144) {
+            instruments.sine.triggerAttackRelease(midiToNote(pitch), "8n");
+            return;
+          }
+          // else if (type === 128) {
+          //   sine.triggerRelease(midiToNote(pitch));
+          // }
+        } else if (event.instrument === "drums") {
+          if (type === 144) {
+            instruments.drums.triggerAttackRelease(midiToNote(pitch), "8n");
+          }
         } else {
           console.error("instrument not implemented", event.instrument);
         }
@@ -332,8 +321,6 @@ const Jamhub: React.FC = () => {
   const webSocketTransport = useRef<Transport>(
     createWebSocketTransport({
       url: `wss://ru1.jamhub.io${window.location.pathname}`,
-      // url: `ws://84.201.149.157${window.location.pathname}`,
-      // url: `ws://localhost${window.location.pathname}`,
     })
   );
   // const localTransport = useRef<Transport>(
@@ -351,7 +338,7 @@ const Jamhub: React.FC = () => {
     "disconnected"
   );
   const [selectedInstrument, setSelectedInstrument] = useState<Lib.Instrument>(
-    "epiano"
+    "sine"
   );
   const [user, setUser] = useState<Lib.User>();
   const [midiAccess, setMidiAccess] = useState<any | undefined>(undefined);
@@ -393,14 +380,14 @@ const Jamhub: React.FC = () => {
     return () => {
       listener.unsubscribe();
     };
-  }, []);
+  }, [transport.events]);
 
   useEffect(() => {
     const conn = transport.connect();
     return () => {
       conn.disconnect();
     };
-  }, []);
+  }, [transport]);
 
   useEffect(() => {
     const tryAccessMidi = async (): Promise<void> => {
@@ -462,42 +449,8 @@ const Jamhub: React.FC = () => {
     return () => {
       midiInput.removeEventListener("midimessage", handleMidiEvent);
     };
-  }, [midiAccess, user, selectedInstrument]);
+  }, [midiAccess, user, selectedInstrument, transport]);
 
-  // useEffect(() => {
-  //   const interval = setInterval(() => {
-  //     if (!user) {
-  //       return;
-  //     }
-  //     console.log("tick");
-  //     transport.send({
-  //       midi: [144, 50, 1],
-  //       type: "midi",
-  //       instrument: "epiano",
-  //       user_id: user.id,
-  //     });
-  //     setTimeout(() => {
-  //       transport.send({
-  //         midi: [128, 50, 1],
-  //         type: "midi",
-  //         instrument: "epiano",
-  //         user_id: user.id,
-  //       });
-  //     }, 100);
-  //     // 666.6666
-  //   }, 1000);
-  //   return () => {
-  //     clearInterval(interval);
-  //   };
-  // }, [user]);
-
-  const instruments: Lib.Instrument[] = [
-    "piano",
-    "guitar",
-    "marimba",
-    "epiano",
-    // "🎸", "🎤", "🎺", "🎧", "🥁", "🪕", "🎷"
-  ];
   return (
     <div
       style={{
@@ -555,7 +508,7 @@ const Jamhub: React.FC = () => {
       )} */}
       </Row>
       <Spacer y={0.5} />
-      <Radio.Group value="1" useRow style={{ justifyContent: "center" }}>
+      <Radio.Group value="5" useRow style={{ justifyContent: "center" }}>
         <Radio
           value="1"
           disabled={player.loadingStatus.piano === "loading"}
@@ -588,6 +541,20 @@ const Jamhub: React.FC = () => {
           onClick={() => setSelectedInstrument("epiano")}
         >
           e-piano<Radio.Desc>{player.loadingStatus.epiano}</Radio.Desc>
+        </Radio>
+        <Radio
+          value="5"
+          disabled={player.loadingStatus.sine === "loading"}
+          onClick={() => setSelectedInstrument("sine")}
+        >
+          sine<Radio.Desc>{player.loadingStatus.sine}</Radio.Desc>
+        </Radio>
+        <Radio
+          value="6"
+          disabled={player.loadingStatus.drums === "loading"}
+          onClick={() => setSelectedInstrument("drums")}
+        >
+          drums<Radio.Desc>{player.loadingStatus.drums}</Radio.Desc>
         </Radio>
       </Radio.Group>
       <div style={{ display: "flex", justifyContent: "center" }}>
@@ -675,15 +642,15 @@ const App: React.FC = () => {
 
 export default App;
 
-const assert = (expression: boolean, error: string): void => {
-  if (!expression) {
-    throw new Error(error);
-  }
-};
-const uniq = (list: string[]): string[] => {
-  return Object.keys(
-    list.reduce((counts, name) => {
-      return { ...counts, ...{ [name]: 1 } };
-    }, {} as { [key: string]: number })
-  );
-};
+// const assert = (expression: boolean, error: string): void => {
+//   if (!expression) {
+//     throw new Error(error);
+//   }
+// };
+// const uniq = (list: string[]): string[] => {
+//   return Object.keys(
+//     list.reduce((counts, name) => {
+//       return { ...counts, ...{ [name]: 1 } };
+//     }, {} as { [key: string]: number })
+//   );
+// };

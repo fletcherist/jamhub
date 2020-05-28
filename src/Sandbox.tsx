@@ -2,50 +2,11 @@ import React, { useEffect, useRef } from "react";
 import * as Tone from "tone";
 import { MIDIEvent } from "./lib";
 import { UserKeyboard, MyKeyboard } from "./Keyboard";
+import { instruments } from "./instruments";
 
 export function sample<T>(list: T[]): T {
   return list[Math.floor(Math.random() * list.length)];
 }
-
-const baseUrl = (url: string): string =>
-  "https://fletcherist.github.io/jamlib/" + url;
-const samples = {
-  // kicks
-  kick1: baseUrl("kick/kick1.mp3"),
-  kick2: baseUrl("kick/kick2.mp3"),
-  kick3: baseUrl("kick/kick3.mp3"),
-  // snares
-  snare1: baseUrl("snare/snare1.mp3"),
-  snare2: baseUrl("snare/snare2.mp3"),
-  snare3: baseUrl("snare/snare3.mp3"),
-  snare4: baseUrl("snare/snare4.mp3"),
-  snare5: baseUrl("snare/snare5.mp3"),
-  snare6: baseUrl("snare/snare6.mp3"),
-  snare7: baseUrl("snare/snare7.mp3"),
-  snare8: baseUrl("snare/snare8.mp3"),
-  snare9: baseUrl("snare/snare9.mp3"),
-  snare10: baseUrl("snare/snare10.mp3"),
-  // hats
-  hat1: baseUrl("hat/hat1.mp3"),
-  hat2: baseUrl("hat/hat2.mp3"),
-  hat3: baseUrl("hat/hat3.mp3"),
-  hat4: baseUrl("hat/hat4.mp3"),
-  hat5: baseUrl("hat/hat5.mp3"),
-  hat6: baseUrl("hat/hat6.mp3"),
-  // perc
-  perc1: baseUrl("perc/perc1.mp3"),
-  perc2: baseUrl("perc/perc2.mp3"),
-  perc3: baseUrl("perc/perc3.mp3"),
-  perc4: baseUrl("perc/perc4.mp3"),
-};
-
-const drums = new Tone.Sampler({
-  urls: {
-    C4: samples["kick1"],
-    D4: samples["hat6"],
-    E4: samples["snare1"],
-  },
-}).toDestination();
 
 interface Sample {
   play: (time: number) => void;
@@ -63,7 +24,7 @@ const kick = (modifiedOptions?: Partial<SampleOptions>): Sample => {
   const options: SampleOptions = { ...defaultOptions, ...modifiedOptions };
   return {
     play: (time: number): void => {
-      drums.triggerAttackRelease(
+      instruments.drums.triggerAttackRelease(
         "C4",
         "16n",
         time + options.delay / 1000,
@@ -76,7 +37,7 @@ const snare = (modifiedOptions?: Partial<SampleOptions>): Sample => {
   const options: SampleOptions = { ...defaultOptions, ...modifiedOptions };
   return {
     play: (time: number): void => {
-      drums.triggerAttackRelease(
+      instruments.drums.triggerAttackRelease(
         "E4",
         "4n",
         time + options.delay / 1000,
@@ -89,7 +50,7 @@ const hat = (modifiedOptions?: Partial<SampleOptions>): Sample => {
   const options: SampleOptions = { ...defaultOptions, ...modifiedOptions };
   return {
     play: (time: number): void => {
-      drums.triggerAttackRelease(
+      instruments.drums.triggerAttackRelease(
         "D4",
         "4n",
         time + options.delay / 1000,
