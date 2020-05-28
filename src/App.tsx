@@ -34,6 +34,8 @@ import {
   User,
   Col,
   Radio,
+  Snippet,
+  Input,
 } from "@zeit-ui/react";
 import {
   createWebSocketTransport,
@@ -315,6 +317,37 @@ const Ping: React.FC<{
   return <span>{ping}ms</span>;
 };
 
+const CreateLink: React.FC = () => {
+  const [link, setLink] = useState<string>("");
+  return (
+    <div
+      style={{
+        textAlign: "center",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <Text b>Create and share the link with friends</Text>
+      <Spacer y={0.5} />
+      <Input
+        onChange={(event) => {
+          setLink(event.target.value);
+        }}
+        value={link}
+        label="jamhub.io/"
+        size="large"
+        placeholder="e.g. tiny-clouds"
+        clearable
+        width="330px"
+      />{" "}
+      <Spacer y={0.5} />
+      <Snippet type="dark" text={`https://jamhub.io/${link}`} width="276px" />
+    </div>
+  );
+};
+
 const Jamhub: React.FC = () => {
   const player = usePlayer();
 
@@ -457,7 +490,7 @@ const Jamhub: React.FC = () => {
         height: "100vh",
         display: "flex",
         flexDirection: "column",
-        background: "antiquewhite",
+        // background: "antiquewhite",
       }}
     >
       <Row
@@ -507,6 +540,7 @@ const Jamhub: React.FC = () => {
         </div>
       )} */}
       </Row>
+      <CreateLink />
       <Spacer y={0.5} />
       <Radio.Group value="5" useRow style={{ justifyContent: "center" }}>
         <Radio
