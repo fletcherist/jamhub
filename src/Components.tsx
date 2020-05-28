@@ -21,6 +21,8 @@ import {
   Snippet,
 } from "@zeit-ui/react";
 
+import { Twitter, Facebook } from "@zeit-ui/react-icons";
+
 import { MyKeyboard, UserKeyboard } from "./Keyboard";
 import * as Lib from "./lib";
 import {
@@ -241,6 +243,31 @@ export const Landing: React.FC = () => {
             <b>low-latency</b>. good-sound instruments & drums. <b>free</b>
           </Text>
         </div>
+        <div className={css.socialIcons}>
+          <a
+            href={`https://twitter.com/intent/tweet?text=${encodeURI(
+              `https://jamhub.io/ tool for online music collaboration`
+            )}`}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <div className={css.socialIcon}>
+              <Twitter />
+            </div>
+          </a>
+          <a
+            href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURI(
+              `https://jamhub.io/ tool for online music collaboration`
+            )}`}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <div className={css.socialIcon}>
+              <Facebook />
+            </div>
+          </a>
+        </div>
+
         <Spacer y={1} />
         <div style={{ display: "flex", justifyContent: "center" }}>
           <div>

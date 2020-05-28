@@ -201,7 +201,7 @@ const drums = new Tone.Sampler({
     D4: samples["hat6"],
     E4: samples["snare1"],
   },
-}).toDestination();
+}).connect(new Tone.Gain(0.4).toDestination());
 
 export const effects = {
   effectReverb,

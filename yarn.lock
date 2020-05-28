@@ -1829,6 +1829,11 @@
   resolved "https://registry.yarnpkg.com/@xtuc/long/-/long-4.2.2.tgz#d291c6a4e97989b5c61d9acf396ae4fe133a718d"
   integrity sha512-NuHqBY1PB/D8xU6s/thBgOAiAP7HOYDQ32+BFZILJ8ivkUkAHQnWfn6WhL79Owj1qmUnoN/YPhktdIoucipkAQ==
 
+"@zeit-ui/react-icons@1.2.2":
+  version "1.2.2"
+  resolved "https://registry.yarnpkg.com/@zeit-ui/react-icons/-/react-icons-1.2.2.tgz#92f8474c986b0a0f9f8afc30e354ac3d54631813"
+  integrity sha512-O0BVU6c9yLyW64DNN7+ovn3s+BtysQcxqKIWVofSnjbToTXaAob5BZXoV+QpEWrUod3olTzJzdw9/D3ha1YMiw==
+
 "@zeit-ui/react@1.6.0":
   version "1.6.0"
   resolved "https://registry.yarnpkg.com/@zeit-ui/react/-/react-1.6.0.tgz#d251771af64d2f97668445c2556958d0961726e7"

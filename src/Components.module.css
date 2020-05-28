@@ -29,3 +29,27 @@
   font-size: 12px;
   padding: 0 0 0.4rem;
 }
+
+.socialIcons {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.socialIcon {
+  text-decoration: none;
+  color: black;
+  background-color: rgba(0, 0, 0, 0.05);
+  border-radius: 5px;
+  margin: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  cursor: pointer;
+}
+.socialIcon:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+.socialIcon:active {
+  background-color: rgba(0, 0, 0, 0.13);
+}
