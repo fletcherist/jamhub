@@ -3,6 +3,9 @@ import { Piano } from "@tonejs/piano";
 
 const ORIGIN = "https://fletcherist.github.io/webaudiomodules";
 
+export const audioContext = new AudioContext();
+// Tone.setContext(audioContext);
+
 export const loadWAMProcessor = (audioContext: AudioContext): Promise<void> =>
   audioContext.audioWorklet.addModule(`${ORIGIN}/wam-processor.js`);
 
@@ -136,18 +139,16 @@ const effectReverb = new Tone.Reverb({
   decay: 10,
   wet: 0.5,
 });
-effectReverb.toDestination();
+
 const effectDelay = new Tone.Delay({
   delayTime: 0.3,
   maxDelay: 3,
 });
-effectDelay.toDestination();
-// const effectTremolo = new Tone.Tremolo(9, 0.75).toDestination().start();
 
 const piano = new Piano({
   velocities: 5,
 });
-piano.toDestination();
+piano.chain(effectReverb, Tone.Destination);
 
 const sine = new Tone.Synth({
   oscillator: {
@@ -160,8 +161,8 @@ const sine = new Tone.Synth({
     release: 1,
   },
 });
-const sineGain = new Tone.Gain(0.5);
-sine.connect(sineGain).connect(effectReverb);
+const sineGain = new Tone.Gain(0.3);
+sine.chain(sineGain, effectReverb, Tone.Destination);
 
 const baseUrl = (url: string): string =>
   "https://fletcherist.github.io/jamlib/" + url;
@@ -201,7 +202,8 @@ const drums = new Tone.Sampler({
     D4: samples["hat6"],
     E4: samples["snare1"],
   },
-}).connect(new Tone.Gain(0.4).toDestination());
+});
+drums.chain(new Tone.Gain(0.3), Tone.Destination);
 
 export const effects = {
   effectReverb,

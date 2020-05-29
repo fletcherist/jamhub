@@ -11,7 +11,13 @@ import { mergeMap, filter } from "rxjs/operators";
 
 import { MyKeyboard, UserKeyboardContainer, midiToNote } from "./Keyboard";
 
-import { DX7, loadWAMProcessor, instruments, effects } from "./instruments";
+import {
+  DX7,
+  loadWAMProcessor,
+  instruments,
+  effects,
+  audioContext,
+} from "./instruments";
 
 import css from "./App.module.css";
 import { Center, Instrument } from "./Components";
@@ -32,9 +38,6 @@ import {
 } from "./transport";
 
 import { startTransportSync } from "./Sandbox";
-
-const audioContext = new AudioContext();
-Tone.setContext(audioContext);
 
 export interface State {
   isMutedMicrophone: boolean;
@@ -148,7 +151,11 @@ const usePlayer = (): Player => {
       await loadWAMProcessor(audioContext);
       await DX7.importScripts(audioContext);
       const dx7 = new DX7(audioContext);
-      dx7.connect(audioContext.destination);
+
+      const dx7gain = audioContext.createGain();
+      dx7gain.connect(audioContext.destination);
+      dx7gain.gain.value = 0.4;
+      dx7.connect(dx7gain);
       // Tone.connect(dx7 as AudioNode, effects.effectReverb);
       await dx7.loadBank("rom1A.syx");
       // const presetNames = [...dx7.presets.keys()];
@@ -496,7 +503,7 @@ const Jamhub: React.FC = () => {
               description="jazzy"
             />
             <Instrument
-              name="sive wave"
+              name="sine wave"
               onClick={() => setSelectedInstrument("sine")}
               loading={player.loadingStatus.sine === "loading"}
               selected={selectedInstrument === "sine"}
@@ -596,7 +603,7 @@ const Jamhub: React.FC = () => {
                 </Tooltip>{" "}
                 for performance settings
               </li>
-              <li>attach midi, if you have</li>
+              <li>attach midi</li>
               <li>
                 your ping is{" "}
                 {user && <Ping userId={user.id} pingChannel={router.ping} />}

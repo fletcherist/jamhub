@@ -10285,10 +10285,10 @@ toidentifier@1.0.0:
   resolved "https://registry.yarnpkg.com/toidentifier/-/toidentifier-1.0.0.tgz#7e1be3470f1e77948bc43d94a3c8f4d7752ba553"
   integrity sha512-yaOH/Pk/VEhBWWTlhI+qXxDFXlejDGcQipMlyxda9nthulaxLZUNcUqFxokp0vcYnvteJln5FNQDRrxj3YcbVw==
 
-tone@14.6.1:
-  version "14.6.1"
-  resolved "https://registry.yarnpkg.com/tone/-/tone-14.6.1.tgz#769a715f1b3ccac3e027d55068f9a8387667a743"
-  integrity sha512-4DUj5WTM4h4JNY1GG23s0x7THEYfJGnCEqSeOgDkyiCg3d7e/wE09hkBm0ZmcOdlPoUwlcVeFd280cwPpnr1Xw==
+tone@14.7.0:
+  version "14.7.0"
+  resolved "https://registry.yarnpkg.com/tone/-/tone-14.7.0.tgz#b533b07f134967a9b339742e9137ac564244ab78"
+  integrity sha512-eZHtFWO1dn3M8prKA6iac8tUcZbmB9fM32YW58lGumdPY/r1ez6ibO/8I3Sh0mlhCKdvPYhxAS55pqDsFWpu/Q==
   dependencies:
     standardized-audio-context "^24.1.5"
     tslib "^1.10.0"
@@ -10661,6 +10661,11 @@ wbuf@^1.1.0, wbuf@^1.7.3:
   integrity sha512-O84QOnr0icsbFGLS0O3bI5FswxzRr8/gHwWkDlQFskhSPryQXvrTMxjxGP4+iWYoauLoBvfDpkrOauZ+0iZpDA==
   dependencies:
     minimalistic-assert "^1.0.0"
+
+webaudio-tinysynth@1.1.2:
+  version "1.1.2"
+  resolved "https://registry.yarnpkg.com/webaudio-tinysynth/-/webaudio-tinysynth-1.1.2.tgz#a92849f70e62fd24c713110140467976c5783ff4"
+  integrity sha512-tH+zEpXcv+jQjhanEzHzqJ9vyYzFrJwCAwVMQTlokW6YTHAOgJOOFXS/rdpbQNp44LEELKlhrLtYMISPJ7pcwg==
 
 webidl-conversions@^4.0.2:
   version "4.0.2"

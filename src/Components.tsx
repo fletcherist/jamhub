@@ -1,24 +1,14 @@
 import React, { useState } from "react";
 import css from "./Components.module.css";
 
-import { Piano } from "@tonejs/piano";
-
 import cx from "classnames";
 import {
-  Dot,
   Text,
-  Radio,
   Description,
   Row,
-  Loading,
-  Tree,
-  Col,
-  Link,
   Spacer,
   Card,
   Button,
-  ButtonGroup,
-  Spinner,
   Input,
   Snippet,
   Modal,
@@ -28,7 +18,7 @@ import {
 import { Twitter, Facebook } from "@zeit-ui/react-icons";
 
 import { MyKeyboard, UserKeyboard } from "./Keyboard";
-import * as Lib from "./lib";
+// import * as Lib from "./lib";
 import {
   Sequence,
   emptySequence,
@@ -361,14 +351,6 @@ const SocialButtons = () => {
     </div>
   );
 };
-
-const piano = new Piano({
-  velocities: 5,
-});
-piano.toDestination();
-piano.load().then(() => {
-  console.log("loaded!");
-});
 
 export const Landing: React.FC = () => {
   return (
