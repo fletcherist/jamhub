@@ -36,10 +36,11 @@ import {
 
 export const Instrument: React.FC<{
   name: string;
+  description: string;
   onClick: (event: React.MouseEvent) => void;
   selected: boolean;
   loading: boolean;
-}> = ({ name, onClick, selected, loading = false }) => {
+}> = ({ name, onClick, selected, loading = false, description }) => {
   return (
     <div
       className={cx(css.instrument, {
@@ -52,7 +53,7 @@ export const Instrument: React.FC<{
         <div className={css.instrumentTitle}>{name}</div>
         <div className={css.instrumentDescription}>
           {/* {!loaded && "loading..."} */}
-          soft & ambient
+          {description}
         </div>
       </div>
     </div>
@@ -86,6 +87,7 @@ const InstrumentStory = () => {
         onClick={() => undefined}
         selected={isSelected}
         loading={isLoading}
+        description="soft & ambient"
       />
     </div>
   );
@@ -101,18 +103,21 @@ export const InstrumentsStory = () => {
         onClick={() => setSelectedInstrument(1)}
         selected={selectedInstrument === 1}
         loading={false}
+        description="soft & ambient"
       />
       <Instrument
         name="grand piano"
         onClick={() => setSelectedInstrument(2)}
         selected={selectedInstrument === 2}
         loading={true}
+        description="soft & ambient"
       />
       <Instrument
         name="drums"
         onClick={() => setSelectedInstrument(3)}
         selected={selectedInstrument === 3}
         loading={false}
+        description="soft & ambient"
       />
     </div>
   );
@@ -142,18 +147,21 @@ export const Storybook: React.FC = () => {
                   onClick={() => undefined}
                   selected={false}
                   loading={false}
+                  description="soft & ambient"
                 />
                 <Instrument
                   name="guitar"
                   onClick={() => undefined}
                   selected={true}
                   loading={false}
+                  description="soft & ambient"
                 />
                 <Instrument
                   name="piano"
                   onClick={() => undefined}
                   selected={false}
                   loading={true}
+                  description="soft & ambient"
                 />
                 <Spacer y={0.5} />
               </div>

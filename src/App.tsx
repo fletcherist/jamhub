@@ -10,12 +10,7 @@ import { Subject, of, Observable } from "rxjs";
 import { mergeMap, filter } from "rxjs/operators";
 // import { LoggerEvent } from "./lib.ts";
 
-import {
-  MyKeyboard,
-  UserKeyboard,
-  UserKeyboardContainer,
-  midiToNote,
-} from "./Keyboard";
+import { MyKeyboard, UserKeyboardContainer, midiToNote } from "./Keyboard";
 
 import { DX7, loadWAMProcessor, instruments, effects } from "./instruments";
 
@@ -27,10 +22,8 @@ import {
   Text,
   Link,
   User,
-  Col,
-  Radio,
-  Snippet,
-  Input,
+  Tooltip,
+  Divider,
 } from "@zeit-ui/react";
 import {
   createWebSocketTransport,
@@ -477,36 +470,42 @@ const Jamhub: React.FC = () => {
               onClick={() => setSelectedInstrument("piano")}
               loading={player.loadingStatus.piano === "loading"}
               selected={selectedInstrument === "piano"}
+              description="soft & ambient"
             />
             <Instrument
               name="guitar"
               onClick={() => setSelectedInstrument("guitar")}
               loading={player.loadingStatus.guitar === "loading"}
               selected={selectedInstrument === "guitar"}
+              description="for solos"
             />
             <Instrument
               name="marimba"
               onClick={() => setSelectedInstrument("marimba")}
               loading={player.loadingStatus.marimba === "loading"}
               selected={selectedInstrument === "marimba"}
+              description="percussion"
             />
             <Instrument
               name="electronic piano"
               onClick={() => setSelectedInstrument("epiano")}
               loading={player.loadingStatus.epiano === "loading"}
               selected={selectedInstrument === "epiano"}
+              description="jazzy"
             />
             <Instrument
               name="sive wave"
               onClick={() => setSelectedInstrument("sine")}
               loading={player.loadingStatus.sine === "loading"}
               selected={selectedInstrument === "sine"}
+              description="example sound"
             />
             <Instrument
               name="lo-fi drums"
               onClick={() => setSelectedInstrument("drums")}
               loading={player.loadingStatus.drums === "loading"}
               selected={selectedInstrument === "drums"}
+              description="for chilling"
             />
           </div>
           <div
@@ -551,33 +550,6 @@ const Jamhub: React.FC = () => {
         <div style={{ minWidth: 500 }}>
           <Row>
             <div>
-              {/* <Row>
-                <Text small>
-                  {user && (
-                    <span>
-                      ping: <Ping userId={user.id} pingChannel={router.ping} />
-                    </span>
-                  )}
-                </Text>
-
-                <Spacer x={0.5} />
-                <Text small>
-                  transport:{" "}
-                  <span
-                    style={{
-                      ...(transportStatus === "connected" && {
-                        color: "green",
-                      }),
-                      ...(transportStatus === "error" && { color: "red" }),
-                      // color: transportStatus === "connected" ? "green" : "black",
-                    }}
-                  >
-                    {transportStatus}
-                  </span>
-                </Text>
-                <Spacer x={0.5} />
-              </Row>
-              <Spacer y={0.5} /> */}
               <MyKeyboard
                 onMIDIEvent={(event) => {
                   console.log("onMIDIEvent", event);
@@ -595,27 +567,90 @@ const Jamhub: React.FC = () => {
             </div>
           </Row>
           <Spacer y={0.5} />
+          {/* <Text h2>hints</Text> */}
           <Text small>
-            Join our{" "}
-            <Link href="https://discord.gg/W9juhMx" icon color target="_blank">
-              Discord
-            </Link>
-            community of musicians{" "}
+            <ul>
+              <li>
+                use{" "}
+                <Tooltip text={"octave down"}>
+                  <Text b style={{ cursor: "pointer" }}>
+                    z
+                  </Text>
+                </Tooltip>{" "}
+                <Tooltip text={"octave up"}>
+                  <Text b style={{ cursor: "pointer" }}>
+                    x
+                  </Text>
+                </Tooltip>{" "}
+                <Tooltip text={"less velocity"}>
+                  <Text b style={{ cursor: "pointer" }}>
+                    c
+                  </Text>
+                </Tooltip>{" "}
+                <Tooltip text={"more velocity"}>
+                  <Text b style={{ cursor: "pointer" }}>
+                    v
+                  </Text>
+                </Tooltip>{" "}
+                keys
+              </li>
+              <li>attach midi keyboard, if you have</li>
+              <li>
+                your ping is{" "}
+                {user && <Ping userId={user.id} pingChannel={router.ping} />}
+                {!user && "connecting..."},{" "}
+                <span
+                  style={{
+                    ...(transportStatus === "connected" && {
+                      color: "green",
+                    }),
+                    ...(transportStatus === "error" && { color: "red" }),
+                    // color: transportStatus === "connected" ? "green" : "black",
+                  }}
+                >
+                  {transportStatus}
+                </span>
+              </li>
+              <li>
+                join our{" "}
+                <Link
+                  href="https://discord.gg/W9juhMx"
+                  icon
+                  color
+                  target="_blank"
+                >
+                  discord
+                </Link>
+                community of musicians{" "}
+              </li>
+            </ul>
+            <Divider />
+            <Text type="secondary">
+              <Link
+                href="https://github.com/fletcherist/jamhub"
+                target="_blank"
+              >
+                {Lib.APP_VERSION}
+              </Link>{" "}
+              <Link
+                href="https://github.com/fletcherist/jamhub/issues"
+                icon
+                color
+                target="_blank"
+              >
+                report bug
+              </Link>
+            </Text>
           </Text>
-          <Text small type="secondary">
-            <Link href="https://github.com/fletcherist/jamhub" target="_blank">
-              {Lib.APP_VERSION}
-            </Link>{" "}
-            <Link
-              href="https://github.com/fletcherist/jamhub/issues"
-              icon
-              color
-              target="_blank"
-            >
-              report bug
-            </Link>
-          </Text>
-          <Spacer y={2} />
+          {/* <div>
+              <Tooltip text={"less velocity"}>
+                <KeyboardDescription>c</KeyboardDescription>
+              </Tooltip>
+              <Tooltip text={"more velocity"}>
+                <KeyboardDescription>v</KeyboardDescription>
+              </Tooltip>
+            </div> */}
+          {/* <Spacer y={2} /> */}
         </div>
       </div>
     </div>

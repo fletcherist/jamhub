@@ -10,12 +10,6 @@ import { MIDIEvent } from "./lib";
 import { filter } from "rxjs/operators";
 import { Subject } from "rxjs";
 
-import {
-  Keyboard as KeyboardDescription,
-  Tooltip,
-  Spacer,
-} from "@zeit-ui/react";
-
 type KeyboardNoteKey =
   | "a"
   | "s"
@@ -237,20 +231,6 @@ export const MyKeyboard: React.FC<{
 
   return (
     <div>
-      {/* <div>
-        <Tooltip text={"octave down"}>
-          <KeyboardDescription>z</KeyboardDescription>
-        </Tooltip>
-        <Tooltip text={"octave up"}>
-          <KeyboardDescription>x</KeyboardDescription>
-        </Tooltip>
-        <Tooltip text={"less velocity"}>
-          <KeyboardDescription>c</KeyboardDescription>
-        </Tooltip>
-        <Tooltip text={"more velocity"}>
-          <KeyboardDescription>v</KeyboardDescription>
-        </Tooltip>
-      </div> */}
       {/* <Spacer y={0.5} /> */}
       <Keyboard
         activeKeys={activeKeys}
