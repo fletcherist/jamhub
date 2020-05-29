@@ -146,7 +146,9 @@ export const createWebSocketTransport = ({
       (async () => {
         while (true) {
           await delay(5000);
-          send.next(createPingEvent());
+          const pingEvent = createPingEvent();
+          send.next(pingEvent);
+          console.log("transport:ping", pingEvent);
         }
       })();
 

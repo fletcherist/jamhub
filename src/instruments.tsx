@@ -147,7 +147,7 @@ effectDelay.toDestination();
 const piano = new Piano({
   velocities: 5,
 });
-piano.connect(effectReverb);
+piano.toDestination();
 
 const sine = new Tone.Synth({
   oscillator: {

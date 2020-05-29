@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import css from "./Components.module.css";
 
+import { Piano } from "@tonejs/piano";
+
 import cx from "classnames";
 import {
   Dot,
@@ -359,6 +361,14 @@ const SocialButtons = () => {
     </div>
   );
 };
+
+const piano = new Piano({
+  velocities: 5,
+});
+piano.toDestination();
+piano.load().then(() => {
+  console.log("loaded!");
+});
 
 export const Landing: React.FC = () => {
   return (

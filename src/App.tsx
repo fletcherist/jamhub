@@ -8,7 +8,6 @@ import * as Lib from "./lib";
 
 import { Subject, of, Observable } from "rxjs";
 import { mergeMap, filter } from "rxjs/operators";
-// import { LoggerEvent } from "./lib.ts";
 
 import { MyKeyboard, UserKeyboardContainer, midiToNote } from "./Keyboard";
 
@@ -150,9 +149,7 @@ const usePlayer = (): Player => {
       await DX7.importScripts(audioContext);
       const dx7 = new DX7(audioContext);
       dx7.connect(audioContext.destination);
-      // dx7.co
       // Tone.connect(dx7 as AudioNode, effects.effectReverb);
-      // dx7.connect(dx7.context.destination);
       await dx7.loadBank("rom1A.syx");
       // const presetNames = [...dx7.presets.keys()];
       // console.log("presetNames", presetNames);
@@ -205,10 +202,15 @@ const usePlayer = (): Player => {
 
     async function main() {
       try {
-        await loadEpiano();
-        await loadMarimba();
-        await loadGuitar();
-        await loadPiano();
+        await Promise.all([
+          loadEpiano(),
+          loadMarimba(),
+          loadGuitar(),
+          loadPiano(),
+        ]);
+        // await loadMarimba();
+        // await loadGuitar();
+        // await loadPiano();
       } catch (error) {
         console.error(error);
       }
@@ -220,7 +222,7 @@ const usePlayer = (): Player => {
     loadingStatus,
     send: (event: Lib.TransportEvent) => {
       if (event.type === "midi") {
-        console.log("player", event, event.midi);
+        // console.log("player", event, event.midi);
         // synth.triggerAttackRelease("C4", "8n");
         // synth.triggerAttackRelease(event.note, "8n");
         const [type, pitch, velocity] = event.midi;
@@ -399,12 +401,12 @@ const Jamhub: React.FC = () => {
     }
     const midiInputs = [...midiAccess.inputs.values()];
     if (midiInputs.length === 0) {
-      console.error("no midi inputs available");
+      console.log("no midi inputs available");
       return;
     }
     const midiInput = midiInputs[0];
     if (!midiInput) {
-      console.error(midiInputs, "no midi input", midiInput);
+      console.log(midiInputs, "no midi input", midiInput);
       return;
     }
 
@@ -552,7 +554,7 @@ const Jamhub: React.FC = () => {
             <div>
               <MyKeyboard
                 onMIDIEvent={(event) => {
-                  console.log("onMIDIEvent", event);
+                  // console.log("onMIDIEvent", event);
                   if (!user) {
                     console.error("no user");
                   }
@@ -571,7 +573,7 @@ const Jamhub: React.FC = () => {
           <Text small>
             <ul>
               <li>
-                use{" "}
+                use keyboard to play,{" "}
                 <Tooltip text={"octave down"}>
                   <Text b style={{ cursor: "pointer" }}>
                     z
@@ -592,9 +594,9 @@ const Jamhub: React.FC = () => {
                     v
                   </Text>
                 </Tooltip>{" "}
-                keys
+                for performance settings
               </li>
-              <li>attach midi keyboard, if you have</li>
+              <li>attach midi, if you have</li>
               <li>
                 your ping is{" "}
                 {user && <Ping userId={user.id} pingChannel={router.ping} />}
