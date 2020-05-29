@@ -19,6 +19,8 @@ import {
   Spinner,
   Input,
   Snippet,
+  Modal,
+  Divider,
 } from "@zeit-ui/react";
 
 import { Twitter, Facebook } from "@zeit-ui/react-icons";
@@ -33,26 +35,96 @@ import {
 } from "./Sandbox";
 
 export const Instrument: React.FC<{
-  name: Lib.Instrument;
+  name: string;
   onClick: (event: React.MouseEvent) => void;
   selected: boolean;
-  loaded: boolean;
-}> = ({ name, onClick, selected, loaded = false }) => {
+  loading: boolean;
+}> = ({ name, onClick, selected, loading = false }) => {
   return (
     <div
-      style={{ opacity: !loaded ? 0.6 : 1 }}
-      className={cx({
+      className={cx(css.instrument, {
         [css.instrumentSelected]: selected,
+        [css.instrumentLoading]: loading,
       })}
       onClick={onClick}
     >
-      <Text span>{name}</Text>
+      <div>
+        <div className={css.instrumentTitle}>{name}</div>
+        <div className={css.instrumentDescription}>
+          {/* {!loaded && "loading..."} */}
+          soft & ambient
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const InstrumentStory = () => {
+  const [isSelected, setIsSelected] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  return (
+    <div>
+      <label>
+        <input
+          type="checkbox"
+          onChange={() => setIsSelected(!isSelected)}
+          checked={isSelected}
+        />
+        selected
+      </label>
+      <label>
+        <input
+          type="checkbox"
+          onChange={() => setIsLoading(!isLoading)}
+          checked={isLoading}
+        />
+        loading
+      </label>
+      <Instrument
+        name="drums"
+        onClick={() => undefined}
+        selected={isSelected}
+        loading={isLoading}
+      />
+    </div>
+  );
+};
+
+export const InstrumentsStory = () => {
+  const [selectedInstrument, setSelectedInstrument] = useState<number>(0);
+
+  return (
+    <div style={{ width: 400 }}>
+      <Instrument
+        name="drums"
+        onClick={() => setSelectedInstrument(1)}
+        selected={selectedInstrument === 1}
+        loading={false}
+      />
+      <Instrument
+        name="grand piano"
+        onClick={() => setSelectedInstrument(2)}
+        selected={selectedInstrument === 2}
+        loading={true}
+      />
+      <Instrument
+        name="drums"
+        onClick={() => setSelectedInstrument(3)}
+        selected={selectedInstrument === 3}
+        loading={false}
+      />
     </div>
   );
 };
 export const Storybook: React.FC = () => {
   return (
     <div>
+      <InstrumentStory />
+      <Divider />
+      <InstrumentsStory />
+      <Divider />
+
       {/* <UserStory /> */}
       {/* <InstrumentsListStory /> */}
       {/* <Row style={{ padding: "10px 0" }}>
@@ -69,19 +141,19 @@ export const Storybook: React.FC = () => {
                   name="epiano"
                   onClick={() => undefined}
                   selected={false}
-                  loaded={false}
+                  loading={false}
                 />
                 <Instrument
                   name="guitar"
                   onClick={() => undefined}
                   selected={true}
-                  loaded={false}
+                  loading={false}
                 />
                 <Instrument
                   name="piano"
                   onClick={() => undefined}
                   selected={false}
-                  loaded={true}
+                  loading={true}
                 />
                 <Spacer y={0.5} />
               </div>
@@ -184,9 +256,28 @@ export const Center: React.FC = ({ children }) => {
   );
 };
 
+const PleaseUseGoogleChrome: React.FC = () => {
+  const [isOpen, setIsOpen] = useState(false);
+  return (
+    <div>
+      <Button auto onClick={() => setIsOpen(true)}>
+        Show Modal
+      </Button>
+      <Modal open={isOpen} onClose={() => setIsOpen(false)}>
+        <Modal.Title>Modal</Modal.Title>
+        <Modal.Subtitle>This is a modal</Modal.Subtitle>
+        <Modal.Content>
+          <p>Some content contained within the modal.</p>
+        </Modal.Content>
+        <Modal.Action passive>Cancel</Modal.Action>
+        <Modal.Action>Submit</Modal.Action>
+      </Modal>
+    </div>
+  );
+};
+
 const CreateLink: React.FC = () => {
   const [path, setPath] = useState<string>("");
-
   const url = `https://jamhub.io/${path}`;
   return (
     <div
@@ -200,25 +291,34 @@ const CreateLink: React.FC = () => {
     >
       <Text b>Create and share the link with friends</Text>
       <Spacer y={0.5} />
-      <Input
-        onChange={(event) => {
-          setPath(event.target.value);
+      <form
+        onSubmit={(event) => {
+          event.preventDefault();
+          console.log("submit");
+          window.open(url);
         }}
-        value={path}
-        label="jamhub.io/"
-        size="large"
-        placeholder="e.g. tiny-clouds"
-        clearable
-        width="100%"
-      />{" "}
-      <Spacer y={0.5} />
-      <Snippet type="dark" text={url} width="100%" />
-      <Spacer y={1} />
-      <a href={url} target="_blank" rel="noopener noreferrer">
-        <Button size="small" disabled={path.length === 0}>
-          Go Live
-        </Button>
-      </a>
+      >
+        <Input
+          autoFocus
+          onChange={(event) => {
+            setPath(event.target.value);
+          }}
+          value={path}
+          label="jamhub.io/"
+          size="large"
+          placeholder="e.g. tiny-clouds"
+          clearable
+          width="100%"
+        />{" "}
+        <Spacer y={0.5} />
+        <Snippet type="dark" text={url} width="100%" />
+        <Spacer y={1} />
+        <a href={url} target="_blank" rel="noopener noreferrer">
+          <Button size="small" disabled={path.length === 0}>
+            Go Live
+          </Button>
+        </a>
+      </form>
     </div>
   );
 };

@@ -1,8 +1,3 @@
-.instrumentSelected {
-  background-color: rgba(0, 0, 0, 0.1);
-  font-weight: bold;
-}
-
 .cell {
   background-color: rgba(0, 0, 0, 0.3);
   width: 80px;
@@ -52,4 +47,40 @@
 }
 .socialIcon:active {
   background-color: rgba(0, 0, 0, 0.13);
+}
+
+.instrument {
+  /* font-size: 20px; */
+  cursor: pointer;
+  /* cursor: not-allowed; */
+  /* border-radius: 8px; */
+  padding: 0px 6px;
+  /* height: 50px; */
+  /* width: 50px; */
+  /* border: 1px solid rgba(0, 0, 0, 0.1); */
+  /* display: flex; */
+  /* align-items: center;
+  justify-content: center; */
+  user-select: none;
+  margin: 5px;
+}
+.instrument:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+.instrument:active {
+  background-color: rgba(0, 0, 0, 0.08);
+}
+.instrumentSelected {
+  background-color: rgba(0, 0, 0, 0.1) !important;
+}
+.instrumentLoading {
+  cursor: not-allowed;
+  /* opacity: 0.6; */
+}
+.instrumentTitle {
+  /* padding-left: 1rem; */
+  font-size: 1.2rem;
+}
+.instrumentDescription {
+  color: rgba(0, 0, 0, 0.5);
 }

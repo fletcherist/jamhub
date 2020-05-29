@@ -1,3 +1,9 @@
+v1.0.0
+
+- browser not supported popup
+- share link with friends on jam session
+- jazzy loop
+
 v0.0.5
 
 - synced drum loops between browsers

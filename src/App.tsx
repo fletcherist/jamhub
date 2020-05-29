@@ -454,101 +454,113 @@ const Jamhub: React.FC = () => {
         height: "100vh",
         display: "flex",
         flexDirection: "column",
-        // background: "antiquewhite",
       }}
     >
-      <Row
+      <div
         style={{
-          flexGrow: 2,
-          // backgroundColor: "rgba(0,0,0,0.05)"
+          display: "flex",
+          justifyContent: "center",
+          height: "100%",
+          // backgroundColor: "#37393f",
         }}
       >
-        <div
+        <Row
           style={{
-            display: "flex",
-            backgroundColor: "rgba(0,0,0,0.05)",
+            flexGrow: 2,
+            maxWidth: 600,
           }}
         >
-          <div style={{ padding: "1rem" }}>
-            {store.state.room.users.map((roomUser) => {
-              return (
-                <>
-                  <div
-                    style={{
-                      backgroundColor: "white",
-                      borderTopLeftRadius: 8,
-                      borderTopRightRadius: 8,
-                      paddingTop: "1rem",
-                    }}
-                  >
-                    <User src="https://unix.bio/assets/avatar.png" name="Witt">
-                      ping:{" "}
-                      <Ping userId={roomUser.id} pingChannel={router.ping} />
-                    </User>
-                    <UserKeyboardContainer
-                      transport={transport}
-                      userId={roomUser.id}
-                    />
-                  </div>
-                  <Spacer y={0.5} />
-                </>
-              );
-            })}
+          <div style={{ flexGrow: 2, padding: "1rem" }}>
+            <Radio.Group value="5" style={{ justifyContent: "center" }}>
+              <Radio
+                value="1"
+                disabled={player.loadingStatus.piano === "loading"}
+                onClick={() => setSelectedInstrument("piano")}
+              >
+                grand piano
+                <Radio.Desc>
+                  {player.loadingStatus.piano === "loading"
+                    ? "loading..."
+                    : "soft & ambient"}{" "}
+                </Radio.Desc>
+              </Radio>
+              <Radio
+                value="2"
+                disabled={player.loadingStatus.guitar === "loading"}
+                onClick={() => setSelectedInstrument("guitar")}
+              >
+                guitar<Radio.Desc>{player.loadingStatus.guitar}</Radio.Desc>
+              </Radio>
+              <Radio
+                value="3"
+                disabled={player.loadingStatus.marimba === "loading"}
+                onClick={() => setSelectedInstrument("marimba")}
+              >
+                marimba<Radio.Desc>{player.loadingStatus.marimba}</Radio.Desc>
+              </Radio>
+              <Radio
+                value="4"
+                disabled={player.loadingStatus.epiano === "loading"}
+                onClick={() => setSelectedInstrument("epiano")}
+              >
+                e-piano<Radio.Desc>{player.loadingStatus.epiano}</Radio.Desc>
+              </Radio>
+              <Radio
+                value="5"
+                disabled={player.loadingStatus.sine === "loading"}
+                onClick={() => setSelectedInstrument("sine")}
+              >
+                sine<Radio.Desc>{player.loadingStatus.sine}</Radio.Desc>
+              </Radio>
+              <Radio
+                value="6"
+                disabled={player.loadingStatus.drums === "loading"}
+                onClick={() => setSelectedInstrument("drums")}
+              >
+                drums<Radio.Desc>{player.loadingStatus.drums}</Radio.Desc>
+              </Radio>
+            </Radio.Group>
           </div>
-        </div>
-        <div style={{ flexGrow: 2, padding: "1rem" }}></div>
-      </Row>
-      <Spacer y={0.5} />
-      <Radio.Group value="5" useRow style={{ justifyContent: "center" }}>
-        <Radio
-          value="1"
-          disabled={player.loadingStatus.piano === "loading"}
-          onClick={() => setSelectedInstrument("piano")}
-        >
-          grand piano
-          <Radio.Desc>
-            {player.loadingStatus.piano === "loading"
-              ? "loading..."
-              : "soft & ambient"}{" "}
-          </Radio.Desc>
-        </Radio>
-        <Radio
-          value="2"
-          disabled={player.loadingStatus.guitar === "loading"}
-          onClick={() => setSelectedInstrument("guitar")}
-        >
-          guitar<Radio.Desc>{player.loadingStatus.guitar}</Radio.Desc>
-        </Radio>
-        <Radio
-          value="3"
-          disabled={player.loadingStatus.marimba === "loading"}
-          onClick={() => setSelectedInstrument("marimba")}
-        >
-          marimba<Radio.Desc>{player.loadingStatus.marimba}</Radio.Desc>
-        </Radio>
-        <Radio
-          value="4"
-          disabled={player.loadingStatus.epiano === "loading"}
-          onClick={() => setSelectedInstrument("epiano")}
-        >
-          e-piano<Radio.Desc>{player.loadingStatus.epiano}</Radio.Desc>
-        </Radio>
-        <Radio
-          value="5"
-          disabled={player.loadingStatus.sine === "loading"}
-          onClick={() => setSelectedInstrument("sine")}
-        >
-          sine<Radio.Desc>{player.loadingStatus.sine}</Radio.Desc>
-        </Radio>
-        <Radio
-          value="6"
-          disabled={player.loadingStatus.drums === "loading"}
-          onClick={() => setSelectedInstrument("drums")}
-        >
-          drums<Radio.Desc>{player.loadingStatus.drums}</Radio.Desc>
-        </Radio>
-      </Radio.Group>
-      <div style={{ display: "flex", justifyContent: "center" }}>
+          <div
+            style={{
+              display: "flex",
+              // backgroundColor: "rgba(0,0,0,0.05)",
+            }}
+          >
+            <div style={{ padding: "1rem" }} className={css.users}>
+              {store.state.room.users.map((roomUser) => {
+                return (
+                  <>
+                    <div
+                      style={{
+                        backgroundColor: "white",
+                        borderTopLeftRadius: 8,
+                        borderTopRightRadius: 8,
+                        paddingTop: "1rem",
+                        // background: "#40444b",
+                      }}
+                    >
+                      <User
+                        src="https://unix.bio/assets/avatar.png"
+                        name="Witt"
+                      >
+                        ping:{" "}
+                        <Ping userId={roomUser.id} pingChannel={router.ping} />
+                      </User>
+                      <UserKeyboardContainer
+                        transport={transport}
+                        userId={roomUser.id}
+                      />
+                    </div>
+                    <Spacer y={0.5} />
+                  </>
+                );
+              })}
+            </div>
+          </div>
+        </Row>
+      </div>
+      <div className={css.myKeyboard}>
         <div>
           <Row>
             <div>
