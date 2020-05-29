@@ -22,15 +22,10 @@ import { DX7, loadWAMProcessor, instruments, effects } from "./instruments";
 import css from "./App.module.css";
 import { Center, Instrument } from "./Components";
 import {
-  Description,
-  ButtonGroup,
   Row,
-  Card,
   Spacer,
   Text,
-  Dot,
   Link,
-  Button,
   User,
   Col,
   Radio,
@@ -461,65 +456,58 @@ const Jamhub: React.FC = () => {
           display: "flex",
           justifyContent: "center",
           height: "100%",
+          paddingTop: "2rem",
           // backgroundColor: "#37393f",
         }}
       >
         <Row
           style={{
             flexGrow: 2,
-            maxWidth: 600,
+            maxWidth: 500,
           }}
         >
-          <div style={{ flexGrow: 2, padding: "1rem" }}>
-            <Radio.Group value="5" style={{ justifyContent: "center" }}>
-              <Radio
-                value="1"
-                disabled={player.loadingStatus.piano === "loading"}
-                onClick={() => setSelectedInstrument("piano")}
-              >
-                grand piano
-                <Radio.Desc>
-                  {player.loadingStatus.piano === "loading"
-                    ? "loading..."
-                    : "soft & ambient"}{" "}
-                </Radio.Desc>
-              </Radio>
-              <Radio
-                value="2"
-                disabled={player.loadingStatus.guitar === "loading"}
-                onClick={() => setSelectedInstrument("guitar")}
-              >
-                guitar<Radio.Desc>{player.loadingStatus.guitar}</Radio.Desc>
-              </Radio>
-              <Radio
-                value="3"
-                disabled={player.loadingStatus.marimba === "loading"}
-                onClick={() => setSelectedInstrument("marimba")}
-              >
-                marimba<Radio.Desc>{player.loadingStatus.marimba}</Radio.Desc>
-              </Radio>
-              <Radio
-                value="4"
-                disabled={player.loadingStatus.epiano === "loading"}
-                onClick={() => setSelectedInstrument("epiano")}
-              >
-                e-piano<Radio.Desc>{player.loadingStatus.epiano}</Radio.Desc>
-              </Radio>
-              <Radio
-                value="5"
-                disabled={player.loadingStatus.sine === "loading"}
-                onClick={() => setSelectedInstrument("sine")}
-              >
-                sine<Radio.Desc>{player.loadingStatus.sine}</Radio.Desc>
-              </Radio>
-              <Radio
-                value="6"
-                disabled={player.loadingStatus.drums === "loading"}
-                onClick={() => setSelectedInstrument("drums")}
-              >
-                drums<Radio.Desc>{player.loadingStatus.drums}</Radio.Desc>
-              </Radio>
-            </Radio.Group>
+          <div
+            style={{
+              flexGrow: 2,
+              // padding: "1rem"
+            }}
+          >
+            <Instrument
+              name="grand piano"
+              onClick={() => setSelectedInstrument("piano")}
+              loading={player.loadingStatus.piano === "loading"}
+              selected={selectedInstrument === "piano"}
+            />
+            <Instrument
+              name="guitar"
+              onClick={() => setSelectedInstrument("guitar")}
+              loading={player.loadingStatus.guitar === "loading"}
+              selected={selectedInstrument === "guitar"}
+            />
+            <Instrument
+              name="marimba"
+              onClick={() => setSelectedInstrument("marimba")}
+              loading={player.loadingStatus.marimba === "loading"}
+              selected={selectedInstrument === "marimba"}
+            />
+            <Instrument
+              name="electronic piano"
+              onClick={() => setSelectedInstrument("epiano")}
+              loading={player.loadingStatus.epiano === "loading"}
+              selected={selectedInstrument === "epiano"}
+            />
+            <Instrument
+              name="sive wave"
+              onClick={() => setSelectedInstrument("sine")}
+              loading={player.loadingStatus.sine === "loading"}
+              selected={selectedInstrument === "sine"}
+            />
+            <Instrument
+              name="lo-fi drums"
+              onClick={() => setSelectedInstrument("drums")}
+              loading={player.loadingStatus.drums === "loading"}
+              selected={selectedInstrument === "drums"}
+            />
           </div>
           <div
             style={{
@@ -527,7 +515,7 @@ const Jamhub: React.FC = () => {
               // backgroundColor: "rgba(0,0,0,0.05)",
             }}
           >
-            <div style={{ padding: "1rem" }} className={css.users}>
+            <div className={css.users}>
               {store.state.room.users.map((roomUser) => {
                 return (
                   <>
@@ -537,7 +525,6 @@ const Jamhub: React.FC = () => {
                         borderTopLeftRadius: 8,
                         borderTopRightRadius: 8,
                         paddingTop: "1rem",
-                        // background: "#40444b",
                       }}
                     >
                       <User
@@ -561,10 +548,10 @@ const Jamhub: React.FC = () => {
         </Row>
       </div>
       <div className={css.myKeyboard}>
-        <div>
+        <div style={{ minWidth: 500 }}>
           <Row>
             <div>
-              <Row>
+              {/* <Row>
                 <Text small>
                   {user && (
                     <span>
@@ -590,7 +577,7 @@ const Jamhub: React.FC = () => {
                 </Text>
                 <Spacer x={0.5} />
               </Row>
-              <Spacer y={0.5} />
+              <Spacer y={0.5} /> */}
               <MyKeyboard
                 onMIDIEvent={(event) => {
                   console.log("onMIDIEvent", event);

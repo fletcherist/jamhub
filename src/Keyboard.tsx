@@ -237,7 +237,7 @@ export const MyKeyboard: React.FC<{
 
   return (
     <div>
-      <div>
+      {/* <div>
         <Tooltip text={"octave down"}>
           <KeyboardDescription>z</KeyboardDescription>
         </Tooltip>
@@ -250,8 +250,8 @@ export const MyKeyboard: React.FC<{
         <Tooltip text={"more velocity"}>
           <KeyboardDescription>v</KeyboardDescription>
         </Tooltip>
-      </div>
-      <Spacer y={0.5} />
+      </div> */}
+      {/* <Spacer y={0.5} /> */}
       <Keyboard
         activeKeys={activeKeys}
         onPressKey={handleKeyboardNoteDown}

@@ -9,12 +9,17 @@
 }
 
 .myKeyboard {
-  /* background-color: #2f3136; */
+  background-color: #f9f9f9;
   display: flex;
   justify-content: center;
+  /* width: 500px; */
+  height: 70vh;
 }
 
 .users {
   /* background-color: #292b30; */
   width: 242px;
+  border-left: 1px solid #eee;
+  padding: 0 1rem;
+  margin: 0 1rem;
 }
