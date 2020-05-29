@@ -23,7 +23,8 @@
     "@zeit-ui/react": "1.6.0",
     "@zeit-ui/react-icons": "1.2.2",
     "react-router-dom": "5.2.0",
-    "@types/react-router-dom": "5.1.5"
+    "@types/react-router-dom": "5.1.5",
+    "webaudio-tinysynth": "1.1.2"
   },
   "scripts": {
     "start": "react-scripts start",

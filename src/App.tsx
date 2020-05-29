@@ -39,6 +39,25 @@ import {
 
 import { startTransportSync } from "./Sandbox";
 
+import * as WebAudioTinySynth from "webaudio-tinysynth";
+
+const tinysynthPresets = {
+  "acoustic-grand-piano": 0,
+  marimba: 12,
+  "drawbar-organ": 16,
+  "rock-organ": 18,
+  "reed-organ": 20,
+  "acoustic-guitar": 24,
+  "jazz-electrin-guitar": 26,
+  "electric-bass": 34,
+  "synth-strings": 51, // very good 80s sound
+  voice: 54,
+  ocarina: 79,
+  "bowed-pad": 92,
+  whistle: 78,
+  bell: 112,
+};
+
 export interface State {
   isMutedMicrophone: boolean;
   isMutedSpeaker: boolean;
@@ -122,6 +141,8 @@ const usePlayer = (): Player => {
   const guitar1 = useRef<DX7>();
   const marimba = useRef<DX7>();
   const epiano = useRef<DX7>();
+  const tinysynthStrings = useRef<any>();
+  const tinysynthCreamyKeys = useRef<any>();
 
   const defaultLoadingStatus: LoadingStatus = {
     epiano: "not loaded",
@@ -130,6 +151,8 @@ const usePlayer = (): Player => {
     piano: "not loaded",
     sine: "ok",
     drums: "ok",
+    tinysynthStrings: "not loaded",
+    tinysynthCreamyKeys: "not loaded",
   };
   const refLoadingStatus = useRef<LoadingStatus>(defaultLoadingStatus);
   const [loadingStatus, setLoadingStatus] = useState<LoadingStatus>(
@@ -206,6 +229,39 @@ const usePlayer = (): Player => {
         updateIsLoaded({ piano: "failed" });
       }
     };
+    const loadTinysynthStrings = async () => {
+      try {
+        updateIsLoaded({ tinysynthStrings: "loading" });
+        const synth = new WebAudioTinySynth({
+          quality: 1,
+          useReverb: 1,
+          reverbLev: 1,
+        });
+        synth.send([0xc0, tinysynthPresets["synth-strings"]]);
+        tinysynthStrings.current = synth;
+        updateIsLoaded({ tinysynthStrings: "ok" });
+      } catch (error) {
+        console.error(error);
+        updateIsLoaded({ tinysynthStrings: "failed" });
+      }
+    };
+    const loadTinysynthCreamyKeys = async () => {
+      try {
+        updateIsLoaded({ tinysynthCreamyKeys: "loading" });
+        const synth = new WebAudioTinySynth({
+          quality: 1,
+          useReverb: 1,
+          // reverbLev: 5,
+        });
+        // synth.setReverbLev(1);
+        synth.send([0xc0, tinysynthPresets["acoustic-grand-piano"]]);
+        tinysynthCreamyKeys.current = synth;
+        updateIsLoaded({ tinysynthCreamyKeys: "ok" });
+      } catch (error) {
+        console.error(error);
+        updateIsLoaded({ tinysynthCreamyKeys: "failed" });
+      }
+    };
 
     async function main() {
       try {
@@ -214,6 +270,8 @@ const usePlayer = (): Player => {
           loadMarimba(),
           loadGuitar(),
           loadPiano(),
+          loadTinysynthStrings(),
+          loadTinysynthCreamyKeys(),
         ]);
         // await loadMarimba();
         // await loadGuitar();
@@ -251,24 +309,30 @@ const usePlayer = (): Player => {
           marimba.current.onMidi(event.midi);
         } else if (event.instrument === "guitar") {
           if (!guitar1.current) {
-            console.error("dx7 is not loaded");
+            console.error("dx7 guitar1 is not loaded");
             return;
           }
           guitar1.current.onMidi(event.midi);
         } else if (event.instrument === "epiano") {
           if (!epiano.current) {
-            console.error("dx7 is not loaded");
+            console.error("dx7 epiano is not loaded");
             return;
           }
           epiano.current.onMidi(event.midi);
-        } else if (event.instrument === "sine") {
-          if (type === 144) {
-            instruments.sine.triggerAttackRelease(midiToNote(pitch), "8n");
+        } else if (event.instrument === "tinysynthStrings") {
+          if (!tinysynthStrings.current) {
+            console.error("tinysynthStrings is not loaded");
             return;
           }
-          // else if (type === 128) {
-          //   sine.triggerRelease(midiToNote(pitch));
-          // }
+          tinysynthStrings.current.send(event.midi);
+          return;
+        } else if (event.instrument === "tinysynthCreamyKeys") {
+          if (!tinysynthCreamyKeys.current) {
+            console.error("tinysynthCreamyKeys is not loaded");
+            return;
+          }
+          tinysynthCreamyKeys.current.send(event.midi);
+          return;
         } else if (event.instrument === "drums") {
           if (type === 144) {
             instruments.drums.triggerAttackRelease(midiToNote(pitch), "8n");
@@ -320,19 +384,16 @@ const Jamhub: React.FC = () => {
   // const localTransport = useRef<Transport>(
   //   createLocalTransport({ player })
   // );
-  // const [usersPing, setUsersPing] = useState<{ [key: string]: number }>({});
 
   const store = useStore();
   const transport = webSocketTransport.current;
-
   const router = createTransportRouter(transport);
-  // const transport = webSocketTransport;
   // const transport = createLocalTransport({ player });
   const [transportStatus, setTransportStatus] = useState<TransportStatus>(
     "disconnected"
   );
   const [selectedInstrument, setSelectedInstrument] = useState<Lib.Instrument>(
-    "sine"
+    "tinysynthCreamyKeys"
   );
   const [user, setUser] = useState<Lib.User>();
   const [midiAccess, setMidiAccess] = useState<any | undefined>(undefined);
@@ -503,11 +564,18 @@ const Jamhub: React.FC = () => {
               description="jazzy"
             />
             <Instrument
-              name="sine wave"
-              onClick={() => setSelectedInstrument("sine")}
-              loading={player.loadingStatus.sine === "loading"}
-              selected={selectedInstrument === "sine"}
+              name="80s strings"
+              onClick={() => setSelectedInstrument("tinysynthStrings")}
+              loading={player.loadingStatus.tinysynthStrings === "loading"}
+              selected={selectedInstrument === "tinysynthStrings"}
               description="example sound"
+            />
+            <Instrument
+              name="creamy keys"
+              onClick={() => setSelectedInstrument("tinysynthCreamyKeys")}
+              loading={player.loadingStatus.tinysynthCreamyKeys === "loading"}
+              selected={selectedInstrument === "tinysynthCreamyKeys"}
+              description="good vibes only"
             />
             <Instrument
               name="lo-fi drums"

@@ -8,7 +8,9 @@ export type Instrument =
   | "marimba"
   | "epiano"
   | "sine"
-  | "drums";
+  | "drums"
+  | "tinysynthStrings"
+  | "tinysynthCreamyKeys";
 export interface TransportEventPing {
   userId: string;
   type: "ping";

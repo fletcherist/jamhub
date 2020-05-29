@@ -156,7 +156,7 @@ export const MyKeyboard: React.FC<{
   onMIDIEvent: (event: MIDIEvent) => void;
 }> = ({ onMIDIEvent }) => {
   const octave = useRef<number>(4);
-  const velocity = useRef<number>(30);
+  const velocity = useRef<number>(70);
   const refActiveKeys = useRef<KeyboardNoteKey[]>([]);
   const [activeKeys, setActiveKeys] = useState<KeyboardNoteKey[]>([]);
 
