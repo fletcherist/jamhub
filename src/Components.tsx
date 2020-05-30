@@ -45,7 +45,7 @@ export const Instrument: React.FC<{
         <div className={css.instrumentTitle}>{name}</div>
         <div className={css.instrumentDescription}>
           {/* {!loaded && "loading..."} */}
-          {description}
+          {loading ? "loading..." : description}
         </div>
       </div>
     </div>
@@ -276,6 +276,12 @@ const PleaseUseGoogleChrome: React.FC = () => {
   );
 };
 
+export const CopyLink: React.FC<{
+  url: string;
+}> = ({ url }) => {
+  return <Snippet type="dark" text={url} width="100%" />;
+};
+
 const CreateLink: React.FC = () => {
   const [path, setPath] = useState<string>("");
   const url = `https://jamhub.io/${path}`;
@@ -311,7 +317,7 @@ const CreateLink: React.FC = () => {
           width="100%"
         />{" "}
         <Spacer y={0.5} />
-        <Snippet type="dark" text={url} width="100%" />
+        <CopyLink url={url} />
         <Spacer y={1} />
         <a href={url} target="_blank" rel="noopener noreferrer">
           <Button size="small" disabled={path.length === 0}>

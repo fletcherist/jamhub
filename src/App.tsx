@@ -20,7 +20,7 @@ import {
 } from "./instruments";
 
 import css from "./App.module.css";
-import { Center, Instrument } from "./Components";
+import { Center, Instrument, CopyLink } from "./Components";
 import {
   Row,
   Spacer,
@@ -498,6 +498,54 @@ const Jamhub: React.FC = () => {
     };
   }, [midiAccess, user, selectedInstrument, transport]);
 
+  const renderUsers = () => {
+    return (
+      <div className={css.users}>
+        {store.state.room.users.map((roomUser) => {
+          return (
+            <>
+              <div
+                style={{
+                  backgroundColor: "white",
+                  borderTopLeftRadius: 8,
+                  borderTopRightRadius: 8,
+                  paddingTop: "1rem",
+                }}
+              >
+                <User src="https://unix.bio/assets/avatar.png" name="Witt">
+                  ping: <Ping userId={roomUser.id} pingChannel={router.ping} />
+                </User>
+                <UserKeyboardContainer
+                  transport={transport}
+                  userId={roomUser.id}
+                />
+              </div>
+              <Spacer y={0.5} />
+            </>
+          );
+        })}
+        {store.state.room.users.length === 0 && (
+          <div>
+            <Text
+              size={13}
+              type="secondary"
+              style={{ width: "100%", textAlign: "center" }}
+            >
+              no one has joined yet
+            </Text>
+          </div>
+        )}
+        <Divider y={1} />
+        <div>
+          <Text size={11} small type="secondary">
+            invite friends
+          </Text>
+          <CopyLink url={`https://jamhub.io${window.location.pathname}`} />
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div
       style={{
@@ -591,35 +639,7 @@ const Jamhub: React.FC = () => {
               // backgroundColor: "rgba(0,0,0,0.05)",
             }}
           >
-            <div className={css.users}>
-              {store.state.room.users.map((roomUser) => {
-                return (
-                  <>
-                    <div
-                      style={{
-                        backgroundColor: "white",
-                        borderTopLeftRadius: 8,
-                        borderTopRightRadius: 8,
-                        paddingTop: "1rem",
-                      }}
-                    >
-                      <User
-                        src="https://unix.bio/assets/avatar.png"
-                        name="Witt"
-                      >
-                        ping:{" "}
-                        <Ping userId={roomUser.id} pingChannel={router.ping} />
-                      </User>
-                      <UserKeyboardContainer
-                        transport={transport}
-                        userId={roomUser.id}
-                      />
-                    </div>
-                    <Spacer y={0.5} />
-                  </>
-                );
-              })}
-            </div>
+            {renderUsers()}
           </div>
         </Row>
       </div>
