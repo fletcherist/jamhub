@@ -231,7 +231,6 @@ const kalimbaSamplesWithBase: {
     [key]: baseUrl(kalimbaSamples[key as keyof typeof kalimbaSamples]),
   };
 }, {} as { [key in keyof typeof kalimbaSamples]: string });
-console.log("kalimbaSamplesWithBase", kalimbaSamplesWithBase);
 const kalimba = new Tone.Sampler({
   urls: kalimbaSamplesWithBase,
 });
@@ -239,6 +238,54 @@ kalimba.chain(
   new Tone.Gain(0.6),
   new Tone.Reverb({
     decay: 4,
+    wet: 0.3,
+  }),
+  Tone.Destination
+);
+
+const riverSamples = {
+  "1": "river/1.mp3",
+  "2": "river/2.mp3",
+  "3": "river/3.mp3",
+  "4": "river/4.mp3",
+  "5": "river/5.mp3",
+  "6": "river/6.mp3",
+  "7": "river/7.mp3",
+  "8": "river/8.mp3",
+  "9": "river/9.mp3",
+  "10": "river/10.mp3",
+  "11": "river/11.mp3",
+  "12": "river/12.mp3",
+  "13": "river/13.mp3",
+  "14": "river/14.mp3",
+  "15": "river/15.mp3",
+  "16": "river/16.mp3",
+};
+
+const river = new Tone.Sampler({
+  urls: {
+    c4: baseUrl(riverSamples["1"]),
+    d4: baseUrl(riverSamples["2"]),
+    e4: baseUrl(riverSamples["3"]),
+    f4: baseUrl(riverSamples["4"]),
+    g4: baseUrl(riverSamples["5"]),
+    a4: baseUrl(riverSamples["6"]),
+    b4: baseUrl(riverSamples["7"]),
+    c5: baseUrl(riverSamples["8"]),
+    d5: baseUrl(riverSamples["9"]),
+    e5: baseUrl(riverSamples["10"]),
+    f5: baseUrl(riverSamples["11"]),
+    g5: baseUrl(riverSamples["12"]),
+    a5: baseUrl(riverSamples["13"]),
+    b5: baseUrl(riverSamples["14"]),
+    c6: baseUrl(riverSamples["15"]),
+    d6: baseUrl(riverSamples["16"]),
+  },
+});
+river.chain(
+  new Tone.Gain(0.6),
+  new Tone.Reverb({
+    decay: 1,
     wet: 0.3,
   }),
   Tone.Destination
@@ -253,4 +300,5 @@ export const instruments = {
   sine,
   drums,
   kalimba,
+  river,
 };

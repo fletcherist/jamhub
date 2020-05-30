@@ -5,13 +5,13 @@ export type MIDIEvent = [number, number, number];
 export type Instrument =
   | "piano"
   | "guitar"
-  | "marimba"
   | "epiano"
   | "sine"
   | "drums"
   | "tinysynthStrings"
   | "tinysynthCreamyKeys"
-  | "kalimba";
+  | "kalimba"
+  | "river";
 export interface TransportEventPing {
   userId: string;
   type: "ping";

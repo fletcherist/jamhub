@@ -139,7 +139,6 @@ interface Player {
 
 const usePlayer = (): Player => {
   const guitar1 = useRef<DX7>();
-  const marimba = useRef<DX7>();
   const epiano = useRef<DX7>();
   const tinysynthStrings = useRef<any>();
   const tinysynthCreamyKeys = useRef<any>();
@@ -147,13 +146,13 @@ const usePlayer = (): Player => {
   const defaultLoadingStatus: LoadingStatus = {
     epiano: "not loaded",
     guitar: "not loaded",
-    marimba: "not loaded",
     piano: "not loaded",
     sine: "ok",
     drums: "ok",
     tinysynthStrings: "not loaded",
     tinysynthCreamyKeys: "not loaded",
     kalimba: "ok",
+    river: "ok",
   };
   const refLoadingStatus = useRef<LoadingStatus>(defaultLoadingStatus);
   const [loadingStatus, setLoadingStatus] = useState<LoadingStatus>(
@@ -198,17 +197,6 @@ const usePlayer = (): Player => {
         updateIsLoaded({ epiano: "failed" });
       }
     };
-    const loadMarimba = async () => {
-      try {
-        updateIsLoaded({ marimba: "loading" });
-        const dx7marimba = await loadDx7("MARIMBA   ");
-        marimba.current = dx7marimba;
-        updateIsLoaded({ marimba: "ok" });
-      } catch (error) {
-        console.error(error);
-        updateIsLoaded({ marimba: "failed" });
-      }
-    };
     const loadGuitar = async () => {
       try {
         updateIsLoaded({ guitar: "loading" });
@@ -239,6 +227,8 @@ const usePlayer = (): Player => {
           reverbLev: 1,
         });
         synth.send([0xc0, tinysynthPresets["synth-strings"]]);
+        console.log("synth", synth);
+
         tinysynthStrings.current = synth;
         updateIsLoaded({ tinysynthStrings: "ok" });
       } catch (error) {
@@ -268,7 +258,6 @@ const usePlayer = (): Player => {
       try {
         await Promise.all([
           loadEpiano(),
-          loadMarimba(),
           loadGuitar(),
           loadPiano(),
           loadTinysynthStrings(),
@@ -302,12 +291,6 @@ const usePlayer = (): Player => {
           } else if (type === 128) {
             instruments.piano.keyUp({ midi: pitch });
           }
-        } else if (event.instrument === "marimba") {
-          if (!marimba.current) {
-            console.error("dx7 is not loaded");
-            return;
-          }
-          marimba.current.onMidi(event.midi);
         } else if (event.instrument === "guitar") {
           if (!guitar1.current) {
             console.error("dx7 guitar1 is not loaded");
@@ -340,7 +323,11 @@ const usePlayer = (): Player => {
           }
         } else if (event.instrument === "kalimba") {
           if (type === 144) {
-            instruments.kalimba.triggerAttackRelease(midiToNote(pitch), "8n");
+            instruments.kalimba.triggerAttackRelease(midiToNote(pitch), "1n");
+          }
+        } else if (event.instrument === "river") {
+          if (type === 144) {
+            instruments.river.triggerAttackRelease(midiToNote(pitch), "1n");
           }
         } else {
           console.error("instrument not implemented", event.instrument);
@@ -555,13 +542,6 @@ const Jamhub: React.FC = () => {
               description="for solos"
             />
             <Instrument
-              name="marimba"
-              onClick={() => setSelectedInstrument("marimba")}
-              loading={player.loadingStatus.marimba === "loading"}
-              selected={selectedInstrument === "marimba"}
-              description="percussion"
-            />
-            <Instrument
               name="electronic piano"
               onClick={() => setSelectedInstrument("epiano")}
               loading={player.loadingStatus.epiano === "loading"}
@@ -595,6 +575,13 @@ const Jamhub: React.FC = () => {
               loading={player.loadingStatus.drums === "loading"}
               selected={selectedInstrument === "drums"}
               description="for chilling"
+            />
+            <Instrument
+              name="river"
+              onClick={() => setSelectedInstrument("river")}
+              loading={player.loadingStatus.river === "loading"}
+              selected={selectedInstrument === "river"}
+              description="playtronica soundfont"
             />
           </div>
           <div
