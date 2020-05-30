@@ -511,7 +511,8 @@ const Jamhub: React.FC = () => {
           display: "flex",
           justifyContent: "center",
           height: "100%",
-          paddingTop: "2rem",
+          paddingTop: "1rem",
+          paddingBottom: "1rem",
           // backgroundColor: "#37393f",
         }}
       >

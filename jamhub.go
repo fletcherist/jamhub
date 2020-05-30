@@ -140,8 +140,8 @@ type User struct {
 	conn *websocket.Conn // The websocket connection.
 	send chan []byte     // Buffered channel of outbound messages.
 
-	stop bool
-	info UserInfo
+	closed bool
+	info   UserInfo
 }
 
 // UserInfo contains some user data
@@ -167,7 +167,7 @@ func (u *User) Wrap() *UserWrap {
 // readPump pumps messages from the websocket connection to the hub.
 func (u *User) readPump() {
 	defer func() {
-		u.stop = true
+		u.closed = true
 		u.room.Leave(u)
 		u.conn.Close()
 	}()
@@ -204,7 +204,7 @@ func (u *User) writePump() {
 	ticker := time.NewTicker(pingPeriod)
 	defer func() {
 		ticker.Stop()
-		u.stop = true
+		u.closed = true
 		u.conn.Close()
 	}()
 	for {
@@ -280,6 +280,9 @@ func (u *User) HandleEvent(eventRaw []byte) error {
 
 // SendEvent sends json body to web socket
 func (u *User) SendEvent(event Event) error {
+	if u.closed == true { // user already disconnected
+		return nil
+	}
 	json, err := json.Marshal(event)
 	if err != nil {
 		return err
