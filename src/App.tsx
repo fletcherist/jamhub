@@ -153,6 +153,7 @@ const usePlayer = (): Player => {
     drums: "ok",
     tinysynthStrings: "not loaded",
     tinysynthCreamyKeys: "not loaded",
+    kalimba: "ok",
   };
   const refLoadingStatus = useRef<LoadingStatus>(defaultLoadingStatus);
   const [loadingStatus, setLoadingStatus] = useState<LoadingStatus>(
@@ -336,6 +337,10 @@ const usePlayer = (): Player => {
         } else if (event.instrument === "drums") {
           if (type === 144) {
             instruments.drums.triggerAttackRelease(midiToNote(pitch), "8n");
+          }
+        } else if (event.instrument === "kalimba") {
+          if (type === 144) {
+            instruments.kalimba.triggerAttackRelease(midiToNote(pitch), "8n");
           }
         } else {
           console.error("instrument not implemented", event.instrument);
@@ -562,6 +567,13 @@ const Jamhub: React.FC = () => {
               loading={player.loadingStatus.epiano === "loading"}
               selected={selectedInstrument === "epiano"}
               description="jazzy"
+            />
+            <Instrument
+              name="kalimba"
+              onClick={() => setSelectedInstrument("kalimba")}
+              loading={player.loadingStatus.kalimba === "loading"}
+              selected={selectedInstrument === "kalimba"}
+              description="percussion"
             />
             <Instrument
               name="80s strings"

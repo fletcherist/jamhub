@@ -205,6 +205,45 @@ const drums = new Tone.Sampler({
 });
 drums.chain(new Tone.Gain(0.3), Tone.Destination);
 
+const kalimbaSamples = {
+  c3: "kalimba/c3.mp3",
+  // "f#3": "kalimba/f#3.mp3",
+  b4: "kalimba/b4.mp3",
+  c4: "kalimba/c4.mp3",
+  c5: "kalimba/c5.mp3",
+  b3: "kalimba/b3.mp3",
+  b2: "kalimba/b2.mp3",
+  // "f#4": "kalimba/f#4.mp3",
+  d4: "kalimba/d4.mp3",
+  e3: "kalimba/e3.mp3",
+  d3: "kalimba/d3.mp3",
+  e4: "kalimba/e4.mp3",
+  g3: "kalimba/g3.mp3",
+  g4: "kalimba/g4.mp3",
+  a3: "kalimba/a3.mp3",
+  a4: "kalimba/a4.mp3",
+};
+const kalimbaSamplesWithBase: {
+  [key in keyof typeof kalimbaSamples]: string;
+} = Object.keys(kalimbaSamples).reduce((acc, key) => {
+  return {
+    ...acc,
+    [key]: baseUrl(kalimbaSamples[key as keyof typeof kalimbaSamples]),
+  };
+}, {} as { [key in keyof typeof kalimbaSamples]: string });
+console.log("kalimbaSamplesWithBase", kalimbaSamplesWithBase);
+const kalimba = new Tone.Sampler({
+  urls: kalimbaSamplesWithBase,
+});
+kalimba.chain(
+  new Tone.Gain(0.6),
+  new Tone.Reverb({
+    decay: 4,
+    wet: 0.3,
+  }),
+  Tone.Destination
+);
+
 export const effects = {
   effectReverb,
   effectDelay,
@@ -213,4 +252,5 @@ export const instruments = {
   piano,
   sine,
   drums,
+  kalimba,
 };

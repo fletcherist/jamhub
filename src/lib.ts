@@ -10,7 +10,8 @@ export type Instrument =
   | "sine"
   | "drums"
   | "tinysynthStrings"
-  | "tinysynthCreamyKeys";
+  | "tinysynthCreamyKeys"
+  | "kalimba";
 export interface TransportEventPing {
   userId: string;
   type: "ping";
