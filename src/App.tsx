@@ -1,13 +1,12 @@
 import React, { useState, useContext, useEffect, useRef } from "react";
-import * as Tone from "tone";
-import cx from "classnames";
+// import cx from "classnames";
 
 import { Room } from "./lib";
 
-import * as Lib from "./lib";
+import * as lib from "./lib";
 
-import { Subject, of, Observable } from "rxjs";
-import { mergeMap, filter } from "rxjs/operators";
+import { of, Observable } from "rxjs";
+import { mergeMap } from "rxjs/operators";
 
 import { MyKeyboard, UserKeyboardContainer, midiToNote } from "./Keyboard";
 
@@ -15,12 +14,11 @@ import {
   DX7,
   loadWAMProcessor,
   instruments,
-  effects,
   audioContext,
 } from "./instruments";
 
 import css from "./App.module.css";
-import { Center, Instrument, CopyLink, LogoWithName } from "./Components";
+import { Instrument, CopyLink, LogoWithName } from "./Components";
 import {
   Row,
   Spacer,
@@ -36,8 +34,6 @@ import {
   Transport,
   TransportStatus,
 } from "./transport";
-
-import { startTransportSync } from "./Sandbox";
 
 import * as WebAudioTinySynth from "webaudio-tinysynth";
 
@@ -61,14 +57,14 @@ const tinysynthPresets = {
 export interface State {
   isMutedMicrophone: boolean;
   isMutedSpeaker: boolean;
-  user?: Lib.User;
+  user?: lib.User;
   room: Room;
 }
 
 interface Api {
-  roomUserAdd: (user: Lib.User) => void;
-  roomUserRemove: (user: Lib.User) => void;
-  roomUserUpdate: (user: Lib.User) => void;
+  roomUserAdd: (user: lib.User) => void;
+  roomUserRemove: (user: lib.User) => void;
+  roomUserUpdate: (user: lib.User) => void;
 }
 interface Store {
   state: State;
@@ -130,10 +126,10 @@ export const useStore = (): Store => {
 };
 
 type LoadingStatus = {
-  [key in Lib.Instrument]: "not loaded" | "loading" | "failed" | "ok";
+  [key in lib.Instrument]: "not loaded" | "loading" | "failed" | "ok";
 };
 interface Player {
-  send: (event: Lib.TransportEvent) => void;
+  send: (event: lib.TransportEvent) => void;
   loadingStatus: LoadingStatus;
 }
 
@@ -147,7 +143,7 @@ const usePlayer = (): Player => {
     epiano: "not loaded",
     guitar: "not loaded",
     piano: "not loaded",
-    sine: "ok",
+    pandrum: "ok",
     drums: "ok",
     tinysynthStrings: "not loaded",
     tinysynthCreamyKeys: "not loaded",
@@ -275,7 +271,7 @@ const usePlayer = (): Player => {
 
   return {
     loadingStatus,
-    send: (event: Lib.TransportEvent) => {
+    send: (event: lib.TransportEvent) => {
       if (event.type === "midi") {
         // console.log("player", event, event.midi);
         // synth.triggerAttackRelease("C4", "8n");
@@ -318,16 +314,28 @@ const usePlayer = (): Player => {
           tinysynthCreamyKeys.current.send(event.midi);
           return;
         } else if (event.instrument === "drums") {
-          if (type === 144) {
-            instruments.drums.triggerAttackRelease(midiToNote(pitch), "8n");
+          if (type === lib.MIDI_NOTE_ON) {
+            instruments.drums.triggerAttack(midiToNote(pitch));
+          } else if (type === lib.MIDI_NOTE_OFF) {
+            instruments.drums.triggerRelease(midiToNote(pitch));
           }
         } else if (event.instrument === "kalimba") {
-          if (type === 144) {
-            instruments.kalimba.triggerAttackRelease(midiToNote(pitch), "1n");
+          if (type === lib.MIDI_NOTE_ON) {
+            instruments.kalimba.triggerAttack(midiToNote(pitch));
+          } else if (type === lib.MIDI_NOTE_OFF) {
+            instruments.kalimba.triggerRelease(midiToNote(pitch));
           }
         } else if (event.instrument === "river") {
+          if (type === lib.MIDI_NOTE_ON) {
+            instruments.river.triggerAttack(midiToNote(pitch));
+          } else if (type === lib.MIDI_NOTE_OFF) {
+            instruments.river.triggerRelease(midiToNote(pitch));
+          }
+        } else if (event.instrument === "pandrum") {
           if (type === 144) {
-            instruments.river.triggerAttackRelease(midiToNote(pitch), "1n");
+            instruments.pandrum.triggerAttack(midiToNote(pitch));
+          } else if (type === 128) {
+            instruments.pandrum.triggerRelease(midiToNote(pitch));
           }
         } else {
           console.error("instrument not implemented", event.instrument);
@@ -341,7 +349,7 @@ const usePlayer = (): Player => {
 
 const Ping: React.FC<{
   userId: string;
-  pingChannel: Observable<Lib.TransportEventPing>;
+  pingChannel: Observable<lib.TransportEventPing>;
 }> = ({ userId, pingChannel }) => {
   const [ping, setPing] = useState<number>(0);
   useEffect(() => {
@@ -381,14 +389,14 @@ const Jamhub: React.FC = () => {
   const transport = webSocketTransport.current;
   const router = createTransportRouter(transport);
   // const transport = createLocalTransport({ player });
-  const refLastMidiEvent = useRef<Lib.TransportEvent>();
+  const refLastMidiEvent = useRef<lib.TransportEvent>();
   const [transportStatus, setTransportStatus] = useState<TransportStatus>(
     "disconnected"
   );
-  const [selectedInstrument, setSelectedInstrument] = useState<Lib.Instrument>(
+  const [selectedInstrument, setSelectedInstrument] = useState<lib.Instrument>(
     "tinysynthCreamyKeys"
   );
-  const [user, setUser] = useState<Lib.User>();
+  const [user, setUser] = useState<lib.User>();
   const [midiAccess, setMidiAccess] = useState<any | undefined>(undefined);
 
   useEffect(() => {
@@ -471,7 +479,7 @@ const Jamhub: React.FC = () => {
       return;
     }
 
-    const handleMidiEvent = (midiEvent: Event & { data: Lib.MIDIEvent }) => {
+    const handleMidiEvent = (midiEvent: Event & { data: lib.MIDIEvent }) => {
       const [type, pitch, velocity] = midiEvent.data;
       console.log("handleMidiEvent", midiEvent.data);
       if (type === 144) {
@@ -547,7 +555,7 @@ const Jamhub: React.FC = () => {
     );
   };
 
-  const switchInstrument = (instrument: Lib.Instrument) => {
+  const switchInstrument = (instrument: lib.Instrument) => {
     if (refLastMidiEvent.current && refLastMidiEvent.current.type === "midi") {
       const [
         eventType,
@@ -637,6 +645,13 @@ const Jamhub: React.FC = () => {
               description="percussion"
             />
             <Instrument
+              name="pandrum"
+              onClick={() => switchInstrument("pandrum")}
+              loading={player.loadingStatus.pandrum === "loading"}
+              selected={selectedInstrument === "pandrum"}
+              description="percussion"
+            />
+            <Instrument
               name="80s strings"
               onClick={() => switchInstrument("tinysynthStrings")}
               loading={player.loadingStatus.tinysynthStrings === "loading"}
@@ -685,7 +700,7 @@ const Jamhub: React.FC = () => {
                   if (!user) {
                     console.error("no user");
                   }
-                  const transportEvent: Lib.TransportEvent = {
+                  const transportEvent: lib.TransportEvent = {
                     type: "midi",
                     midi: event,
                     instrument: selectedInstrument,
@@ -761,7 +776,7 @@ const Jamhub: React.FC = () => {
                 href="https://github.com/fletcherist/jamhub"
                 target="_blank"
               >
-                {Lib.APP_VERSION}
+                {lib.APP_VERSION}
               </Link>{" "}
               <Link
                 href="https://github.com/fletcherist/jamhub/issues"

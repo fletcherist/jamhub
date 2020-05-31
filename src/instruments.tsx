@@ -150,6 +150,11 @@ const effectReverb = new Tone.Reverb({
   wet: 0.5,
 });
 
+const effectReverbLight = new Tone.Reverb({
+  decay: 4,
+  wet: 0.3,
+});
+
 const effectDelay = new Tone.Delay({
   delayTime: 0.3,
   maxDelay: 3,
@@ -217,13 +222,13 @@ drums.chain(new Tone.Gain(0.3), Tone.Destination);
 
 const kalimbaSamples = {
   c3: "kalimba/c3.mp3",
-  // "f#3": "kalimba/f#3.mp3",
+  "f#3": "kalimba/gb3.mp3",
   b4: "kalimba/b4.mp3",
   c4: "kalimba/c4.mp3",
   c5: "kalimba/c5.mp3",
   b3: "kalimba/b3.mp3",
   b2: "kalimba/b2.mp3",
-  // "f#4": "kalimba/f#4.mp3",
+  "f#4": "kalimba/gb4.mp3",
   d4: "kalimba/d4.mp3",
   e3: "kalimba/e3.mp3",
   d3: "kalimba/d3.mp3",
@@ -244,14 +249,7 @@ const kalimbaSamplesWithBase: {
 const kalimba = new Tone.Sampler({
   urls: kalimbaSamplesWithBase,
 });
-kalimba.chain(
-  new Tone.Gain(0.6),
-  new Tone.Reverb({
-    decay: 4,
-    wet: 0.3,
-  }),
-  Tone.Destination
-);
+kalimba.chain(new Tone.Gain(0.6), effectReverbLight, Tone.Destination);
 
 const riverSamples = {
   "1": "river/1.mp3",
@@ -301,6 +299,30 @@ river.chain(
   Tone.Destination
 );
 
+const pandrumSamples = {
+  c3: "pandrum/c3.mp3",
+  c4: "pandrum/c4.mp3",
+  d4: "pandrum/d4.mp3",
+  f4: "pandrum/f4.mp3",
+  g3: "pandrum/g3.mp3",
+  eb4: "pandrum/eb4.mp3",
+  g4: "pandrum/g4.mp3",
+  bb3: "pandrum/bb3.mp3",
+};
+
+const pandrum = new Tone.Sampler({
+  c3: baseUrl(pandrumSamples.c3),
+  c4: baseUrl(pandrumSamples.c4),
+  d4: baseUrl(pandrumSamples.d4),
+  f4: baseUrl(pandrumSamples.f4),
+  g3: baseUrl(pandrumSamples.g3),
+  g4: baseUrl(pandrumSamples.g4),
+  "d#4": baseUrl(pandrumSamples["eb4"]),
+  "a#3": baseUrl(pandrumSamples.bb3),
+});
+
+pandrum.chain(new Tone.Gain(1.9), effectReverb, Tone.Destination);
+
 export const effects = {
   effectReverb,
   effectDelay,
@@ -311,4 +333,5 @@ export const instruments = {
   drums,
   kalimba,
   river,
+  pandrum,
 };

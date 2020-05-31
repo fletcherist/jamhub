@@ -1,17 +1,24 @@
 export const APP_VERSION = "v1.0.0";
 
-export type MIDIEvent = [number, number, number];
+export const MIDI_NOTE_ON = 144;
+export const MIDI_NOTE_OFF = 128;
+
+export type MIDIEvent = [
+  typeof MIDI_NOTE_ON | typeof MIDI_NOTE_OFF,
+  number,
+  number
+];
 
 export type Instrument =
   | "piano"
   | "guitar"
   | "epiano"
-  | "sine"
   | "drums"
   | "tinysynthStrings"
   | "tinysynthCreamyKeys"
   | "kalimba"
-  | "river";
+  | "river"
+  | "pandrum";
 export interface TransportEventPing {
   userId: string;
   type: "ping";
