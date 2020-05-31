@@ -152,6 +152,10 @@ const effectDelay = new Tone.Delay({
   delayTime: 0.3,
   maxDelay: 3,
 });
+const effectReverbDrums = new Tone.Reverb({
+  decay: 4,
+  wet: 0.1,
+});
 
 const piano = new Piano({
   velocities: 5,
@@ -207,11 +211,19 @@ const samples = {
 const drums = new Tone.Sampler({
   urls: {
     C4: samples["kick1"],
+    "C#4": samples["perc1"],
     D4: samples["hat6"],
-    E4: samples["snare1"],
+    "D#4": samples["perc2"],
+    E4: samples["snare6"],
+    F4: samples["hat1"],
+    "F#4": samples["perc3"],
+    G4: samples["hat2"],
+    "G#4": samples["perc4"],
+    A4: samples["hat3"],
+    B5: samples["snare10"],
   },
 });
-drums.chain(new Tone.Gain(0.3), Tone.Destination);
+drums.chain(new Tone.Gain(0.3), effectReverbDrums, Tone.Destination);
 
 const kalimbaSamples = {
   c3: "kalimba/c3.mp3",
@@ -283,14 +295,7 @@ const river = new Tone.Sampler({
     d6: baseUrl(riverSamples["16"]),
   },
 });
-river.chain(
-  new Tone.Gain(0.6),
-  new Tone.Reverb({
-    decay: 1,
-    wet: 0.3,
-  }),
-  Tone.Destination
-);
+river.chain(new Tone.Gain(0.6), effectReverbDrums, Tone.Destination);
 
 const pandrumSamples = {
   c3: "pandrum/c3.mp3",

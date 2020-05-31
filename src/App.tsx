@@ -547,7 +547,6 @@ const Jamhub: React.FC = () => {
             </Text>
           </div>
         )}
-        <Divider y={1} />
         <div>
           <Text size={11} small type="secondary">
             invite friends
