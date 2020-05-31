@@ -3,7 +3,13 @@ import { Piano } from "@tonejs/piano";
 
 const ORIGIN = "https://fletcherist.github.io/webaudiomodules";
 
-export const audioContext = new AudioContext();
+const createAudioContext = (): AudioContext => {
+  window.AudioContext =
+    window.AudioContext || (window as any).webkitAudioContext;
+  const audioContext = new AudioContext();
+  return audioContext;
+};
+export const audioContext = createAudioContext();
 // Tone.setContext(audioContext);
 
 export const loadWAMProcessor = (audioContext: AudioContext): Promise<void> =>
@@ -50,6 +56,10 @@ class WAMController extends AudioWorkletNode {
     });
   }
 }
+
+// const createDx7 = () => {
+
+// }
 
 export class DX7 extends WAMController {
   public banks: string[];

@@ -24,7 +24,8 @@
     "@zeit-ui/react-icons": "1.2.2",
     "react-router-dom": "5.2.0",
     "@types/react-router-dom": "5.1.5",
-    "webaudio-tinysynth": "1.1.2"
+    "webaudio-tinysynth": "1.1.2",
+    "audioworklet-polyfill": "1.1.2"
   },
   "scripts": {
     "start": "react-scripts start",

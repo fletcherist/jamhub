@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import css from "./Components.module.css";
 
 import cx from "classnames";
@@ -13,9 +13,10 @@ import {
   Snippet,
   Modal,
   Divider,
+  Link,
 } from "@zeit-ui/react";
 
-import { Twitter, Facebook } from "@zeit-ui/react-icons";
+import { Twitter, Facebook, Chrome } from "@zeit-ui/react-icons";
 import { MyKeyboard, UserKeyboard } from "./Keyboard";
 // import * as Lib from "./lib";
 import {
@@ -147,6 +148,7 @@ export const LogoWithName: React.FC<{}> = () => {
 export const Storybook: React.FC = () => {
   return (
     <div>
+      <PleaseUseGoogleChrome />
       <div>
         <Logo />
         <LogoWithName />
@@ -290,21 +292,39 @@ export const Center: React.FC = ({ children }) => {
   );
 };
 
-const PleaseUseGoogleChrome: React.FC = () => {
+export const PleaseUseGoogleChrome: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
+  useEffect(() => {
+    const isChrome = (): boolean =>
+      navigator.userAgent.toLowerCase().includes("chrome");
+    console.log("isChrome", isChrome);
+    if (!isChrome()) {
+      setIsOpen(true);
+    }
+  }, []);
   return (
     <div>
-      <Button auto onClick={() => setIsOpen(true)}>
+      {/* <Button auto onClick={() => setIsOpen(true)}>
         Show Modal
-      </Button>
+      </Button> */}
       <Modal open={isOpen} onClose={() => setIsOpen(false)}>
-        <Modal.Title>Modal</Modal.Title>
-        <Modal.Subtitle>This is a modal</Modal.Subtitle>
+        <Modal.Title>Sorry!</Modal.Title>
+        <Modal.Subtitle>Your browser is not supported</Modal.Subtitle>
         <Modal.Content>
-          <p>Some content contained within the modal.</p>
+          <p style={{ textAlign: "center" }}>
+            Some features may not work.
+            <br /> Please use Google Chrome
+          </p>
+          <div style={{ display: "flex", justifyContent: "center" }}>
+            <Link color href="https://www.google.com/chrome/">
+              <Chrome size={64} />
+            </Link>
+          </div>
         </Modal.Content>
-        <Modal.Action passive>Cancel</Modal.Action>
-        <Modal.Action>Submit</Modal.Action>
+        <Modal.Action passive onClick={() => setIsOpen(false)}>
+          Okay
+        </Modal.Action>
+        {/* <Modal.Action>Submit</Modal.Action> */}
       </Modal>
     </div>
   );

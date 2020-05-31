@@ -1,11 +1,13 @@
 import React from "react";
 import ReactDOM from "react-dom";
+
+import "audioworklet-polyfill";
 import { ZeitProvider, CssBaseline } from "@zeit-ui/react";
 
 import App from "./App";
 import * as serviceWorker from "./serviceWorker";
 
-import { Storybook, Landing } from "./Components";
+import { Storybook, Landing, PleaseUseGoogleChrome } from "./Components";
 import { BrowserRouter, Switch, Route } from "react-router-dom";
 
 const Routes: React.FC = () => {
@@ -31,6 +33,7 @@ ReactDOM.render(
     <ZeitProvider>
       <CssBaseline />
       <Routes />
+      <PleaseUseGoogleChrome />
     </ZeitProvider>
   </React.StrictMode>,
   document.getElementById("root")
