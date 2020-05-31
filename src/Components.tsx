@@ -18,6 +18,7 @@ import {
 
 import { Twitter, Facebook, Chrome } from "@zeit-ui/react-icons";
 import { MyKeyboard, UserKeyboard } from "./Keyboard";
+
 // import * as Lib from "./lib";
 import {
   Sequence,
@@ -25,6 +26,7 @@ import {
   createDrumLoop,
   startTransportSync,
 } from "./Sandbox";
+import { analytics } from "./analytics";
 
 export const Instrument: React.FC<{
   name: string;
@@ -372,7 +374,16 @@ export const PleaseUseGoogleChrome: React.FC = () => {
 export const CopyLink: React.FC<{
   url: string;
 }> = ({ url }) => {
-  return <Snippet type="dark" text={url} width="100%" />;
+  return (
+    <Snippet
+      onClick={() => {
+        analytics.app.shareLink();
+      }}
+      type="dark"
+      text={url}
+      width="100%"
+    />
+  );
 };
 
 const CreateLink: React.FC = () => {
@@ -412,7 +423,14 @@ const CreateLink: React.FC = () => {
         <Spacer y={0.5} />
         <CopyLink url={url} />
         <Spacer y={1} />
-        <a href={url} target="_blank" rel="noopener noreferrer">
+        <a
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={() => {
+            analytics.app.createRoom();
+          }}
+        >
           <Button size="small" disabled={path.length === 0}>
             Go Live
           </Button>
@@ -431,6 +449,9 @@ const SocialButtons = () => {
         )}`}
         target="_blank"
         rel="noopener noreferrer"
+        onClick={() => {
+          analytics.app.clickSocial("twitter");
+        }}
       >
         <div className={css.socialIcon}>
           <Twitter />
@@ -442,6 +463,9 @@ const SocialButtons = () => {
         )}`}
         target="_blank"
         rel="noopener noreferrer"
+        onClick={() => {
+          analytics.app.clickSocial("facebook");
+        }}
       >
         <div className={css.socialIcon}>
           <Facebook />

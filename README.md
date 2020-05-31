@@ -1,8 +1,8 @@
 <img src="./public/logo-full.svg">
 
-[https://jamhub.io](https://jamhub.io) — service for musicians' collaboration and jamming with very low latency (~20ms). also feel free to join our [discord](https://discord.gg/W9juhMx) server to find musicians for jam.
+[https://jamhub.io](https://jamhub.io) — service for musicians' collaboration and jamming with very low latency (~20ms).
 
-
+also feel free to join our [discord](https://discord.gg/W9juhMx) server to find musicians for jam.
 
 # motivation
 
@@ -27,6 +27,6 @@ i can't jam with my friends in real-world because of covid, so I'm trying to mov
 
 # contributing
 
-feel free to send any bugs 
-  
+feel free to send any bugs
+
 Phil Romanov © MIT 2020

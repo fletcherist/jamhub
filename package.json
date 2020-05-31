@@ -25,7 +25,8 @@
     "react-router-dom": "5.2.0",
     "@types/react-router-dom": "5.1.5",
     "webaudio-tinysynth": "1.1.2",
-    "audioworklet-polyfill": "1.1.2"
+    "audioworklet-polyfill": "1.1.2",
+    "react-ga": "2.7.0"
   },
   "scripts": {
     "start": "react-scripts start",
