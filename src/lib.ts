@@ -11,10 +11,10 @@ export type MIDIEvent = [
 
 export type Instrument =
   | "piano"
-  | "guitar"
-  | "epiano"
+  // | "guitar"
+  // | "epiano"
   | "drums"
-  | "tinysynthStrings"
+  | "tinysynthOrgan"
   | "tinysynthCreamyKeys"
   | "kalimba"
   | "river"

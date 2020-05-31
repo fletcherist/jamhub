@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef, useContext } from "react";
 import ReactDOM from "react-dom";
 
 import "audioworklet-polyfill";
@@ -9,6 +9,7 @@ import * as serviceWorker from "./serviceWorker";
 
 import { Storybook, Landing, PleaseUseGoogleChrome } from "./Components";
 import { BrowserRouter, Switch, Route } from "react-router-dom";
+import { AudioContextProvider } from "./store";
 
 const Routes: React.FC = () => {
   return (
@@ -29,13 +30,15 @@ const Routes: React.FC = () => {
 };
 
 ReactDOM.render(
-  <React.StrictMode>
-    <ZeitProvider>
-      <CssBaseline />
-      <Routes />
-      <PleaseUseGoogleChrome />
-    </ZeitProvider>
-  </React.StrictMode>,
+  <AudioContextProvider>
+    <React.StrictMode>
+      <ZeitProvider>
+        <CssBaseline />
+        <Routes />
+        <PleaseUseGoogleChrome />
+      </ZeitProvider>
+    </React.StrictMode>
+  </AudioContextProvider>,
   document.getElementById("root")
 );
 

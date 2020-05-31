@@ -3,13 +3,6 @@ import { Piano } from "@tonejs/piano";
 
 const ORIGIN = "https://fletcherist.github.io/webaudiomodules";
 
-const createAudioContext = (): AudioContext => {
-  window.AudioContext =
-    window.AudioContext || (window as any).webkitAudioContext;
-  const audioContext = new AudioContext();
-  return audioContext;
-};
-export const audioContext = createAudioContext();
 // Tone.setContext(audioContext);
 
 export const loadWAMProcessor = (audioContext: AudioContext): Promise<void> =>

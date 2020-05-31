@@ -16,7 +16,13 @@ import {
   Link,
 } from "@zeit-ui/react";
 
-import { Twitter, Facebook, Chrome } from "@zeit-ui/react-icons";
+import {
+  Twitter,
+  Facebook,
+  Chrome,
+  Headphones,
+  Emoji,
+} from "@zeit-ui/react-icons";
 import { MyKeyboard, UserKeyboard } from "./Keyboard";
 
 // import * as Lib from "./lib";
@@ -27,6 +33,7 @@ import {
   startTransportSync,
 } from "./Sandbox";
 import { analytics } from "./analytics";
+import { useAudioContext } from "./store";
 
 export const Instrument: React.FC<{
   name: string;
@@ -190,6 +197,7 @@ export const Storybook: React.FC = () => {
   return (
     <div>
       <PleaseUseGoogleChrome />
+      <PopupWelcomeToSession />
       <div>
         <Logo />
         <LogoWithName />
@@ -364,6 +372,64 @@ export const PleaseUseGoogleChrome: React.FC = () => {
         </Modal.Content>
         <Modal.Action passive onClick={() => setIsOpen(false)}>
           Okay
+        </Modal.Action>
+        {/* <Modal.Action>Submit</Modal.Action> */}
+      </Modal>
+    </div>
+  );
+};
+export const PopupWelcomeToSession: React.FC = () => {
+  const audioContext = useAudioContext();
+  const [isOpen, setIsOpen] = useState(false);
+  const open = () => setIsOpen(true);
+  const close = () => {
+    setIsOpen(false);
+  };
+  useEffect(() => {
+    open();
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+    const handleKey = (event: KeyboardEvent) => {
+      if (audioContext.state === "suspended") {
+        audioContext.resume();
+      }
+      close();
+    };
+    document.addEventListener("keydown", handleKey);
+    return () => {
+      document.removeEventListener("keydown", handleKey);
+    };
+  }, [isOpen, audioContext]);
+  return (
+    <div>
+      <Modal
+        open={isOpen}
+        onClose={() => {
+          close();
+        }}
+      >
+        <Modal.Title>Hello!</Modal.Title>
+        <Modal.Content>
+          <p style={{ textAlign: "center" }}>
+            <div>Welcome to jam session.</div>
+            <div>
+              <b>1.</b> Turn on your headphones
+            </div>
+            <div>
+              <b>2.</b> Press any key to continue
+            </div>
+            <div style={{ paddingTop: "2rem" }}>
+              <Headphones size={64} />
+            </div>
+          </p>
+          <div style={{ display: "flex", justifyContent: "center" }}></div>
+        </Modal.Content>
+        <Modal.Action passive onClick={() => close()}>
+          Join
         </Modal.Action>
         {/* <Modal.Action>Submit</Modal.Action> */}
       </Modal>

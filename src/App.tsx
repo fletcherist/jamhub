@@ -10,15 +10,15 @@ import { mergeMap } from "rxjs/operators";
 
 import { MyKeyboard, UserKeyboardContainer, midiToNote } from "./Keyboard";
 
-import {
-  DX7,
-  loadWAMProcessor,
-  instruments,
-  audioContext,
-} from "./instruments";
+import { DX7, loadWAMProcessor, instruments } from "./instruments";
 
 import css from "./App.module.css";
-import { Instrument, CopyLink, LogoWithName } from "./Components";
+import {
+  Instrument,
+  CopyLink,
+  LogoWithName,
+  PopupWelcomeToSession,
+} from "./Components";
 import {
   Row,
   Spacer,
@@ -134,18 +134,18 @@ interface Player {
 }
 
 const usePlayer = (): Player => {
-  const guitar1 = useRef<DX7>();
-  const epiano = useRef<DX7>();
-  const tinysynthStrings = useRef<any>();
+  // const guitar1 = useRef<DX7>();
+  // const epiano = useRef<DX7>();
+  const tinysynthOrgan = useRef<any>();
   const tinysynthCreamyKeys = useRef<any>();
 
   const defaultLoadingStatus: LoadingStatus = {
-    epiano: "not loaded",
-    guitar: "not loaded",
+    // epiano: "not loaded",
+    // guitar: "not loaded",
     piano: "not loaded",
     pandrum: "ok",
     drums: "ok",
-    tinysynthStrings: "not loaded",
+    tinysynthOrgan: "not loaded",
     tinysynthCreamyKeys: "not loaded",
     kalimba: "ok",
     river: "ok",
@@ -166,44 +166,44 @@ const usePlayer = (): Player => {
   type Preset = "BRASS   1 " | "GUITAR  1 " | "MARIMBA   " | "E.PIANO 1 ";
 
   useEffect(() => {
-    const loadDx7 = async (preset: Preset): Promise<DX7> => {
-      await loadWAMProcessor(audioContext);
-      await DX7.importScripts(audioContext);
-      const dx7 = new DX7(audioContext);
+    // const loadDx7 = async (preset: Preset): Promise<DX7> => {
+    //   await loadWAMProcessor(audioContext);
+    //   await DX7.importScripts(audioContext);
+    //   const dx7 = new DX7(audioContext);
 
-      const dx7gain = audioContext.createGain();
-      dx7gain.connect(audioContext.destination);
-      dx7gain.gain.value = 0.4;
-      dx7.connect(dx7gain);
-      // Tone.connect(dx7 as AudioNode, effects.effectReverb);
-      await dx7.loadBank("rom1A.syx");
-      // const presetNames = [...dx7.presets.keys()];
-      // console.log("presetNames", presetNames);
-      dx7.setPatch(dx7.presets.get(preset));
-      return dx7;
-    };
-    const loadEpiano = async () => {
-      try {
-        updateIsLoaded({ epiano: "loading" });
-        const dx7epiano = await loadDx7("E.PIANO 1 ");
-        epiano.current = dx7epiano;
-        updateIsLoaded({ epiano: "ok" });
-      } catch (error) {
-        console.error(error);
-        updateIsLoaded({ epiano: "failed" });
-      }
-    };
-    const loadGuitar = async () => {
-      try {
-        updateIsLoaded({ guitar: "loading" });
-        const dx7guitar1 = await loadDx7("GUITAR  1 ");
-        guitar1.current = dx7guitar1;
-        updateIsLoaded({ guitar: "ok" });
-      } catch (error) {
-        console.error(error);
-        updateIsLoaded({ guitar: "failed" });
-      }
-    };
+    //   const dx7gain = audioContext.createGain();
+    //   dx7gain.connect(audioContext.destination);
+    //   dx7gain.gain.value = 0.4;
+    //   dx7.connect(dx7gain);
+    //   // Tone.connect(dx7 as AudioNode, effects.effectReverb);
+    //   await dx7.loadBank("rom1A.syx");
+    //   // const presetNames = [...dx7.presets.keys()];
+    //   // console.log("presetNames", presetNames);
+    //   dx7.setPatch(dx7.presets.get(preset));
+    //   return dx7;
+    // };
+    // const loadEpiano = async () => {
+    //   try {
+    //     updateIsLoaded({ epiano: "loading" });
+    //     const dx7epiano = await loadDx7("E.PIANO 1 ");
+    //     epiano.current = dx7epiano;
+    //     updateIsLoaded({ epiano: "ok" });
+    //   } catch (error) {
+    //     console.error(error);
+    //     updateIsLoaded({ epiano: "failed" });
+    //   }
+    // };
+    // const loadGuitar = async () => {
+    //   try {
+    //     updateIsLoaded({ guitar: "loading" });
+    //     const dx7guitar1 = await loadDx7("GUITAR  1 ");
+    //     guitar1.current = dx7guitar1;
+    //     updateIsLoaded({ guitar: "ok" });
+    //   } catch (error) {
+    //     console.error(error);
+    //     updateIsLoaded({ guitar: "failed" });
+    //   }
+    // };
     const loadPiano = async () => {
       try {
         updateIsLoaded({ piano: "loading" });
@@ -214,22 +214,23 @@ const usePlayer = (): Player => {
         updateIsLoaded({ piano: "failed" });
       }
     };
-    const loadTinysynthStrings = async () => {
+    const loadTinysynthOrgan = async () => {
       try {
-        updateIsLoaded({ tinysynthStrings: "loading" });
+        updateIsLoaded({ tinysynthOrgan: "loading" });
         const synth = new WebAudioTinySynth({
           quality: 1,
           useReverb: 1,
           reverbLev: 1,
         });
-        synth.send([0xc0, tinysynthPresets["synth-strings"]]);
+        synth.setMasterVol(0.1);
+        synth.send([0xc0, tinysynthPresets["drawbar-organ"]]);
         console.log("synth", synth);
 
-        tinysynthStrings.current = synth;
-        updateIsLoaded({ tinysynthStrings: "ok" });
+        tinysynthOrgan.current = synth;
+        updateIsLoaded({ tinysynthOrgan: "ok" });
       } catch (error) {
         console.error(error);
-        updateIsLoaded({ tinysynthStrings: "failed" });
+        updateIsLoaded({ tinysynthOrgan: "failed" });
       }
     };
     const loadTinysynthCreamyKeys = async () => {
@@ -238,9 +239,8 @@ const usePlayer = (): Player => {
         const synth = new WebAudioTinySynth({
           quality: 1,
           useReverb: 1,
-          // reverbLev: 5,
         });
-        // synth.setReverbLev(1);
+        synth.setMasterVol(0.1);
         synth.send([0xc0, tinysynthPresets["acoustic-grand-piano"]]);
         tinysynthCreamyKeys.current = synth;
         updateIsLoaded({ tinysynthCreamyKeys: "ok" });
@@ -253,10 +253,10 @@ const usePlayer = (): Player => {
     async function main() {
       try {
         await Promise.all([
-          loadEpiano(),
-          loadGuitar(),
+          // loadEpiano(),
+          // loadGuitar(),
           loadPiano(),
-          loadTinysynthStrings(),
+          loadTinysynthOrgan(),
           loadTinysynthCreamyKeys(),
         ]);
         // await loadMarimba();
@@ -273,38 +273,36 @@ const usePlayer = (): Player => {
     loadingStatus,
     send: (event: lib.TransportEvent) => {
       if (event.type === "midi") {
-        // console.log("player", event, event.midi);
-        // synth.triggerAttackRelease("C4", "8n");
-        // synth.triggerAttackRelease(event.note, "8n");
         const [type, pitch, velocity] = event.midi;
-
         if (event.instrument === "piano") {
-          if (type === 144) {
+          if (type === lib.MIDI_NOTE_ON) {
             instruments.piano.keyDown({
               midi: pitch,
               velocity: velocity / 256,
             });
-          } else if (type === 128) {
+          } else if (type === lib.MIDI_NOTE_OFF) {
             instruments.piano.keyUp({ midi: pitch });
           }
-        } else if (event.instrument === "guitar") {
-          if (!guitar1.current) {
-            console.error("dx7 guitar1 is not loaded");
+        }
+        // else if (event.instrument === "guitar") {
+        //   if (!guitar1.current) {
+        //     console.error("dx7 guitar1 is not loaded");
+        //     return;
+        //   }
+        //   guitar1.current.onMidi(event.midi);
+        // } else if (event.instrument === "epiano") {
+        //   if (!epiano.current) {
+        //     console.error("dx7 epiano is not loaded");
+        //     return;
+        //   }
+        //   epiano.current.onMidi(event.midi);
+        // }
+        else if (event.instrument === "tinysynthOrgan") {
+          if (!tinysynthOrgan.current) {
+            console.error("tinysynthOrgan is not loaded");
             return;
           }
-          guitar1.current.onMidi(event.midi);
-        } else if (event.instrument === "epiano") {
-          if (!epiano.current) {
-            console.error("dx7 epiano is not loaded");
-            return;
-          }
-          epiano.current.onMidi(event.midi);
-        } else if (event.instrument === "tinysynthStrings") {
-          if (!tinysynthStrings.current) {
-            console.error("tinysynthStrings is not loaded");
-            return;
-          }
-          tinysynthStrings.current.send(event.midi);
+          tinysynthOrgan.current.send(event.midi);
           return;
         } else if (event.instrument === "tinysynthCreamyKeys") {
           if (!tinysynthCreamyKeys.current) {
@@ -580,6 +578,7 @@ const Jamhub: React.FC = () => {
         flexDirection: "column",
       }}
     >
+      <PopupWelcomeToSession />
       <div style={{ display: "flex", justifyContent: "center" }}>
         <div
           style={{
@@ -623,20 +622,20 @@ const Jamhub: React.FC = () => {
               selected={selectedInstrument === "piano"}
               description="soft & ambient"
             />
-            <Instrument
+            {/* <Instrument
               name="guitar"
               onClick={() => switchInstrument("guitar")}
               loading={player.loadingStatus.guitar === "loading"}
               selected={selectedInstrument === "guitar"}
               description="for solos"
-            />
-            <Instrument
+            /> */}
+            {/* <Instrument
               name="electronic piano"
               onClick={() => switchInstrument("epiano")}
               loading={player.loadingStatus.epiano === "loading"}
               selected={selectedInstrument === "epiano"}
               description="jazzy"
-            />
+            /> */}
             <Instrument
               name="kalimba"
               onClick={() => switchInstrument("kalimba")}
@@ -649,13 +648,13 @@ const Jamhub: React.FC = () => {
               onClick={() => switchInstrument("pandrum")}
               loading={player.loadingStatus.pandrum === "loading"}
               selected={selectedInstrument === "pandrum"}
-              description="percussion"
+              description="rare drum instrument"
             />
             <Instrument
               name="80s strings"
-              onClick={() => switchInstrument("tinysynthStrings")}
-              loading={player.loadingStatus.tinysynthStrings === "loading"}
-              selected={selectedInstrument === "tinysynthStrings"}
+              onClick={() => switchInstrument("tinysynthOrgan")}
+              loading={player.loadingStatus.tinysynthOrgan === "loading"}
+              selected={selectedInstrument === "tinysynthOrgan"}
               description="example sound"
             />
             <Instrument
