@@ -9,6 +9,9 @@ const EVENT_SHARE_LINK = "shareLink";
 const EVENT_CREATE_ROOM = "createRoom";
 
 export const analytics = {
+  pageview: () => {
+    ReactGA.pageview(window.location.pathname + window.location.search);
+  },
   app: {
     [EVENT_SWITCH_INSTRUMENT]: (instrument: Lib.Instrument): void => {
       ReactGA.event({

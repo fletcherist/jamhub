@@ -16,13 +16,7 @@ import {
   Link,
 } from "@zeit-ui/react";
 
-import {
-  Twitter,
-  Facebook,
-  Chrome,
-  Headphones,
-  Emoji,
-} from "@zeit-ui/react-icons";
+import { Twitter, Facebook, Chrome, Music } from "@zeit-ui/react-icons";
 import { MyKeyboard, UserKeyboard } from "./Keyboard";
 
 // import * as Lib from "./lib";
@@ -383,6 +377,9 @@ export const PopupWelcomeToSession: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const open = () => setIsOpen(true);
   const close = () => {
+    if (audioContext.state === "suspended") {
+      audioContext.resume();
+    }
     setIsOpen(false);
   };
   useEffect(() => {
@@ -397,7 +394,7 @@ export const PopupWelcomeToSession: React.FC = () => {
       if (audioContext.state === "suspended") {
         audioContext.resume();
       }
-      close();
+      setIsOpen(false);
     };
     document.addEventListener("keydown", handleKey);
     return () => {
@@ -415,7 +412,9 @@ export const PopupWelcomeToSession: React.FC = () => {
         <Modal.Title>Hello!</Modal.Title>
         <Modal.Content>
           <p style={{ textAlign: "center" }}>
-            <div>Welcome to jam session.</div>
+            <div>
+              <b>Welcome to jam session</b>
+            </div>
             <div>
               <b>1.</b> Turn on your headphones
             </div>
@@ -423,7 +422,7 @@ export const PopupWelcomeToSession: React.FC = () => {
               <b>2.</b> Press any key to continue
             </div>
             <div style={{ paddingTop: "2rem" }}>
-              <Headphones size={64} />
+              <Music size={64} />
             </div>
           </p>
           <div style={{ display: "flex", justifyContent: "center" }}></div>
@@ -542,6 +541,9 @@ const SocialButtons = () => {
 };
 
 export const Landing: React.FC = () => {
+  useEffect(() => {
+    analytics.pageview();
+  }, []);
   return (
     <div
       style={{

@@ -36,6 +36,7 @@ import {
 } from "./transport";
 
 import * as WebAudioTinySynth from "webaudio-tinysynth";
+import { analytics } from "./analytics";
 
 const tinysynthPresets = {
   "acoustic-grand-piano": 0,
@@ -442,6 +443,10 @@ const Jamhub: React.FC = () => {
       conn.disconnect();
     };
   }, [transport]);
+
+  useEffect(() => {
+    analytics.pageview();
+  }, []);
 
   useEffect(() => {
     const tryAccessMidi = async (): Promise<void> => {
