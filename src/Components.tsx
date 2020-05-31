@@ -16,7 +16,6 @@ import {
 } from "@zeit-ui/react";
 
 import { Twitter, Facebook } from "@zeit-ui/react-icons";
-
 import { MyKeyboard, UserKeyboard } from "./Keyboard";
 // import * as Lib from "./lib";
 import {
@@ -114,9 +113,44 @@ export const InstrumentsStory = () => {
     </div>
   );
 };
+
+export const Logo: React.FC<{
+  size?: number;
+}> = ({ size = 48 }) => {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 240 240"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <circle cx="120" cy="120" r="120" fill="black" />
+      <path
+        d="M50 123.5C129.5 203 124 190.5 124 117C124 43.5 190.5 44.5 190.5 117"
+        stroke="white"
+        stroke-width="20"
+      />
+    </svg>
+  );
+};
+export const LogoWithName: React.FC<{}> = () => {
+  return (
+    <div style={{ display: "flex", alignItems: "center", cursor: "default" }}>
+      <Logo size={24} />
+      <Text span b style={{ paddingLeft: 6, letterSpacing: "1px" }}>
+        jamhub
+      </Text>
+    </div>
+  );
+};
 export const Storybook: React.FC = () => {
   return (
     <div>
+      <div>
+        <Logo />
+        <LogoWithName />
+      </div>
       <InstrumentStory />
       <Divider />
       <InstrumentsStory />

@@ -20,7 +20,7 @@ import {
 } from "./instruments";
 
 import css from "./App.module.css";
-import { Center, Instrument, CopyLink } from "./Components";
+import { Center, Instrument, CopyLink, LogoWithName } from "./Components";
 import {
   Row,
   Spacer,
@@ -554,12 +554,26 @@ const Jamhub: React.FC = () => {
         flexDirection: "column",
       }}
     >
+      <div style={{ display: "flex", justifyContent: "center" }}>
+        <div
+          style={{
+            maxWidth: 500,
+            width: "100%",
+            // backgroundColor: "#eee",
+          }}
+        >
+          <div style={{ padding: "0.8rem 0.6rem 0.2rem" }}>
+            <LogoWithName />
+          </div>
+          {/* <Divider y={0} /> */}
+        </div>
+      </div>
       <div
         style={{
           display: "flex",
           justifyContent: "center",
           height: "100%",
-          paddingTop: "1rem",
+          // paddingTop: "1rem",
           paddingBottom: "1rem",
           // backgroundColor: "#37393f",
         }}
