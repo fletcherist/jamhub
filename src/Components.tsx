@@ -405,6 +405,16 @@ export const Landing: React.FC = () => {
     >
       <div style={{ maxWidth: 400 }}>
         <div style={{ textAlign: "center" }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              padding: "2rem",
+            }}
+          >
+            <LogoWithName />
+          </div>
+
           <Text h2>Jam with friends online</Text>
           <Text p>
             tool for online music collaboration. <b>midi</b> support.
