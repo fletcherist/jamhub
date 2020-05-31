@@ -562,7 +562,7 @@ const Jamhub: React.FC = () => {
             // backgroundColor: "#eee",
           }}
         >
-          <div style={{ padding: "0.8rem 0.6rem 0.2rem" }}>
+          <div style={{ padding: "1rem 0.6rem 0.4rem" }}>
             <LogoWithName />
           </div>
           {/* <Divider y={0} /> */}
