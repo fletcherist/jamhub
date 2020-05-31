@@ -381,6 +381,7 @@ const Jamhub: React.FC = () => {
   const transport = webSocketTransport.current;
   const router = createTransportRouter(transport);
   // const transport = createLocalTransport({ player });
+  const refLastMidiEvent = useRef<Lib.TransportEvent>();
   const [transportStatus, setTransportStatus] = useState<TransportStatus>(
     "disconnected"
   );
@@ -546,6 +547,23 @@ const Jamhub: React.FC = () => {
     );
   };
 
+  const switchInstrument = (instrument: Lib.Instrument) => {
+    if (refLastMidiEvent.current && refLastMidiEvent.current.type === "midi") {
+      const [
+        eventType,
+        eventNote,
+        eventVelocity,
+      ] = refLastMidiEvent.current.midi;
+      if (eventType === 144) {
+        transport.send({
+          ...refLastMidiEvent.current,
+          midi: [128, eventNote, eventVelocity],
+        });
+      }
+    }
+    setSelectedInstrument(instrument);
+  };
+
   return (
     <div
       style={{
@@ -592,56 +610,56 @@ const Jamhub: React.FC = () => {
           >
             <Instrument
               name="grand piano"
-              onClick={() => setSelectedInstrument("piano")}
+              onClick={() => switchInstrument("piano")}
               loading={player.loadingStatus.piano === "loading"}
               selected={selectedInstrument === "piano"}
               description="soft & ambient"
             />
             <Instrument
               name="guitar"
-              onClick={() => setSelectedInstrument("guitar")}
+              onClick={() => switchInstrument("guitar")}
               loading={player.loadingStatus.guitar === "loading"}
               selected={selectedInstrument === "guitar"}
               description="for solos"
             />
             <Instrument
               name="electronic piano"
-              onClick={() => setSelectedInstrument("epiano")}
+              onClick={() => switchInstrument("epiano")}
               loading={player.loadingStatus.epiano === "loading"}
               selected={selectedInstrument === "epiano"}
               description="jazzy"
             />
             <Instrument
               name="kalimba"
-              onClick={() => setSelectedInstrument("kalimba")}
+              onClick={() => switchInstrument("kalimba")}
               loading={player.loadingStatus.kalimba === "loading"}
               selected={selectedInstrument === "kalimba"}
               description="percussion"
             />
             <Instrument
               name="80s strings"
-              onClick={() => setSelectedInstrument("tinysynthStrings")}
+              onClick={() => switchInstrument("tinysynthStrings")}
               loading={player.loadingStatus.tinysynthStrings === "loading"}
               selected={selectedInstrument === "tinysynthStrings"}
               description="example sound"
             />
             <Instrument
               name="creamy keys"
-              onClick={() => setSelectedInstrument("tinysynthCreamyKeys")}
+              onClick={() => switchInstrument("tinysynthCreamyKeys")}
               loading={player.loadingStatus.tinysynthCreamyKeys === "loading"}
               selected={selectedInstrument === "tinysynthCreamyKeys"}
               description="good vibes only"
             />
             <Instrument
               name="lo-fi drums"
-              onClick={() => setSelectedInstrument("drums")}
+              onClick={() => switchInstrument("drums")}
               loading={player.loadingStatus.drums === "loading"}
               selected={selectedInstrument === "drums"}
               description="for chilling"
             />
             <Instrument
               name="river"
-              onClick={() => setSelectedInstrument("river")}
+              onClick={() => switchInstrument("river")}
               loading={player.loadingStatus.river === "loading"}
               selected={selectedInstrument === "river"}
               description="playtronica soundfont"
@@ -667,12 +685,14 @@ const Jamhub: React.FC = () => {
                   if (!user) {
                     console.error("no user");
                   }
-                  transport.send({
+                  const transportEvent: Lib.TransportEvent = {
                     type: "midi",
                     midi: event,
                     instrument: selectedInstrument,
                     userId: user ? user.id : "0",
-                  });
+                  };
+                  refLastMidiEvent.current = transportEvent;
+                  transport.send(transportEvent);
                 }}
               />
             </div>
