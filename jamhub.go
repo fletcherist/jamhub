@@ -146,8 +146,8 @@ type User struct {
 
 // UserInfo contains some user data
 type UserInfo struct {
-	Emoji string `json:"emoji"` // emoji-face like on clients (for test)
-	Mute  bool   `json:"mute"`
+	Name string `json:"name"` // emoji-face like on clients (for test)
+	Mute bool   `json:"mute"`
 }
 
 // UserWrap represents user object sent to client
@@ -252,7 +252,7 @@ func (u *User) HandleEvent(eventRaw []byte) error {
 	if err != nil {
 		return err
 	}
-	u.log("handle event:", event.Type)
+	// u.log("handle event:", event.Type)
 	event.UserID = u.ID
 	if event.Type == "ping" {
 		pingTimestamp := FromUnixMilli(event.Value)
@@ -366,9 +366,9 @@ func serveWs(rooms *Rooms, w http.ResponseWriter, r *http.Request) {
 
 	log.Println("ws connection to room:", roomID, len(room.GetUsers()), "users")
 
-	emojis := []string{
-		"😎", "🧐", "🤡", "👻", "😷", "🤗", "😏",
-		"👽", "👨‍🚀", "🐺", "🐯", "🦁", "🐶", "🐼", "🙈",
+	usernames := []string{
+		"David Bowie", "Eminem", "Bob Dylan", "Frank Sinatra", "Paul McCartney", "Elton John", "Kurt Kobain",
+		"Bob Marlie", "Elvis Presley", "John Lennon", "Trent Reznor", "Hans Zimmer", "John Williams", "billie eilish",
 	}
 
 	user := &User{
@@ -378,8 +378,8 @@ func serveWs(rooms *Rooms, w http.ResponseWriter, r *http.Request) {
 		send: make(chan []byte, 256),
 
 		info: UserInfo{
-			Emoji: emojis[rand.Intn(len(emojis))],
-			Mute:  true, // user is muted by default
+			Name: usernames[rand.Intn(len(usernames))],
+			Mute: true, // user is muted by default
 		},
 	}
 

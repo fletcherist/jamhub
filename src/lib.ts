@@ -83,30 +83,12 @@ export const createPingEvent = (): TransportEventPingOutgoing => {
 // }
 export interface User {
   id: string;
-  emoji: string;
+  name: string;
 }
 
 export interface Room {
   users: User[];
 }
-
-export const emojis = [
-  "😎",
-  "🧐",
-  "🤡",
-  "👻",
-  "😷",
-  "🤗",
-  "😏",
-  "👽",
-  "👨‍🚀",
-  "🐺",
-  "🐯",
-  "🦁",
-  "🐶",
-  "🐼",
-  "🙈",
-];
 
 export const delay = (ms: number) =>
   new Promise((resolve) => setTimeout(resolve, ms));

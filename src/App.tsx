@@ -524,7 +524,10 @@ const Jamhub: React.FC = () => {
                   paddingTop: "1rem",
                 }}
               >
-                <User src="https://unix.bio/assets/avatar.png" name="Witt">
+                <User
+                  src={`https://avatars.dicebear.com/api/initials/${roomUser.name}.svg`}
+                  name={roomUser.name}
+                >
                   ping: <Ping userId={roomUser.id} pingChannel={router.ping} />
                 </User>
                 <UserKeyboardContainer

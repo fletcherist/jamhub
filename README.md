@@ -14,7 +14,7 @@ i can't jam with my friends in real-world because of covid, so I'm trying to mov
 2. copy that link and share it with friends
 3. go ahead and have fun
 
-# FAQ
+# faq
 
 - What is that?
   > jamhub is a [server](https://github.com/fletcherist/jamhub/blob/master/jamhub.go) implements midi-over-websocket protocol and web application with high-quality virtual instruments, drum loops and textures.
