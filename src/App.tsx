@@ -524,12 +524,15 @@ const Jamhub: React.FC = () => {
                   paddingTop: "1rem",
                 }}
               >
-                <User
+                {/* <User
                   src={`https://avatars.dicebear.com/api/initials/${roomUser.name}.svg`}
                   name={roomUser.name}
                 >
                   ping: <Ping userId={roomUser.id} pingChannel={router.ping} />
-                </User>
+                </User> */}
+                <Text small type="secondary" size={11}>
+                  ping: <Ping userId={roomUser.id} pingChannel={router.ping} />
+                </Text>
                 <UserKeyboardContainer
                   transport={transport}
                   userId={roomUser.id}
