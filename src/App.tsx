@@ -521,7 +521,7 @@ const Jamhub: React.FC = () => {
                   backgroundColor: "white",
                   borderTopLeftRadius: 8,
                   borderTopRightRadius: 8,
-                  paddingTop: "1rem",
+                  // paddingBottom: "0.5rem",
                 }}
               >
                 {/* <User
@@ -538,7 +538,7 @@ const Jamhub: React.FC = () => {
                   userId={roomUser.id}
                 />
               </div>
-              <Spacer y={0.5} />
+              {/* <Spacer y={0.5} /> */}
             </>
           );
         })}
@@ -658,14 +658,14 @@ const Jamhub: React.FC = () => {
               onClick={() => switchInstrument("pandrum")}
               loading={player.loadingStatus.pandrum === "loading"}
               selected={selectedInstrument === "pandrum"}
-              description="rare drum instrument"
+              description="rariest drum"
             />
             <Instrument
-              name="80s strings"
+              name="rock organ"
               onClick={() => switchInstrument("tinysynthOrgan")}
               loading={player.loadingStatus.tinysynthOrgan === "loading"}
               selected={selectedInstrument === "tinysynthOrgan"}
-              description="example sound"
+              description="fat & crunchy"
             />
             <Instrument
               name="creamy keys"
