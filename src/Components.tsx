@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import css from "./Components.module.css";
 
 import cx from "classnames";
@@ -27,7 +27,13 @@ import {
 } from "./Sandbox";
 import { analytics } from "./analytics";
 import { useAudioContext } from "./store";
-import { Granular, getAudioBuffer, GranulaProps } from "./granular";
+import {
+  Granular,
+  getAudioBuffer,
+  GranulaProps,
+  createReverb,
+  Reverb,
+} from "./granular";
 
 export const Instrument: React.FC<{
   name: string;
@@ -181,6 +187,8 @@ export const LogoWithName: React.FC<{}> = () => {
 export const GranularStory = () => {
   const audioContext = useAudioContext();
   const [buffer, setBuffer] = useState<AudioBuffer>();
+  const [start, setStart] = useState<boolean>(false);
+  const reverb = useRef<Reverb>();
 
   const defaultControls: GranulaProps["controls"] = {
     adsr: {
@@ -205,6 +213,9 @@ export const GranularStory = () => {
 
   useEffect(() => {
     const getFile = async () => {
+      reverb.current = await createReverb(audioContext);
+      reverb.current.output.connect(audioContext.destination);
+
       const audioBuffer = await getAudioBuffer(
         audioContext,
         // "https://fletcherist.github.io/jamlib/kalimba/c4.mp3"
@@ -216,55 +227,122 @@ export const GranularStory = () => {
     getFile();
   }, [audioContext]);
 
-  if (!buffer) {
+  if (!buffer || !reverb.current) {
     return null;
   }
 
   return (
     <div>
-      <button>start</button>
-      <input
-        type="range"
-        step={1}
-        min={10}
-        max={100}
-        value={state.adsr.attack}
-        onChange={(event) => {
-          const newAttack = Number(event.target.value);
-          updateAdsr({ attack: newAttack });
-        }}
-      />
-      <input
-        type="range"
-        step={0.1}
-        min={0}
-        max={2}
-        value={state.spread}
-        onChange={(event) => {
-          update({ spread: Number(event.target.value) });
-        }}
-      />
-      <input
-        type="range"
-        step={1}
-        min={10}
-        max={4000}
-        value={state.density}
-        onChange={(event) => {
-          update({ density: Number(event.target.value) });
-        }}
-      />
-      <input
-        type="range"
-        step={0.1}
-        min={0}
-        max={1}
-        value={state.position}
-        onChange={(event) => {
-          update({ position: Number(event.target.value) });
-        }}
-      />
-      <Granular audioContext={audioContext} buffer={buffer} controls={state} />
+      <button onClick={() => setStart(!start)}>
+        {start ? "stop" : "start"}
+      </button>
+      {start && (
+        <div>
+          <div>
+            reverb
+            <input
+              type="range"
+              step={0.01}
+              min={0}
+              max={1}
+              // value={state.adsr.attack}
+              onChange={(event) => {
+                if (reverb.current) {
+                  reverb.current.setWet(Number(event.target.value));
+                }
+              }}
+            />
+          </div>
+          <div style={{ backgroundColor: "rgba(0,0,0,0.1)" }}>
+            <div>
+              attack
+              <input
+                type="range"
+                step={1}
+                min={10}
+                max={300}
+                value={state.adsr.attack}
+                onChange={(event) => {
+                  updateAdsr({ attack: Number(event.target.value) });
+                }}
+              />
+            </div>
+            <div>
+              sustain
+              <input
+                type="range"
+                step={1}
+                min={10}
+                max={100}
+                value={state.adsr.sustain}
+                onChange={(event) => {
+                  updateAdsr({ sustain: Number(event.target.value) });
+                }}
+              />
+            </div>
+            <div>
+              release
+              <input
+                type="range"
+                step={1}
+                min={10}
+                max={300}
+                value={state.adsr.release}
+                onChange={(event) => {
+                  updateAdsr({ release: Number(event.target.value) });
+                }}
+              />
+            </div>
+          </div>
+
+          <div>
+            spread
+            <input
+              type="range"
+              step={0.1}
+              min={0}
+              max={2}
+              value={state.spread}
+              onChange={(event) => {
+                update({ spread: Number(event.target.value) });
+              }}
+            />
+          </div>
+          <div>
+            density
+            <input
+              type="range"
+              step={1}
+              min={10}
+              max={4000}
+              value={state.density}
+              onChange={(event) => {
+                update({ density: Number(event.target.value) });
+              }}
+            />
+          </div>
+          <div>
+            position
+            <input
+              type="range"
+              step={0.01}
+              min={0}
+              max={1}
+              value={state.position}
+              onChange={(event) => {
+                update({ position: Number(event.target.value) });
+              }}
+            />
+          </div>
+
+          <Granular
+            audioContext={audioContext}
+            buffer={buffer}
+            output={reverb.current.input}
+            controls={state}
+          />
+        </div>
+      )}
     </div>
   );
 };
@@ -274,7 +352,7 @@ export const Storybook: React.FC = () => {
       {/* <PopupUseChrome />
       <PopupWelcomeToSession /> */}
       <GranularStory />
-      <GranularStory />
+      {/* <GranularStory /> */}
       <div>
         <Logo />
         <LogoWithName />

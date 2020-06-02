@@ -1,3 +1,7 @@
+v1.0.1
+
+- [ ] granular synth for atmospheres and textures
+
 v1.0.0
 
 - browser not supported popup

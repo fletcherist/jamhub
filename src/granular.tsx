@@ -101,12 +101,14 @@ export const startGrain = (grain: Grain, state: GranulaProps) => {
   // Apply curves
   grain.source.start(now, position, end / 1000 + 0.1);
   // Attack curve
+  //   grain.gain.gain.exponentialRampToValueAtTime(1, now + attackTime / 1000);
   grain.gain.gain.exponentialRampToValueAtTime(1, now + attackTime / 1000);
   // Wait sustain amount before invoking release curve
   setTimeout(
-    () =>
+    () => {
       // Release curve
-      grain.gain.gain.exponentialRampToValueAtTime(0.0001, now + end / 1000),
+      grain.gain.gain.exponentialRampToValueAtTime(0.0001, now + end / 1000);
+    },
     // Sustain
     sustainTime
   );
@@ -123,8 +125,9 @@ export const startGrain = (grain: Grain, state: GranulaProps) => {
 export interface GranulaProps {
   audioContext: AudioContext;
   buffer: AudioBuffer;
+  output: AudioNode;
   controls: {
-    adsr: ADSR;
+    adsr: ADSR; // ms
     density: number;
     spread: number;
     position: number;
@@ -138,7 +141,7 @@ interface Granula {
   stop: () => void;
 }
 const createGranula = (props: GranulaProps): Granula => {
-  const { audioContext, buffer, controls } = props;
+  const { audioContext, buffer, controls, output } = props;
   const state: {
     interval: NodeJS.Timeout | undefined;
     grains: Grain[];
@@ -149,7 +152,7 @@ const createGranula = (props: GranulaProps): Granula => {
   const master = createGain(audioContext);
 
   master.gain.value = 0.1;
-  master.connect(audioContext.destination);
+  master.connect(output);
 
   const start = () => {
     if (state.interval) {
@@ -173,6 +176,7 @@ const createGranula = (props: GranulaProps): Granula => {
       const newGrain = createGrain(controls.pan, master, audioContext);
       startGrain(newGrain, props);
       state.grains = [...state.grains, newGrain].slice(0, 20);
+      console.log(state.grains);
     } catch (error) {
       console.error(error);
       stop();
@@ -181,6 +185,45 @@ const createGranula = (props: GranulaProps): Granula => {
   return {
     start,
     stop,
+  };
+};
+
+export interface Reverb {
+  input: AudioNode;
+  output: AudioNode;
+  setWet: (wet: number) => void;
+}
+export const createReverb = async (
+  audioContext: AudioContext
+): Promise<Reverb> => {
+  const convolver = audioContext.createConvolver();
+  const response = await fetch(
+    "https://oskareriksson.se/tuna/impulses/impulse_rev.wav"
+  );
+  const buffer = await response.arrayBuffer();
+  convolver.buffer = await audioContext.decodeAudioData(buffer);
+
+  const master = audioContext.createGain();
+
+  const input = audioContext.createGain();
+  const dry = audioContext.createGain();
+  const wet = audioContext.createGain();
+
+  input.connect(dry);
+  input.connect(wet);
+
+  dry.connect(master);
+  wet.connect(convolver);
+
+  convolver.connect(master);
+
+  return {
+    input: input,
+    output: master,
+    setWet: (wetGain: number) => {
+      wet.gain.value = wetGain;
+      dry.gain.value = 1 - wetGain;
+    },
   };
 };
 
