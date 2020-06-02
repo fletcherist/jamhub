@@ -7,7 +7,7 @@ import { ZeitProvider, CssBaseline } from "@zeit-ui/react";
 import App from "./App";
 import * as serviceWorker from "./serviceWorker";
 
-import { Storybook, Landing, PleaseUseGoogleChrome } from "./Components";
+import { Storybook, Landing, PopupUseChrome } from "./Components";
 import { BrowserRouter, Switch, Route } from "react-router-dom";
 import { AudioContextProvider } from "./store";
 
@@ -35,7 +35,7 @@ ReactDOM.render(
       <ZeitProvider>
         <CssBaseline />
         <Routes />
-        <PleaseUseGoogleChrome />
+        <PopupUseChrome />
       </ZeitProvider>
     </React.StrictMode>
   </AudioContextProvider>,

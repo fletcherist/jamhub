@@ -19,7 +19,6 @@ import {
 import { Twitter, Facebook, Chrome, Music } from "@zeit-ui/react-icons";
 import { MyKeyboard, UserKeyboard } from "./Keyboard";
 
-// import * as Lib from "./lib";
 import {
   Sequence,
   emptySequence,
@@ -28,6 +27,7 @@ import {
 } from "./Sandbox";
 import { analytics } from "./analytics";
 import { useAudioContext } from "./store";
+import { Granular, getAudioBuffer } from "./granular";
 
 export const Instrument: React.FC<{
   name: string;
@@ -47,7 +47,6 @@ export const Instrument: React.FC<{
       <div>
         <div className={css.instrumentTitle}>{name}</div>
         <div className={css.instrumentDescription}>
-          {/* {!loaded && "loading..."} */}
           {loading ? "loading..." : description}
         </div>
       </div>
@@ -133,20 +132,12 @@ export const Logo: React.FC<{
       <path
         d="M50 123.5C129.5 203 124 190.5 124 117C124 43.5 190.5 44.5 190.5 117"
         stroke="white"
-        stroke-width="20"
+        strokeWidth="20"
       />
     </svg>
   );
 };
 export const LogoWithName: React.FC<{}> = () => {
-  // return (
-  //   <div style={{ display: "flex", alignItems: "center", cursor: "default" }}>
-  //     <Logo size={24} />
-  //     <Text span b style={{ paddingLeft: 6, letterSpacing: "1px" }}>
-  //       jamhub
-  //     </Text>
-  //   </div>
-  // );
   return (
     <svg
       width="100"
@@ -158,7 +149,7 @@ export const LogoWithName: React.FC<{}> = () => {
       <path
         d="M66 129.688C127.676 191.585 123.409 181.853 123.409 124.628C123.409 67.4022 175 68.1808 175 124.628"
         stroke="white"
-        stroke-width="20"
+        strokeWidth="20"
       />
       <path
         d="M298.016 84.0352H335.34V158.479C335.34 163.218 334.679 167.411 333.357 171.057C332.081 174.702 330.19 177.756 327.684 180.217C325.223 182.723 322.192 184.615 318.592 185.891C315.037 187.212 310.981 187.873 306.424 187.873C303.826 187.873 301.388 187.782 299.109 187.6C296.876 187.463 294.507 187.167 292 186.711L292.889 176.32C293.663 176.457 294.643 176.571 295.828 176.662C297.013 176.799 298.198 176.89 299.383 176.936C300.613 177.027 301.775 177.072 302.869 177.072C304.008 177.118 304.897 177.141 305.535 177.141C307.905 177.141 310.138 176.822 312.234 176.184C314.331 175.591 316.154 174.566 317.703 173.107C319.253 171.649 320.46 169.712 321.326 167.297C322.238 164.927 322.693 161.988 322.693 158.479V95.041H298.016V84.0352ZM320.916 64.5527C320.916 62.502 321.531 60.7702 322.762 59.3574C323.992 57.8991 325.883 57.1699 328.436 57.1699C330.988 57.1699 332.902 57.8991 334.178 59.3574C335.454 60.7702 336.092 62.502 336.092 64.5527C336.092 66.6035 335.454 68.3353 334.178 69.748C332.902 71.1152 330.988 71.7988 328.436 71.7988C325.883 71.7988 323.992 71.1152 322.762 69.748C321.531 68.3353 320.916 66.6035 320.916 64.5527Z"
@@ -187,11 +178,51 @@ export const LogoWithName: React.FC<{}> = () => {
     </svg>
   );
 };
+export const GranularStory = () => {
+  const audioContext = useAudioContext();
+  const [buffer, setBuffer] = useState<AudioBuffer>();
+
+  useEffect(() => {
+    const getFile = async () => {
+      const audioBuffer = await getAudioBuffer(
+        audioContext,
+        // "https://fletcherist.github.io/jamlib/kalimba/c4.mp3"
+        "https://ruebel.github.io/granular/audio/test.mp3"
+      );
+      console.log("audio buffer fetched", audioBuffer);
+      setBuffer(audioBuffer);
+    };
+    getFile();
+  }, [audioContext]);
+
+  if (!buffer) {
+    return null;
+  }
+
+  const defaultProps = {
+    attack: 100, // [10, 100]
+    sustain: 100, // [10, 200]
+    release: 100, // [10, 100]
+    density: 20, // [10, 4000]
+    gain: 0.3,
+    pan: 0.01,
+    playbackRate: 1, // [0, 2]
+    position: 0.3,
+    spread: 0.2, // [0, 2]
+  };
+  return (
+    <div>
+      <button>start</button>
+      <Granular audioContext={audioContext} buffer={buffer} {...defaultProps} />
+    </div>
+  );
+};
 export const Storybook: React.FC = () => {
   return (
     <div>
-      <PleaseUseGoogleChrome />
-      <PopupWelcomeToSession />
+      {/* <PopupUseChrome />
+      <PopupWelcomeToSession /> */}
+      <GranularStory />
       <div>
         <Logo />
         <LogoWithName />
@@ -200,7 +231,6 @@ export const Storybook: React.FC = () => {
       <Divider />
       <InstrumentsStory />
       <Divider />
-
       {/* <UserStory /> */}
       {/* <InstrumentsListStory /> */}
       {/* <Row style={{ padding: "10px 0" }}>
@@ -258,7 +288,7 @@ const Cell: React.FC<{
     <div className={css.cell} style={{}} onClick={onClick}>
       <svg width="32px" height="32px" viewBox="0 0 32 32">
         <defs />
-        <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g stroke="none" strokeWidth="1" fill="none" fillRule="evenodd">
           <g fill="#FFFFFF">
             {status === "playing" ? (
               <rect x="0" y="0" width="32" height="32" />
@@ -335,7 +365,7 @@ export const Center: React.FC = ({ children }) => {
   );
 };
 
-export const PleaseUseGoogleChrome: React.FC = () => {
+export const PopupUseChrome: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   useEffect(() => {
     const isChrome = (): boolean =>
@@ -346,30 +376,24 @@ export const PleaseUseGoogleChrome: React.FC = () => {
     }
   }, []);
   return (
-    <div>
-      {/* <Button auto onClick={() => setIsOpen(true)}>
-        Show Modal
-      </Button> */}
-      <Modal open={isOpen} onClose={() => setIsOpen(false)}>
-        <Modal.Title>Sorry!</Modal.Title>
-        <Modal.Subtitle>Your browser is not supported</Modal.Subtitle>
-        <Modal.Content>
-          <p style={{ textAlign: "center" }}>
-            Some features may not work.
-            <br /> Please use Google Chrome
-          </p>
-          <div style={{ display: "flex", justifyContent: "center" }}>
-            <Link color href="https://www.google.com/chrome/">
-              <Chrome size={64} />
-            </Link>
-          </div>
-        </Modal.Content>
-        <Modal.Action passive onClick={() => setIsOpen(false)}>
-          Okay
-        </Modal.Action>
-        {/* <Modal.Action>Submit</Modal.Action> */}
-      </Modal>
-    </div>
+    <Modal open={isOpen} onClose={() => setIsOpen(false)}>
+      <Modal.Title>Sorry!</Modal.Title>
+      <Modal.Subtitle>Your browser is not supported</Modal.Subtitle>
+      <Modal.Content>
+        <p style={{ textAlign: "center" }}>
+          Some features may not work.
+          <br /> Please use Google Chrome
+        </p>
+        <div style={{ display: "flex", justifyContent: "center" }}>
+          <Link color href="https://www.google.com/chrome/">
+            <Chrome size={64} />
+          </Link>
+        </div>
+      </Modal.Content>
+      <Modal.Action passive onClick={() => setIsOpen(false)}>
+        Okay
+      </Modal.Action>
+    </Modal>
   );
 };
 export const PopupWelcomeToSession: React.FC = () => {
@@ -402,37 +426,34 @@ export const PopupWelcomeToSession: React.FC = () => {
     };
   }, [isOpen, audioContext]);
   return (
-    <div>
-      <Modal
-        open={isOpen}
-        onClose={() => {
-          close();
-        }}
-      >
-        <Modal.Title>Hello!</Modal.Title>
-        <Modal.Content>
-          <p style={{ textAlign: "center" }}>
-            <div>
-              <b>Welcome to jam session</b>
-            </div>
-            <div>
-              <b>1.</b> Turn on your headphones
-            </div>
-            <div>
-              <b>2.</b> Press any key to continue
-            </div>
-            <div style={{ paddingTop: "2rem" }}>
-              <Music size={64} />
-            </div>
-          </p>
-          <div style={{ display: "flex", justifyContent: "center" }}></div>
-        </Modal.Content>
-        <Modal.Action passive onClick={() => close()}>
-          Join
-        </Modal.Action>
-        {/* <Modal.Action>Submit</Modal.Action> */}
-      </Modal>
-    </div>
+    <Modal
+      open={isOpen}
+      onClose={() => {
+        close();
+      }}
+    >
+      <Modal.Title>Hello!</Modal.Title>
+      <Modal.Content>
+        <p style={{ textAlign: "center" }}>
+          <div>
+            <b>Welcome to jam session</b>
+          </div>
+          <div>
+            <b>1.</b> Turn on your headphones
+          </div>
+          <div>
+            <b>2.</b> Press any key to continue
+          </div>
+          <div style={{ paddingTop: "2rem" }}>
+            <Music size={64} />
+          </div>
+        </p>
+        <div style={{ display: "flex", justifyContent: "center" }}></div>
+      </Modal.Content>
+      <Modal.Action passive onClick={() => close()}>
+        Join
+      </Modal.Action>
+    </Modal>
   );
 };
 

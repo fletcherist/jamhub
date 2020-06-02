@@ -231,7 +231,6 @@ export const MyKeyboard: React.FC<{
 
   return (
     <div>
-      {/* <Spacer y={0.5} /> */}
       <Keyboard
         activeKeys={activeKeys}
         onPressKey={handleKeyboardNoteDown}
@@ -379,11 +378,6 @@ export const Keyboard: React.FC<{
         {black("u")}
       </div>
       {white("j")}
-      {/* <div className={css.whiteWithBlack}>
-        <WhiteBind keyboardKey="k" />
-        <BlackBind keyboardKey="o" />
-      </div>
-      <WhiteBind keyboardKey="l" /> */}
     </div>
   );
 };
