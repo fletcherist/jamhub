@@ -27,7 +27,7 @@ import {
 } from "./Sandbox";
 import { analytics } from "./analytics";
 import { useAudioContext } from "./store";
-import { Granular, getAudioBuffer } from "./granular";
+import { Granular, getAudioBuffer, GranulaProps } from "./granular";
 
 export const Instrument: React.FC<{
   name: string;
@@ -182,6 +182,27 @@ export const GranularStory = () => {
   const audioContext = useAudioContext();
   const [buffer, setBuffer] = useState<AudioBuffer>();
 
+  const defaultControls: GranulaProps["controls"] = {
+    adsr: {
+      attack: 100, // [10, 100]
+      sustain: 100, // [10, 200]
+      release: 100, // [10, 100]
+      decay: 0,
+    },
+    density: 20, // [10, 4000]
+    // gain: 0.3,
+    pan: 0.01,
+    playbackRate: 1, // [0, 2]
+    position: 0.8,
+    spread: 0.4, // [0, 2]
+  };
+  type State = typeof defaultControls;
+  const [state, setState] = useState<State>(defaultControls);
+  const update = (partial: Partial<State>) =>
+    setState({ ...state, ...partial });
+  const updateAdsr = (partial: Partial<GranulaProps["controls"]["adsr"]>) =>
+    update({ adsr: { ...state.adsr, ...partial } });
+
   useEffect(() => {
     const getFile = async () => {
       const audioBuffer = await getAudioBuffer(
@@ -199,21 +220,51 @@ export const GranularStory = () => {
     return null;
   }
 
-  const defaultProps = {
-    attack: 100, // [10, 100]
-    sustain: 100, // [10, 200]
-    release: 100, // [10, 100]
-    density: 20, // [10, 4000]
-    gain: 0.3,
-    pan: 0.01,
-    playbackRate: 1, // [0, 2]
-    position: 0.3,
-    spread: 0.2, // [0, 2]
-  };
   return (
     <div>
       <button>start</button>
-      <Granular audioContext={audioContext} buffer={buffer} {...defaultProps} />
+      <input
+        type="range"
+        step={1}
+        min={10}
+        max={100}
+        value={state.adsr.attack}
+        onChange={(event) => {
+          const newAttack = Number(event.target.value);
+          updateAdsr({ attack: newAttack });
+        }}
+      />
+      <input
+        type="range"
+        step={0.1}
+        min={0}
+        max={2}
+        value={state.spread}
+        onChange={(event) => {
+          update({ spread: Number(event.target.value) });
+        }}
+      />
+      <input
+        type="range"
+        step={1}
+        min={10}
+        max={4000}
+        value={state.density}
+        onChange={(event) => {
+          update({ density: Number(event.target.value) });
+        }}
+      />
+      <input
+        type="range"
+        step={0.1}
+        min={0}
+        max={1}
+        value={state.position}
+        onChange={(event) => {
+          update({ position: Number(event.target.value) });
+        }}
+      />
+      <Granular audioContext={audioContext} buffer={buffer} controls={state} />
     </div>
   );
 };
@@ -222,6 +273,7 @@ export const Storybook: React.FC = () => {
     <div>
       {/* <PopupUseChrome />
       <PopupWelcomeToSession /> */}
+      <GranularStory />
       <GranularStory />
       <div>
         <Logo />

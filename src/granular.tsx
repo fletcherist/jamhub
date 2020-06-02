@@ -73,7 +73,7 @@ export const killGrain = (grain: Grain) => {
   grain.busy = false;
 };
 
-export const startGrain = (grain: Grain, state: GranularProps) => {
+export const startGrain = (grain: Grain, state: GranulaProps) => {
   // Set busy flag so grain doesn't get reused
   grain.busy = true;
   // Create source from buffer
@@ -82,22 +82,22 @@ export const startGrain = (grain: Grain, state: GranularProps) => {
   grain.source.connect(grain.pan);
   // Set the pan amount for the grain
   grain.pan.pan.setValueAtTime(
-    random(-state.pan, state.pan),
+    random(-state.controls.pan, state.controls.pan),
     state.audioContext.currentTime
   );
   // Set the playback rate of the grain
-  grain.source.playbackRate.value *= state.playbackRate;
+  grain.source.playbackRate.value *= state.controls.playbackRate;
   // Get the starting position in the buffer
   const position = getPosition(
     state.buffer.duration,
-    state.position,
-    state.spread
+    state.controls.position,
+    state.controls.spread
   );
   // Calculate curve times
   const now = state.audioContext.currentTime;
-  const attackTime = state.attack;
-  const sustainTime = attackTime + state.sustain;
-  const end = sustainTime + state.release;
+  const attackTime = state.controls.adsr.attack;
+  const sustainTime = attackTime + state.controls.adsr.sustain;
+  const end = sustainTime + state.controls.adsr.release;
   // Apply curves
   grain.source.start(now, position, end / 1000 + 0.1);
   // Attack curve
@@ -117,109 +117,84 @@ export const startGrain = (grain: Grain, state: GranularProps) => {
       grain.source.disconnect();
     }
     grain.busy = false;
-    // killGrain()
   }, end + 5);
 };
 
-export interface GranularProps {
-  attack: number;
-  buffer: AudioBuffer;
+export interface GranulaProps {
   audioContext: AudioContext;
-  density: number;
-  gain: number;
-  //   output: object;
-  pan: number;
-  playbackRate: number;
-  position: number;
-  release: number;
-  spread: number;
-  sustain: number;
+  buffer: AudioBuffer;
+  controls: {
+    adsr: ADSR;
+    density: number;
+    spread: number;
+    position: number;
+    pan: number;
+    playbackRate: number;
+  };
 }
 
-export const Granular: React.FC<GranularProps> = (props) => {
-  const grains = useRef<Grain[]>([]);
-  const master = useRef<GainNode>();
-  const interval = useRef<NodeJS.Timeout>();
+interface Granula {
+  start: () => void;
+  stop: () => void;
+}
+const createGranula = (props: GranulaProps): Granula => {
+  const { audioContext, buffer, controls } = props;
+  const state: {
+    interval: NodeJS.Timeout | undefined;
+    grains: Grain[];
+  } = {
+    interval: undefined,
+    grains: [],
+  };
+  const master = createGain(audioContext);
 
-  useEffect(() => {
-    master.current = createGain(props.audioContext, props.gain);
-    master.current.gain.value = 0.1;
-    master.current.connect(props.audioContext.destination);
-
-    start();
-    return () => {
-      stop();
-      grains.current.forEach(killGrain);
-      if (master.current) {
-        master.current.disconnect();
-      }
-    };
-  }, [props.audioContext]);
-
-  //   componentWillReceiveProps(next) {
-  //     if (next.run !== this.props.run) {
-  //       // Detect if we need to start or stop the engine
-  //       if (next.run) {
-  //         this.start();
-  //       } else {
-  //         this.stop();
-  //       }
-  //     } else if (next.density !== this.props.density && this.state.interval) {
-  //       // A change in density means we have to adust the interval time
-  //       clearInterval(this.state.interval);
-  //       this.setState((state) => ({
-  //         interval: setInterval(this.tick, 1000 / this.props.density),
-  //       }));
-  //     } else if (next.gain !== this.props.gain) {
-  //       // Change the master gain
-  //       const master = this.state.master;
-  //       master.gain.value = Math.max(0.001, Math.min(1, next.gain));
-  //     }
-  //   }
+  master.gain.value = 0.1;
+  master.connect(audioContext.destination);
 
   const start = () => {
-    console.log("started");
-    if (interval.current) {
+    if (state.interval) {
       return;
     }
-    if (!props.buffer) {
-      console.warn("No audio buffer provided!");
-      return;
-    }
-    console.log(1);
-    interval.current = setInterval(() => tick(), 1000 / props.density);
+    state.interval = setInterval(() => tick(), 1000 / controls.density);
   };
-
   const stop = () => {
-    if (interval.current) {
-      clearInterval(interval.current);
+    if (state.interval) {
+      clearInterval(state.interval);
     }
-    interval.current = undefined;
+    state.interval = undefined;
   };
-
   const tick = () => {
-    // console.log("tick");
-    const grain = grains.current.find((candidate) => !candidate.busy);
+    const grain = state.grains.find((candidate) => !candidate.busy);
     try {
       if (grain) {
         startGrain(grain, props);
         return;
       }
-      if (!master.current) {
-        throw new Error("no master");
-      }
-      const newGrain = createGrain(
-        props.pan,
-        master.current,
-        props.audioContext
-      );
+      const newGrain = createGrain(controls.pan, master, audioContext);
       startGrain(newGrain, props);
-      grains.current = [...grains.current, newGrain].slice(0, 20);
-      //   console.log("grains.length", grains.current.length);
+      state.grains = [...state.grains, newGrain].slice(0, 20);
     } catch (error) {
       console.error(error);
       stop();
     }
   };
+  return {
+    start,
+    stop,
+  };
+};
+
+export const Granular: React.FC<GranulaProps> = (props) => {
+  const granula = useRef<Granula>();
+
+  useEffect(() => {
+    granula.current = createGranula(props);
+    granula.current.start();
+    return () => {
+      if (granula.current) {
+        granula.current.stop();
+      }
+    };
+  }, [props]);
   return null;
 };
