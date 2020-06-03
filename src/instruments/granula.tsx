@@ -155,6 +155,7 @@ export interface GranulaProps {
     position: number;
     pan: number;
     playbackRate: number;
+    reverb: number;
   };
 }
 
@@ -210,6 +211,21 @@ const createGranula = (props: GranulaProps): Granula => {
   };
 };
 
+export const Granular: React.FC<GranulaProps> = (props) => {
+  const granula = useRef<Granula>();
+
+  useEffect(() => {
+    granula.current = createGranula(props);
+    granula.current.start();
+    return () => {
+      if (granula.current) {
+        granula.current.stop();
+      }
+    };
+  }, [props]);
+  return null;
+};
+
 export interface Reverb {
   input: AudioNode;
   output: AudioNode;
@@ -247,19 +263,4 @@ export const createReverb = async (
       dry.gain.value = 1 - wetGain;
     },
   };
-};
-
-export const Granular: React.FC<GranulaProps> = (props) => {
-  const granula = useRef<Granula>();
-
-  useEffect(() => {
-    granula.current = createGranula(props);
-    granula.current.start();
-    return () => {
-      if (granula.current) {
-        granula.current.stop();
-      }
-    };
-  }, [props]);
-  return null;
 };

@@ -14,6 +14,7 @@ import {
   Modal,
   Divider,
   Link,
+  Code,
 } from "@zeit-ui/react";
 
 import { Twitter, Facebook, Chrome, Music } from "@zeit-ui/react-icons";
@@ -33,7 +34,7 @@ import {
   GranulaProps,
   createReverb,
   Reverb,
-} from "./granular";
+} from "./instruments/granula";
 
 export const Instrument: React.FC<{
   name: string;
@@ -184,12 +185,13 @@ export const LogoWithName: React.FC<{}> = () => {
     </svg>
   );
 };
-export const GranularStory = () => {
+export const GranularStory: React.FC<{
+  url: string;
+}> = ({ url }) => {
   const audioContext = useAudioContext();
   const [buffer, setBuffer] = useState<AudioBuffer>();
   const [start, setStart] = useState<boolean>(false);
   const reverb = useRef<Reverb>();
-  const [reverbWet, setReverbWet] = useState<number>(0.6);
 
   const defaultControls: GranulaProps["controls"] = {
     adsr: {
@@ -205,6 +207,7 @@ export const GranularStory = () => {
     playbackRate: 1, // [0, 2]
     position: 0.8,
     spread: 0.4, // [0, 2]
+    reverb: 0.5,
   };
   type State = typeof defaultControls;
   const [state, setState] = useState<State>(defaultControls);
@@ -221,145 +224,175 @@ export const GranularStory = () => {
       const audioBuffer = await getAudioBuffer(
         audioContext,
         // "https://fletcherist.github.io/jamlib/kalimba/c4.mp3"
-        "https://ruebel.github.io/granular/audio/test.mp3"
+        // "https://ruebel.github.io/granular/audio/test.mp3"
+        // "https://www.soundjay.com/nature/river-6.mp3"
+        url
       );
       console.log("audio buffer fetched", audioBuffer);
       setBuffer(audioBuffer);
     };
     getFile();
-  }, [audioContext]);
+  }, [audioContext, url]);
 
-  if (!buffer || !reverb.current) {
-    return null;
-  }
+  // if (!buffer || !reverb.current) {
+  //   return null;
+  // }
 
   return (
-    <div>
-      <button onClick={() => setStart(!start)}>
-        {start ? "stop" : "start"}
-      </button>
-      {start && (
-        <div>
-          <div>
-            transpose
-            <input
-              type="range"
-              step={1}
-              min={0}
-              max={10}
-              value={state.transpose}
-              onChange={(event) => {
-                update({ transpose: Number(event.target.value) });
-              }}
-            />
-          </div>
-          <div>
-            reverb
-            <input
-              type="range"
-              step={0.01}
-              min={0}
-              max={1}
-              value={reverbWet}
-              onChange={(event) => {
-                if (reverb.current) {
-                  const wet = Number(event.target.value);
-                  setReverbWet(wet);
-                  reverb.current.setWet(wet);
-                }
-              }}
-            />
-          </div>
-          <div style={{ backgroundColor: "rgba(0,0,0,0.1)" }}>
-            <div>
-              attack
-              <input
-                type="range"
-                step={1}
-                min={10}
-                max={300}
-                value={state.adsr.attack}
-                onChange={(event) => {
-                  updateAdsr({ attack: Number(event.target.value) });
-                }}
-              />
-            </div>
-            <div>
-              sustain
-              <input
-                type="range"
-                step={1}
-                min={10}
-                max={100}
-                value={state.adsr.sustain}
-                onChange={(event) => {
-                  updateAdsr({ sustain: Number(event.target.value) });
-                }}
-              />
-            </div>
-            <div>
-              release
-              <input
-                type="range"
-                step={1}
-                min={10}
-                max={300}
-                value={state.adsr.release}
-                onChange={(event) => {
-                  updateAdsr({ release: Number(event.target.value) });
-                }}
-              />
-            </div>
-          </div>
+    <div style={{ display: "flex" }}>
+      <div style={{ width: "300px", padding: "1rem" }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "flex-end",
+          }}
+        >
+          <Text
+            span
+            size={13}
+            b
+            style={{ textAlign: "right", padding: "0.5rem" }}
+          >
+            atmosphere
+          </Text>
+          <Button size="mini" onClick={() => setStart(!start)}>
+            {start ? "stop" : "start"}
+          </Button>
+        </div>
+        <GranulaController
+          label="reverb"
+          min={0}
+          max={1}
+          step={0.01}
+          value={state.reverb}
+          onChange={(value) => {
+            update({ reverb: value });
+            if (reverb.current) {
+              reverb.current.setWet(value);
+            }
+          }}
+        />
 
-          <div>
-            spread
-            <input
-              type="range"
-              step={0.1}
-              min={0}
-              max={2}
-              value={state.spread}
-              onChange={(event) => {
-                update({ spread: Number(event.target.value) });
-              }}
-            />
-          </div>
-          <div>
-            density
-            <input
-              type="range"
-              step={1}
-              min={10}
-              max={400}
-              value={state.density}
-              onChange={(event) => {
-                update({ density: Number(event.target.value) });
-              }}
-            />
-          </div>
-          <div>
-            position
-            <input
-              type="range"
-              step={0.01}
-              min={0}
-              max={1}
-              value={state.position}
-              onChange={(event) => {
-                update({ position: Number(event.target.value) });
-              }}
-            />
-          </div>
-
+        <GranulaController
+          label="attack"
+          min={10}
+          max={300}
+          step={1}
+          value={state.adsr.attack}
+          onChange={(value) => {
+            updateAdsr({ attack: value });
+          }}
+        />
+        <GranulaController
+          label="sustain"
+          min={10}
+          max={100}
+          step={1}
+          value={state.adsr.sustain}
+          onChange={(value) => {
+            updateAdsr({ sustain: value });
+          }}
+        />
+        <GranulaController
+          label="release"
+          min={10}
+          max={300}
+          step={1}
+          value={state.adsr.release}
+          onChange={(value) => {
+            updateAdsr({ release: value });
+          }}
+        />
+        <GranulaController
+          label="spread"
+          min={0}
+          max={2}
+          step={0.1}
+          value={state.spread}
+          onChange={(value) => {
+            update({ spread: value });
+          }}
+        />
+        <GranulaController
+          label="density"
+          min={10}
+          max={400}
+          step={1}
+          value={state.density}
+          onChange={(value) => {
+            update({ density: value });
+          }}
+        />
+        <GranulaController
+          label="fragment"
+          min={0}
+          max={1}
+          step={0.01}
+          value={state.position}
+          onChange={(value) => {
+            update({ position: value });
+          }}
+        />
+        <GranulaController
+          label="pitch"
+          min={0}
+          max={10}
+          step={1}
+          value={state.transpose}
+          onChange={(value) => {
+            update({ transpose: value });
+          }}
+        />
+        {buffer && reverb.current && start && (
           <Granular
             audioContext={audioContext}
             buffer={buffer}
             output={reverb.current.input}
             controls={state}
           />
-        </div>
-      )}
+        )}
+      </div>
+      <Code block width="50%">
+        {JSON.stringify(state, null, 2)}
+      </Code>
+    </div>
+  );
+};
+
+export const GranulaController: React.FC<{
+  min: number;
+  max: number;
+  step: number;
+  value: number;
+  label: string;
+  disabled?: boolean;
+  onChange: (value: number) => void;
+}> = ({ min, max, step, onChange, value, label, disabled = false }) => {
+  return (
+    <div style={{ display: "flex", alignItems: "center" }}>
+      <Text
+        span
+        type="secondary"
+        size={11}
+        style={{ padding: 5, minWidth: 60, textAlign: "right" }}
+      >
+        {label}
+      </Text>
+      <div style={{ display: "flex", alignItems: "center", width: "100%" }}>
+        <input
+          style={{ width: "100%" }}
+          type="range"
+          step={step}
+          min={min}
+          max={max}
+          value={value}
+          disabled={disabled}
+          onChange={(event) => {
+            onChange(Number(event.target.value));
+          }}
+        />
+      </div>
     </div>
   );
 };
@@ -368,7 +401,12 @@ export const Storybook: React.FC = () => {
     <div>
       {/* <PopupUseChrome />
       <PopupWelcomeToSession /> */}
-      <GranularStory />
+      <div style={{ maxWidth: 600 }}>
+        {/* <GranularStory url="https://www.soundjay.com/nature/campfire-1.mp3" /> */}
+        <GranularStory url="https://ruebel.github.io/granular/audio/test.mp3" />
+        {/* <GranularStory url="https://www.soundjay.com/nature/river-6.mp3" /> */}
+      </div>
+
       {/* <GranularStory /> */}
       <div>
         <Logo />
@@ -378,6 +416,24 @@ export const Storybook: React.FC = () => {
       <Divider />
       <InstrumentsStory />
       <Divider />
+
+      <GranulaController
+        label="attack"
+        min={1}
+        max={100}
+        step={5}
+        onChange={() => undefined}
+        value={50}
+      />
+      <GranulaController
+        label="attack"
+        min={1}
+        max={100}
+        step={5}
+        onChange={() => undefined}
+        value={50}
+      />
+
       {/* <UserStory /> */}
       {/* <InstrumentsListStory /> */}
       {/* <Row style={{ padding: "10px 0" }}>
