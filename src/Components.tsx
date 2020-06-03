@@ -469,7 +469,7 @@ export const GranulaTransportController: React.FC<{
       onChange={(newState) => {
         setState(newState);
         console.log("sync", { type: "sync", state: newState });
-        transport.send({ type: "sync", state: newState });
+        // transport.send({ type: "sync", state: newState });
       }}
       url="https://ruebel.github.io/granular/audio/test.mp3"
     />
