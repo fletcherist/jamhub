@@ -36,6 +36,11 @@ import {
   Reverb,
 } from "./instruments/granula";
 
+import { Observable } from "rxjs";
+import { Transport } from "./transport";
+
+import * as lib from "./lib";
+
 export const Instrument: React.FC<{
   name: string;
   description: string;
@@ -405,33 +410,67 @@ export const GranulaParameter: React.FC<{
 };
 
 type GranulaState = GranulaProps["controls"];
+export const granulaDefaultState: GranulaState = {
+  running: false,
+  adsr: {
+    attack: 100, // [10, 100]
+    sustain: 100, // [10, 200]
+    release: 100, // [10, 100]
+    // decay: 0,
+  },
+  transpose: 0,
+  density: 20, // [10, 4000]
+  // gain: 0.3,
+  pan: 0.01,
+  gain: 0.1,
+  playbackRate: 1, // [0, 2]
+  position: 0.57,
+  spread: 0.4, // [0, 2]
+  reverb: 0.5,
+};
+
 export const GranulaController: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
-  const defaultControls: GranulaProps["controls"] = {
-    running: false,
-    adsr: {
-      attack: 100, // [10, 100]
-      sustain: 100, // [10, 200]
-      release: 100, // [10, 100]
-      // decay: 0,
-    },
-    transpose: 0,
-    density: 20, // [10, 4000]
-    // gain: 0.3,
-    pan: 0.01,
-    gain: 0.1,
-    playbackRate: 1, // [0, 2]
-    position: 0.8,
-    spread: 0.4, // [0, 2]
-    reverb: 0.5,
-  };
-  const [state, setState] = useState<GranulaState>(defaultControls);
+  const [state, setState] = useState<GranulaState>(granulaDefaultState);
   return (
     <Granula
       loading={loading}
       setLoading={setLoading}
       state={state}
       onChange={(newState) => setState(newState)}
+      url="https://ruebel.github.io/granular/audio/test.mp3"
+    />
+  );
+};
+
+export const GranulaTransportController: React.FC<{
+  transport: Transport;
+  sync: Observable<lib.TransportEvent>;
+}> = ({ transport, sync }) => {
+  const [loading, setLoading] = useState<boolean>(true);
+  const [state, setState] = useState<GranulaState>(granulaDefaultState);
+
+  useEffect(() => {
+    const subscription = sync.subscribe((event) => {
+      if (event.type === "sync") {
+        setState(event.state as GranulaState);
+      }
+    });
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [sync]);
+
+  return (
+    <Granula
+      loading={loading}
+      setLoading={setLoading}
+      state={state}
+      onChange={(newState) => {
+        setState(newState);
+        console.log("sync", { type: "sync", state: newState });
+        transport.send({ type: "sync", state: newState });
+      }}
       url="https://ruebel.github.io/granular/audio/test.mp3"
     />
   );

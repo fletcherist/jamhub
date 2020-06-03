@@ -169,6 +169,7 @@ export const createTransportRouter = (transport: Transport) => {
   const ping = transport.receive.pipe(
     filter((event) => event.type === "ping")
   ) as Observable<Lib.TransportEventPing>;
+  const sync = transport.receive.pipe(filter((event) => event.type === "sync"));
 
-  return { ping };
+  return { ping, sync };
 };

@@ -19,6 +19,7 @@ import {
   LogoWithName,
   PopupWelcomeToSession,
   GranulaController,
+  GranulaTransportController,
 } from "./Components";
 import {
   Row,
@@ -361,33 +362,29 @@ const Ping: React.FC<{
     });
     return () => subscription.unsubscribe();
   }, [pingChannel, userId]);
-  // useEffect(() => {
-  //   const subscription = router.ping.subscribe((pingEvent) => {
-  //     setUsersPing({
-  //       ...usersPing,
-  //       ...{ [pingEvent.userId]: pingEvent.value },
-  //     });
-  //   });
-  //   return () => subscription.unsubscribe();
-  // }, [router, usersPing]);
 
   return <span>{ping}ms</span>;
 };
 
-const Jamhub: React.FC = () => {
-  const player = usePlayer();
-
+export const useTransport = (): Transport => {
   const webSocketTransport = useRef<Transport>(
     createWebSocketTransport({
       url: `wss://ru1.jamhub.io${window.location.pathname}`,
     })
   );
+
+  return webSocketTransport.current;
+};
+
+const Jamhub: React.FC = () => {
+  const player = usePlayer();
+
   // const localTransport = useRef<Transport>(
   //   createLocalTransport({ player })
   // );
 
   const store = useStore();
-  const transport = webSocketTransport.current;
+  const transport = useTransport();
   const router = createTransportRouter(transport);
   // const transport = createLocalTransport({ player });
   const refLastMidiEvent = useRef<lib.TransportEvent>();
@@ -693,14 +690,24 @@ const Jamhub: React.FC = () => {
           </div>
           <div
             style={{
+              borderLeft: "1px solid #eee",
+              borderRight: "1px solid #eee",
+              paddingRight: 14,
+              paddingLeft: 14,
+            }}
+          >
+            <GranulaTransportController
+              transport={transport}
+              sync={router.sync}
+            />
+          </div>
+          <div
+            style={{
               display: "flex",
               // backgroundColor: "rgba(0,0,0,0.05)",
             }}
           >
             {renderUsers()}
-          </div>
-          <div>
-            <GranulaController />
           </div>
         </Row>
       </div>

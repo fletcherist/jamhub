@@ -274,6 +274,9 @@ func (u *User) HandleEvent(eventRaw []byte) error {
 		u.info.Mute = false
 		u.BroadcastEventUnmute()
 		return nil
+	} else if event.Type == "sync" {
+		u.BroadcastEvent(*event)
+		return nil
 	}
 	return u.SendErr(errNotImplemented)
 }
@@ -367,8 +370,7 @@ func serveWs(rooms *Rooms, w http.ResponseWriter, r *http.Request) {
 	log.Println("ws connection to room:", roomID, len(room.GetUsers()), "users")
 
 	usernames := []string{
-		"David Bowie", "Eminem", "Bob Dylan", "Frank Sinatra", "Paul McCartney", "Elton John", "Kurt Kobain",
-		"Bob Marlie", "Elvis Presley", "John Lennon", "Trent Reznor", "Hans Zimmer", "John Williams", "billie eilish",
+		"David Bowie",
 	}
 
 	user := &User{

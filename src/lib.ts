@@ -1,4 +1,4 @@
-export const APP_VERSION = "v1.0.0";
+export const APP_VERSION = "v1.1.0";
 
 export const MIDI_NOTE_ON = 144;
 export const MIDI_NOTE_OFF = 128;
@@ -51,6 +51,10 @@ export interface TransportEventUserLeave {
   type: "user_leave";
   user: User;
 }
+export interface TransportSyncEvent {
+  type: "sync";
+  state: object;
+}
 export type TransportEvent =
   | TransportEventMIDI
   | TransportEventPing
@@ -58,30 +62,13 @@ export type TransportEvent =
   | TransportEventUser
   | TransportEventUserJoin
   | TransportEventUserLeave
-  | TransportEventPingOutgoing;
+  | TransportEventPingOutgoing
+  | TransportSyncEvent;
 
 export const createPingEvent = (): TransportEventPingOutgoing => {
   return { type: "ping", value: Date.now() };
 };
 
-// export interface TransportEvent {
-//   type:
-//     | "midi"
-//     | "ping"
-//     | "pong"
-//     | "answer"
-//     | "candidate"
-//     | "error"
-//     | "user"
-//     | "user_join"
-//     | "user_leave"
-//     | "room"
-//     | "mute"
-//     | "unmute";
-//   midi?:
-//   user?: User;
-//   room?: Room;
-// }
 export interface User {
   id: string;
   name: string;
