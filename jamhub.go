@@ -24,9 +24,6 @@ import (
 )
 
 var (
-	errChanClosed     = errors.New("channel closed")
-	errInvalidTrack   = errors.New("track is nil")
-	errInvalidPacket  = errors.New("packet is nil")
 	errNotImplemented = errors.New("not implemented")
 )
 
@@ -242,6 +239,7 @@ type Event struct {
 	User       *UserWrap `json:"user,omitempty"`
 	Room       *RoomWrap `json:"room,omitempty"`
 	Desc       string    `json:"desc,omitempty"`
+	State      string    `json:"state,omitempty"`
 	Value      int64     `json:"value"`
 }
 

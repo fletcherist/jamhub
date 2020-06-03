@@ -11,8 +11,6 @@ export type MIDIEvent = [
 
 export type Instrument =
   | "piano"
-  // | "guitar"
-  // | "epiano"
   | "drums"
   | "tinysynthOrgan"
   | "tinysynthCreamyKeys"
@@ -53,7 +51,7 @@ export interface TransportEventUserLeave {
 }
 export interface TransportSyncEvent {
   type: "sync";
-  state: object;
+  state: string;
 }
 export type TransportEvent =
   | TransportEventMIDI

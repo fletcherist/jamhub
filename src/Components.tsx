@@ -452,8 +452,9 @@ export const GranulaTransportController: React.FC<{
 
   useEffect(() => {
     const subscription = sync.subscribe((event) => {
+      // console.log("received sync:", event);
       if (event.type === "sync") {
-        setState(event.state as GranulaState);
+        setState(JSON.parse(event.state) as GranulaState);
       }
     });
     return () => {
@@ -468,8 +469,8 @@ export const GranulaTransportController: React.FC<{
       state={state}
       onChange={(newState) => {
         setState(newState);
-        console.log("sync", { type: "sync", state: newState });
-        // transport.send({ type: "sync", state: newState });
+        // console.log("sync", { type: "sync", state: newState });
+        transport.send({ type: "sync", state: JSON.stringify(newState) });
       }}
       url="https://ruebel.github.io/granular/audio/test.mp3"
     />
