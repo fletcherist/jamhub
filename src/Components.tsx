@@ -189,8 +189,10 @@ export const LogoWithName: React.FC<{}> = () => {
 export const Granula: React.FC<{
   url: string;
   onChange: (state: GranulaState) => void;
+  setLoading: (loading: boolean) => void;
   state: GranulaState;
-}> = ({ url, state, onChange }) => {
+  loading: boolean;
+}> = ({ url, state, onChange, loading = true, setLoading }) => {
   const audioContext = useAudioContext();
   const [buffer, setBuffer] = useState<AudioBuffer>();
   const reverb = useRef<Reverb>();
@@ -202,6 +204,7 @@ export const Granula: React.FC<{
 
   useEffect(() => {
     const getFile = async () => {
+      setLoading(true);
       reverb.current = await createReverb(audioContext);
       reverb.current.output.connect(audioContext.destination);
 
@@ -214,6 +217,7 @@ export const Granula: React.FC<{
       );
       console.log("audio buffer fetched", audioBuffer);
       setBuffer(audioBuffer);
+      setLoading(false);
     };
     getFile();
   }, [audioContext, url]);
@@ -234,10 +238,11 @@ export const Granula: React.FC<{
             b
             style={{ textAlign: "right", padding: "0.5rem" }}
           >
-            atmosphere
+            {loading ? "loading..." : "atmosphere"}
           </Text>
           <Button
             size="mini"
+            disabled={loading}
             onClick={() => update({ running: !state.running })}
           >
             {state.running ? "stop" : "start"}
@@ -249,6 +254,7 @@ export const Granula: React.FC<{
           max={1}
           step={0.01}
           value={state.reverb}
+          disabled={loading}
           onChange={(value) => {
             update({ reverb: value });
             if (reverb.current) {
@@ -263,6 +269,7 @@ export const Granula: React.FC<{
           max={300}
           step={1}
           value={state.adsr.attack}
+          disabled={loading}
           onChange={(value) => {
             updateAdsr({ attack: value });
           }}
@@ -273,6 +280,7 @@ export const Granula: React.FC<{
           max={100}
           step={1}
           value={state.adsr.sustain}
+          disabled={loading}
           onChange={(value) => {
             updateAdsr({ sustain: value });
           }}
@@ -283,6 +291,7 @@ export const Granula: React.FC<{
           max={300}
           step={1}
           value={state.adsr.release}
+          disabled={loading}
           onChange={(value) => {
             updateAdsr({ release: value });
           }}
@@ -293,6 +302,7 @@ export const Granula: React.FC<{
           max={2}
           step={0.1}
           value={state.spread}
+          disabled={loading}
           onChange={(value) => {
             update({ spread: value });
           }}
@@ -303,6 +313,7 @@ export const Granula: React.FC<{
           max={400}
           step={1}
           value={state.density}
+          disabled={loading}
           onChange={(value) => {
             update({ density: value });
           }}
@@ -313,6 +324,7 @@ export const Granula: React.FC<{
           max={1}
           step={0.01}
           value={state.position}
+          disabled={loading}
           onChange={(value) => {
             update({ position: value });
           }}
@@ -323,8 +335,20 @@ export const Granula: React.FC<{
           max={10}
           step={1}
           value={state.transpose}
+          disabled={loading}
           onChange={(value) => {
             update({ transpose: value });
+          }}
+        />
+        <GranulaParameter
+          label="gain"
+          min={0}
+          max={1}
+          step={0.1}
+          value={state.gain}
+          disabled={loading}
+          onChange={(value) => {
+            update({ gain: value });
           }}
         />
         {buffer && reverb.current && state.running && (
@@ -382,6 +406,7 @@ export const GranulaParameter: React.FC<{
 
 type GranulaState = GranulaProps["controls"];
 export const GranulaController: React.FC = () => {
+  const [loading, setLoading] = useState<boolean>(true);
   const defaultControls: GranulaProps["controls"] = {
     running: false,
     adsr: {
@@ -394,6 +419,7 @@ export const GranulaController: React.FC = () => {
     density: 20, // [10, 4000]
     // gain: 0.3,
     pan: 0.01,
+    gain: 0.1,
     playbackRate: 1, // [0, 2]
     position: 0.8,
     spread: 0.4, // [0, 2]
@@ -402,6 +428,8 @@ export const GranulaController: React.FC = () => {
   const [state, setState] = useState<GranulaState>(defaultControls);
   return (
     <Granula
+      loading={loading}
+      setLoading={setLoading}
       state={state}
       onChange={(newState) => setState(newState)}
       url="https://ruebel.github.io/granular/audio/test.mp3"

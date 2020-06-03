@@ -156,6 +156,7 @@ export interface GranulaProps {
     pan: number;
     playbackRate: number;
     reverb: number;
+    gain: number;
     running: boolean;
   };
 }
@@ -175,7 +176,7 @@ const createGranula = (props: GranulaProps): Granula => {
   };
   const master = createGain(audioContext);
 
-  master.gain.value = 0.1;
+  master.gain.value = Math.max(0, controls.gain / 4);
   master.connect(output);
 
   const start = () => {
