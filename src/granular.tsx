@@ -14,43 +14,100 @@ export const getAudioBuffer = async (
   return buffer;
 };
 
-export const createGain = (audioContext: AudioContext, velocity = 0.001) => {
+export const createGain = (
+  audioContext: AudioContext,
+  velocity = 0.001
+): GainNode => {
   const gain = audioContext.createGain();
   gain.gain.value = velocity;
   return gain;
 };
 
-export const createPan = (audioContext: AudioContext, pan: number) => {
+export const createPan = (audioContext: AudioContext): StereoPannerNode => {
   const panner = audioContext.createStereoPanner();
   return panner;
 };
 
 interface Grain {
-  busy: boolean;
-  gain: GainNode;
-  pan: StereoPannerNode;
-  source?: AudioBufferSourceNode;
+  // source: AudioBufferSourceNode;
+  isPlaying: () => boolean;
+  play: (props: GranulaProps) => void;
 }
 
 interface ADSR {
   attack: number;
-  decay: number;
+  // decay: number;
   sustain: number;
   release: number;
 }
 export const createGrain = (
-  panVal: number,
-  output: AudioNode,
-  audioContext: AudioContext
+  audioContext: AudioContext,
+  output: AudioNode
 ): Grain => {
-  const gain = createGain(audioContext);
-  const pan = createPan(audioContext, panVal);
-  pan.connect(gain);
-  gain.connect(output);
-  return {
+  const state = {
     busy: false,
-    gain,
-    pan,
+  };
+  const gain = audioContext.createGain();
+  const panner = audioContext.createStereoPanner();
+  panner.connect(gain);
+  gain.connect(output);
+
+  const play = (props: GranulaProps) => {
+    // Set busy flag so grain doesn't get reused
+    state.busy = true;
+    // Create source from buffer
+    const source = props.audioContext.createBufferSource();
+    source.buffer = props.buffer;
+    source.connect(panner);
+    // Set the pan amount for the grain
+    panner.pan.setValueAtTime(
+      random(-props.controls.pan, props.controls.pan),
+      props.audioContext.currentTime
+    );
+    // Set the playback rate of the grain
+    source.playbackRate.value = multiplyTranspose(props.controls.transpose);
+    // Get the starting position in the buffer
+    const position = getPosition(
+      props.buffer.duration,
+      props.controls.position,
+      props.controls.spread
+    );
+    // Calculate curve times
+    const now = props.audioContext.currentTime;
+    const { attack, sustain, release } = props.controls.adsr;
+
+    // convert ms to seconds
+    const attackDuration = attack / 1000;
+    const sustainDuration = sustain / 1000;
+    const releaseDuration = release / 1000;
+    const duration = attackDuration + sustainDuration + releaseDuration;
+    const durationMs = attack + sustain + release;
+
+    const attackAt = now;
+    const sustainAt = attackAt + attackDuration;
+    const releaseAt = sustainAt + sustainDuration;
+    const endAt = releaseAt + releaseDuration;
+
+    source.start(attackAt, position, duration);
+    source.stop(endAt);
+
+    // attack
+    gain.gain.setValueAtTime(0, attackAt);
+    gain.gain.exponentialRampToValueAtTime(1, sustainAt);
+    // sustain
+    // release
+    gain.gain.setValueAtTime(1, releaseAt);
+    gain.gain.exponentialRampToValueAtTime(0.00001, endAt);
+    // clean up when finished
+    setTimeout(() => {
+      source.disconnect();
+      state.busy = false;
+    }, durationMs);
+  };
+
+  return {
+    isPlaying: () => state.busy,
+    play,
   };
 };
 
@@ -64,69 +121,27 @@ const getPosition = (
   return Math.max(0, adjustedPos + spreadOffset);
 };
 
-export const killGrain = (grain: Grain) => {
-  if (grain.source) {
-    grain.source.stop();
-    grain.source.disconnect();
-  }
-  grain.gain.disconnect();
-  grain.busy = false;
-};
+// export const killGrain = (grain: Grain) => {
+//   if (grain.source) {
+//     grain.source.stop();
+//     grain.source.disconnect();
+//   }
+//   grain.gain.disconnect();
+//   grain.busy = false;
+// };
 
 const multiplyTranspose = (value: number): number => Math.pow(2, value / 12);
-
-export const startGrain = (grain: Grain, state: GranulaProps) => {
-  // Set busy flag so grain doesn't get reused
-  grain.busy = true;
-  // Create source from buffer
-  grain.source = state.audioContext.createBufferSource();
-  grain.source.buffer = state.buffer;
-  grain.source.connect(grain.pan);
-  // Set the pan amount for the grain
-  grain.pan.pan.setValueAtTime(
-    random(-state.controls.pan, state.controls.pan),
-    state.audioContext.currentTime
-  );
-  // Set the playback rate of the grain
-  // grain.source.playbackRate.value *= state.controls.playbackRate;
-  grain.source.playbackRate.value = multiplyTranspose(
-    state.controls.transpose
-    // + output.tune / 100
-  );
-  // Get the starting position in the buffer
-  const position = getPosition(
-    state.buffer.duration,
-    state.controls.position,
-    state.controls.spread
-  );
-  // Calculate curve times
-  const now = state.audioContext.currentTime;
-  const attackTime = state.controls.adsr.attack;
-  const sustainTime = attackTime + state.controls.adsr.sustain;
-  const end = sustainTime + state.controls.adsr.release;
-  // Apply curves
-  grain.source.start(now, position, end / 1000 + 0.1);
-  // Attack curve
-  //   grain.gain.gain.exponentialRampToValueAtTime(1, now + attackTime / 1000);
-  grain.gain.gain.exponentialRampToValueAtTime(1, now + attackTime / 1000);
-  // Wait sustain amount before invoking release curve
-  setTimeout(
-    () => {
-      // Release curve
-      grain.gain.gain.exponentialRampToValueAtTime(0.0001, now + end / 1000);
-    },
-    // Sustain
-    sustainTime
-  );
-  // Clean up when finished
-  setTimeout(() => {
-    if (grain.source) {
-      grain.source.stop();
-      grain.source.disconnect();
-    }
-    grain.busy = false;
-  }, end + 5);
-};
+// const applyAdsr = (gain: GainNode, audioContext: AudioContext, adsr: ADSR): void => {
+//   gain.gain.exponentialRampToValueAtTime(1, audioContext.currentTime + adsr.attack / 1000);
+//   setTimeout(
+//     () => {
+//       // Release curve
+//       gain.gain.exponentialRampToValueAtTime(0.0001, now + end / 1000);
+//     },
+//     // Sustain
+//     sustainDuration
+//   );
+// }
 
 export interface GranulaProps {
   audioContext: AudioContext;
@@ -174,15 +189,15 @@ const createGranula = (props: GranulaProps): Granula => {
     state.interval = undefined;
   };
   const tick = () => {
-    const grain = state.grains.find((candidate) => !candidate.busy);
+    const grain = state.grains.find((candidate) => !candidate.isPlaying());
     try {
       if (grain) {
-        startGrain(grain, props);
+        grain.play(props);
         return;
       }
-      const newGrain = createGrain(controls.pan, master, audioContext);
-      startGrain(newGrain, props);
-      state.grains = [...state.grains, newGrain].slice(0, 20);
+      const newGrain = createGrain(audioContext, master);
+      newGrain.play(props);
+      state.grains = [...state.grains, newGrain].slice(0, 100);
       console.log(state.grains);
     } catch (error) {
       console.error(error);

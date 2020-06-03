@@ -189,13 +189,14 @@ export const GranularStory = () => {
   const [buffer, setBuffer] = useState<AudioBuffer>();
   const [start, setStart] = useState<boolean>(false);
   const reverb = useRef<Reverb>();
+  const [reverbWet, setReverbWet] = useState<number>(0.6);
 
   const defaultControls: GranulaProps["controls"] = {
     adsr: {
       attack: 100, // [10, 100]
       sustain: 100, // [10, 200]
       release: 100, // [10, 100]
-      decay: 0,
+      // decay: 0,
     },
     transpose: 0,
     density: 20, // [10, 4000]
@@ -259,10 +260,12 @@ export const GranularStory = () => {
               step={0.01}
               min={0}
               max={1}
-              // value={state.adsr.attack}
+              value={reverbWet}
               onChange={(event) => {
                 if (reverb.current) {
-                  reverb.current.setWet(Number(event.target.value));
+                  const wet = Number(event.target.value);
+                  setReverbWet(wet);
+                  reverb.current.setWet(wet);
                 }
               }}
             />
@@ -328,7 +331,7 @@ export const GranularStory = () => {
               type="range"
               step={1}
               min={10}
-              max={4000}
+              max={400}
               value={state.density}
               onChange={(event) => {
                 update({ density: Number(event.target.value) });
