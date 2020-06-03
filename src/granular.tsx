@@ -73,6 +73,8 @@ export const killGrain = (grain: Grain) => {
   grain.busy = false;
 };
 
+const multiplyTranspose = (value: number): number => Math.pow(2, value / 12);
+
 export const startGrain = (grain: Grain, state: GranulaProps) => {
   // Set busy flag so grain doesn't get reused
   grain.busy = true;
@@ -86,7 +88,11 @@ export const startGrain = (grain: Grain, state: GranulaProps) => {
     state.audioContext.currentTime
   );
   // Set the playback rate of the grain
-  grain.source.playbackRate.value *= state.controls.playbackRate;
+  // grain.source.playbackRate.value *= state.controls.playbackRate;
+  grain.source.playbackRate.value = multiplyTranspose(
+    state.controls.transpose
+    // + output.tune / 100
+  );
   // Get the starting position in the buffer
   const position = getPosition(
     state.buffer.duration,
@@ -127,6 +133,7 @@ export interface GranulaProps {
   buffer: AudioBuffer;
   output: AudioNode;
   controls: {
+    transpose: number;
     adsr: ADSR; // ms
     density: number;
     spread: number;

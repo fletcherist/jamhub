@@ -197,6 +197,7 @@ export const GranularStory = () => {
       release: 100, // [10, 100]
       decay: 0,
     },
+    transpose: 0,
     density: 20, // [10, 4000]
     // gain: 0.3,
     pan: 0.01,
@@ -238,6 +239,19 @@ export const GranularStory = () => {
       </button>
       {start && (
         <div>
+          <div>
+            transpose
+            <input
+              type="range"
+              step={1}
+              min={0}
+              max={10}
+              value={state.transpose}
+              onChange={(event) => {
+                update({ transpose: Number(event.target.value) });
+              }}
+            />
+          </div>
           <div>
             reverb
             <input
