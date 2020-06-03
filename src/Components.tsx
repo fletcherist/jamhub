@@ -185,34 +185,18 @@ export const LogoWithName: React.FC<{}> = () => {
     </svg>
   );
 };
-export const GranularStory: React.FC<{
+
+export const Granula: React.FC<{
   url: string;
-}> = ({ url }) => {
+  onChange: (state: GranulaState) => void;
+  state: GranulaState;
+}> = ({ url, state, onChange }) => {
   const audioContext = useAudioContext();
   const [buffer, setBuffer] = useState<AudioBuffer>();
-  const [start, setStart] = useState<boolean>(false);
   const reverb = useRef<Reverb>();
 
-  const defaultControls: GranulaProps["controls"] = {
-    adsr: {
-      attack: 100, // [10, 100]
-      sustain: 100, // [10, 200]
-      release: 100, // [10, 100]
-      // decay: 0,
-    },
-    transpose: 0,
-    density: 20, // [10, 4000]
-    // gain: 0.3,
-    pan: 0.01,
-    playbackRate: 1, // [0, 2]
-    position: 0.8,
-    spread: 0.4, // [0, 2]
-    reverb: 0.5,
-  };
-  type State = typeof defaultControls;
-  const [state, setState] = useState<State>(defaultControls);
-  const update = (partial: Partial<State>) =>
-    setState({ ...state, ...partial });
+  const update = (partial: Partial<GranulaState>) =>
+    onChange({ ...state, ...partial });
   const updateAdsr = (partial: Partial<GranulaProps["controls"]["adsr"]>) =>
     update({ adsr: { ...state.adsr, ...partial } });
 
@@ -234,13 +218,9 @@ export const GranularStory: React.FC<{
     getFile();
   }, [audioContext, url]);
 
-  // if (!buffer || !reverb.current) {
-  //   return null;
-  // }
-
   return (
     <div style={{ display: "flex" }}>
-      <div style={{ width: "300px", padding: "1rem" }}>
+      <div style={{ width: "300px" }}>
         <div
           style={{
             display: "flex",
@@ -256,11 +236,14 @@ export const GranularStory: React.FC<{
           >
             atmosphere
           </Text>
-          <Button size="mini" onClick={() => setStart(!start)}>
-            {start ? "stop" : "start"}
+          <Button
+            size="mini"
+            onClick={() => update({ running: !state.running })}
+          >
+            {state.running ? "stop" : "start"}
           </Button>
         </div>
-        <GranulaController
+        <GranulaParameter
           label="reverb"
           min={0}
           max={1}
@@ -274,7 +257,7 @@ export const GranularStory: React.FC<{
           }}
         />
 
-        <GranulaController
+        <GranulaParameter
           label="attack"
           min={10}
           max={300}
@@ -284,7 +267,7 @@ export const GranularStory: React.FC<{
             updateAdsr({ attack: value });
           }}
         />
-        <GranulaController
+        <GranulaParameter
           label="sustain"
           min={10}
           max={100}
@@ -294,7 +277,7 @@ export const GranularStory: React.FC<{
             updateAdsr({ sustain: value });
           }}
         />
-        <GranulaController
+        <GranulaParameter
           label="release"
           min={10}
           max={300}
@@ -304,7 +287,7 @@ export const GranularStory: React.FC<{
             updateAdsr({ release: value });
           }}
         />
-        <GranulaController
+        <GranulaParameter
           label="spread"
           min={0}
           max={2}
@@ -314,7 +297,7 @@ export const GranularStory: React.FC<{
             update({ spread: value });
           }}
         />
-        <GranulaController
+        <GranulaParameter
           label="density"
           min={10}
           max={400}
@@ -324,7 +307,7 @@ export const GranularStory: React.FC<{
             update({ density: value });
           }}
         />
-        <GranulaController
+        <GranulaParameter
           label="fragment"
           min={0}
           max={1}
@@ -334,7 +317,7 @@ export const GranularStory: React.FC<{
             update({ position: value });
           }}
         />
-        <GranulaController
+        <GranulaParameter
           label="pitch"
           min={0}
           max={10}
@@ -344,7 +327,7 @@ export const GranularStory: React.FC<{
             update({ transpose: value });
           }}
         />
-        {buffer && reverb.current && start && (
+        {buffer && reverb.current && state.running && (
           <Granular
             audioContext={audioContext}
             buffer={buffer}
@@ -353,14 +336,14 @@ export const GranularStory: React.FC<{
           />
         )}
       </div>
-      <Code block width="50%">
+      {/* <Code block width="50%">
         {JSON.stringify(state, null, 2)}
-      </Code>
+      </Code> */}
     </div>
   );
 };
 
-export const GranulaController: React.FC<{
+export const GranulaParameter: React.FC<{
   min: number;
   max: number;
   step: number;
@@ -396,6 +379,36 @@ export const GranulaController: React.FC<{
     </div>
   );
 };
+
+type GranulaState = GranulaProps["controls"];
+export const GranulaController: React.FC = () => {
+  const defaultControls: GranulaProps["controls"] = {
+    running: false,
+    adsr: {
+      attack: 100, // [10, 100]
+      sustain: 100, // [10, 200]
+      release: 100, // [10, 100]
+      // decay: 0,
+    },
+    transpose: 0,
+    density: 20, // [10, 4000]
+    // gain: 0.3,
+    pan: 0.01,
+    playbackRate: 1, // [0, 2]
+    position: 0.8,
+    spread: 0.4, // [0, 2]
+    reverb: 0.5,
+  };
+  const [state, setState] = useState<GranulaState>(defaultControls);
+  return (
+    <Granula
+      state={state}
+      onChange={(newState) => setState(newState)}
+      url="https://ruebel.github.io/granular/audio/test.mp3"
+    />
+  );
+};
+
 export const Storybook: React.FC = () => {
   return (
     <div>
@@ -403,7 +416,7 @@ export const Storybook: React.FC = () => {
       <PopupWelcomeToSession /> */}
       <div style={{ maxWidth: 600 }}>
         {/* <GranularStory url="https://www.soundjay.com/nature/campfire-1.mp3" /> */}
-        <GranularStory url="https://ruebel.github.io/granular/audio/test.mp3" />
+        <GranulaController />
         {/* <GranularStory url="https://www.soundjay.com/nature/river-6.mp3" /> */}
       </div>
 
@@ -417,7 +430,7 @@ export const Storybook: React.FC = () => {
       <InstrumentsStory />
       <Divider />
 
-      <GranulaController
+      <GranulaParameter
         label="attack"
         min={1}
         max={100}
@@ -425,7 +438,7 @@ export const Storybook: React.FC = () => {
         onChange={() => undefined}
         value={50}
       />
-      <GranulaController
+      <GranulaParameter
         label="attack"
         min={1}
         max={100}

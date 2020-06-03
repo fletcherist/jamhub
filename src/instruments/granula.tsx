@@ -156,6 +156,7 @@ export interface GranulaProps {
     pan: number;
     playbackRate: number;
     reverb: number;
+    running: boolean;
   };
 }
 

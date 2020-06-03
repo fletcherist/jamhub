@@ -18,6 +18,7 @@ import {
   CopyLink,
   LogoWithName,
   PopupWelcomeToSession,
+  GranulaController,
 } from "./Components";
 import {
   Row,
@@ -150,6 +151,7 @@ const usePlayer = (): Player => {
     tinysynthCreamyKeys: "not loaded",
     kalimba: "ok",
     river: "ok",
+    granula: "not loaded",
   };
   const refLoadingStatus = useRef<LoadingStatus>(defaultLoadingStatus);
   const [loadingStatus, setLoadingStatus] = useState<LoadingStatus>(
@@ -592,7 +594,7 @@ const Jamhub: React.FC = () => {
       <div style={{ display: "flex", justifyContent: "center" }}>
         <div
           style={{
-            maxWidth: 500,
+            maxWidth: 800,
             width: "100%",
             // backgroundColor: "#eee",
           }}
@@ -616,7 +618,7 @@ const Jamhub: React.FC = () => {
         <Row
           style={{
             flexGrow: 2,
-            maxWidth: 500,
+            maxWidth: 800,
           }}
         >
           <div
@@ -696,6 +698,9 @@ const Jamhub: React.FC = () => {
             }}
           >
             {renderUsers()}
+          </div>
+          <div>
+            <GranulaController />
           </div>
         </Row>
       </div>

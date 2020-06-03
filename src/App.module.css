@@ -20,7 +20,9 @@
   /* background-color: #292b30; */
   width: 242px;
   border-left: 1px solid #eee;
+  border-right: 1px solid #eee;
   /* padding: 0 1rem; */
   padding-left: 14px;
-  margin: 0 10px;
+  padding-right: 14px;
+  /* margin: 0 10px; */
 }
