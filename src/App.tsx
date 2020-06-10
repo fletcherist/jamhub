@@ -485,6 +485,16 @@ const Jamhub: React.FC = () => {
       const [type, pitch, velocity] = midiEvent.data;
       console.log("handleMidiEvent", midiEvent.data);
       if (type === 144) {
+        if (velocity === 0) {
+          // note off
+          transport.send({
+            type: "midi",
+            midi: [128, pitch, velocity],
+            instrument: selectedInstrument,
+            userId: user.id,
+          });
+          return;
+        }
         // note on
         transport.send({
           type: "midi",
