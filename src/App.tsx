@@ -717,7 +717,7 @@ const Jamhub: React.FC = () => {
             <div>
               <MyKeyboard
                 onMIDIEvent={(event) => {
-                  // console.log("onMIDIEvent", event);
+                  console.log("onMIDIEvent", event);
                   if (!user) {
                     console.error("no user");
                   }
