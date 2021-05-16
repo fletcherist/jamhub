@@ -3,7 +3,7 @@ Description=jamhub
 
 [Service]
 Type=simple
-ExecStart=/opt/bin/jamhub
+ExecStart=/usr/local/bin/jamhub
 Restart=always
 RestartSec=20s
 User=root

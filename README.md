@@ -1,6 +1,6 @@
 <img src="./public/logo-full.svg">
 
-[https://jamhub.io](https://jamhub.io) — service for musicians' collaboration and jamming with very low latency (~20ms).
+[https://jamhub.netlify.app](https://jamhub.netlify.app) — service for musicians' collaboration and jamming with very low latency (~20ms).
 
 also feel free to join our [discord](https://discord.gg/W9juhMx) server to find musicians for jam.
 
@@ -10,7 +10,7 @@ i can't jam with my friends in real-world because of covid, so I'm trying to mov
 
 # usage
 
-1. create your own jam room just like http://jamhub.io/my_band (`http://jamhub.io/:anything_will_do`)
+1. create your own jam room just like https://jamhub.netlify.app/my_band (`https://jamhub.netlify.app/:anything_will_do`)
 2. copy that link and share it with friends
 3. go ahead and have fun
 

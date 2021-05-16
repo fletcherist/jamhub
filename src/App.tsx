@@ -155,9 +155,8 @@ const usePlayer = (): Player => {
     granula: "not loaded",
   };
   const refLoadingStatus = useRef<LoadingStatus>(defaultLoadingStatus);
-  const [loadingStatus, setLoadingStatus] = useState<LoadingStatus>(
-    defaultLoadingStatus
-  );
+  const [loadingStatus, setLoadingStatus] =
+    useState<LoadingStatus>(defaultLoadingStatus);
   const updateIsLoaded = (partial: Partial<LoadingStatus>) => {
     const newLoadingStatus: LoadingStatus = {
       ...refLoadingStatus.current,
@@ -370,6 +369,7 @@ export const useTransport = (): Transport => {
   const webSocketTransport = useRef<Transport>(
     createWebSocketTransport({
       url: `wss://ru1.jamhub.io${window.location.pathname}`,
+      // url: `ws://localhost:80${window.location.pathname}`,
     })
   );
 
@@ -388,9 +388,8 @@ const Jamhub: React.FC = () => {
   const router = createTransportRouter(transport);
   // const transport = createLocalTransport({ player });
   const refLastMidiEvent = useRef<lib.TransportEvent>();
-  const [transportStatus, setTransportStatus] = useState<TransportStatus>(
-    "disconnected"
-  );
+  const [transportStatus, setTransportStatus] =
+    useState<TransportStatus>("disconnected");
   const [selectedInstrument, setSelectedInstrument] = useState<lib.Instrument>(
     "tinysynthCreamyKeys"
   );
@@ -566,7 +565,9 @@ const Jamhub: React.FC = () => {
           <Text size={11} small type="secondary">
             invite friends
           </Text>
-          <CopyLink url={`https://jamhub.io${window.location.pathname}`} />
+          <CopyLink
+            url={`https://jamhub.netlify.app${window.location.pathname}`}
+          />
         </div>
       </div>
     );
@@ -574,11 +575,8 @@ const Jamhub: React.FC = () => {
 
   const switchInstrument = (instrument: lib.Instrument) => {
     if (refLastMidiEvent.current && refLastMidiEvent.current.type === "midi") {
-      const [
-        eventType,
-        eventNote,
-        eventVelocity,
-      ] = refLastMidiEvent.current.midi;
+      const [eventType, eventNote, eventVelocity] =
+        refLastMidiEvent.current.midi;
       if (eventType === 144) {
         transport.send({
           ...refLastMidiEvent.current,

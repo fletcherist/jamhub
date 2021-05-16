@@ -1,8 +1,6 @@
 package main
 
 import (
-	"context"
-	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -12,7 +10,6 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
-	"golang.org/x/crypto/acme/autocert"
 
 	"net/http"
 
@@ -556,42 +553,12 @@ func main() {
 		log.Printf("Defaulting to port %s", port)
 	}
 	addr := fmt.Sprintf(":%s", port)
-
 	srv := &http.Server{
 		Handler:      router,
 		Addr:         addr,
 		WriteTimeout: 5 * time.Second,
 		ReadTimeout:  5 * time.Second,
 	}
-	var m *autocert.Manager
-	hostPolicy := func(ctx context.Context, host string) error {
-		// Note: change to your real host
-		allowedHost := "ru1.jamhub.io"
-		if host == allowedHost {
-			return nil
-		}
-		return fmt.Errorf("acme/autocert: only %s host is allowed", allowedHost)
-	}
-	m = &autocert.Manager{
-		Prompt:     autocert.AcceptTOS,
-		HostPolicy: hostPolicy,
-		Cache:      autocert.DirCache("."),
-	}
-	srv.Addr = ":443"
-	srv.TLSConfig = &tls.Config{GetCertificate: m.GetCertificate}
-	go func() {
-		fmt.Printf("listening https on %s\n", srv.Addr)
-		log.Fatal(srv.ListenAndServeTLS("", ""))
-	}()
-
-	httpSrv := &http.Server{
-		Addr:         ":80",
-		WriteTimeout: 5 * time.Second,
-		ReadTimeout:  5 * time.Second,
-	}
-	httpSrv.Handler = m.HTTPHandler(httpSrv.Handler)
-	err := httpSrv.ListenAndServe()
-	if err != nil {
-		log.Fatalf("httpSrv.ListenAndServe() failed with %s", err)
-	}
+	log.Println("server is running on:", port)
+	log.Fatal(srv.ListenAndServe())
 }
