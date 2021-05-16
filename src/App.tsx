@@ -368,11 +368,10 @@ const Ping: React.FC<{
 export const useTransport = (): Transport => {
   const webSocketTransport = useRef<Transport>(
     createWebSocketTransport({
-      url: `wss://ru1.jamhub.io${window.location.pathname}`,
-      // url: `ws://localhost:80${window.location.pathname}`,
+      url: `wss://jamhub-feoacb563q-uc.a.run.app${window.location.pathname}`,
+      // url: `ws://localhost:80${window.location.pathname}`, // use this for local development
     })
   );
-
   return webSocketTransport.current;
 };
 
