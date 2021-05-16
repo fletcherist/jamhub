@@ -566,7 +566,7 @@ func main() {
 	var m *autocert.Manager
 	hostPolicy := func(ctx context.Context, host string) error {
 		// Note: change to your real host
-		allowedHost := "ru1.jamhub.io"
+		allowedHost := "ru1.jamhub.netlify.app"
 		if host == allowedHost {
 			return nil
 		}

@@ -758,7 +758,7 @@ export const CopyLink: React.FC<{
 
 const CreateLink: React.FC = () => {
   const [path, setPath] = useState<string>("");
-  const url = `https://jamhub.io/${path}`;
+  const url = `https://jamhub.netlify.app/${path}`;
   return (
     <div
       style={{
@@ -784,7 +784,7 @@ const CreateLink: React.FC = () => {
             setPath(event.target.value);
           }}
           value={path}
-          label="jamhub.io/"
+          label="jamhub.netlify.app/"
           size="large"
           placeholder="e.g. tiny-clouds"
           clearable
@@ -815,7 +815,7 @@ const SocialButtons = () => {
     <div className={css.socialIcons}>
       <a
         href={`https://twitter.com/intent/tweet?text=${encodeURI(
-          `https://jamhub.io/ tool for online music collaboration`
+          `https://jamhub.netlify.app/ tool for online music collaboration`
         )}`}
         target="_blank"
         rel="noopener noreferrer"
@@ -829,7 +829,7 @@ const SocialButtons = () => {
       </a>
       <a
         href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURI(
-          `https://jamhub.io/ tool for online music collaboration`
+          `https://jamhub.netlify.app/ tool for online music collaboration`
         )}`}
         target="_blank"
         rel="noopener noreferrer"

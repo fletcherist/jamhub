@@ -369,7 +369,7 @@ const Ping: React.FC<{
 export const useTransport = (): Transport => {
   const webSocketTransport = useRef<Transport>(
     createWebSocketTransport({
-      url: `wss://ru1.jamhub.io${window.location.pathname}`,
+      url: `wss://ru1.jamhub.netlify.app${window.location.pathname}`,
     })
   );
 
@@ -566,7 +566,7 @@ const Jamhub: React.FC = () => {
           <Text size={11} small type="secondary">
             invite friends
           </Text>
-          <CopyLink url={`https://jamhub.io${window.location.pathname}`} />
+          <CopyLink url={`https://jamhub.netlify.app${window.location.pathname}`} />
         </div>
       </div>
     );
